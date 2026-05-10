@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+__pycache__/
+*.py[cod]
+backend/.venv/
+backend/venv/
+backend/.eero_credentials
+.DS_Store
