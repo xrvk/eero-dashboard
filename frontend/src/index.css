@@ -1140,3 +1140,7 @@ body {
   transition: all 0.15s;
 }
 .detail-action-link:hover { background: rgba(110,160,255,0.1); }
+
+/* ── Clickable table rows ───────────────────── */
+.clickable-row { cursor: pointer; }
+.clickable-row:hover td { background: var(--bg-card-hover); }

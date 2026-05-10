@@ -443,7 +443,8 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
                   const conn = getConn(d);
                   const bars = conn?.score_bars ?? 0;
                   return (
-                  <tr key={d.mac || extractId(d.url)} className={d.connected ? '' : 'row-offline'}>
+                  <tr key={d.mac || extractId(d.url)} className={`${d.connected ? '' : 'row-offline'} clickable-row`}
+                    onClick={() => setSelectedDevice(d)}>
                     <td className="td-icon">{getDeviceIcon(d)}</td>
                     <td className="td-name">{d.display_name || d.hostname || 'Unknown'}</td>
                     <td className="td-mono">{d.ip || '—'}</td>
@@ -471,7 +472,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
                     <td className="td-mono">
                       {conn?.rx_rate_info?.rate_bps ? formatRate(conn.rx_rate_info.rate_bps) : d.wireless ? '—' : ''}
                     </td>
-                    <td>
+                    <td onClick={(e) => e.stopPropagation()}>
                       {d.connected && (
                         <div className="device-actions">
                           <button className="btn-action" title="Pause" disabled={actionLoading === d.mac}
