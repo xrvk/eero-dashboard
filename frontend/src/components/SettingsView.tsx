@@ -772,6 +772,9 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const updates = updatesData as Record<string, unknown> || {};
   const thread = threadData as Record<string, unknown> || {};
   const routing = routingData as Record<string, unknown> || {};
+  const wanIp = String(settings.wan_ip || '');
+  const gatewayIp = String(settings.gateway_ip || '');
+  const timezone = (settings.timezone as Record<string, unknown>)?.value as string || '';
 
   const handleRename = async () => {
     if (!newName.trim()) return;
@@ -809,150 +812,167 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   };
 
   return (
-    <div>
-      {/* Network Name */}
-      <div className="settings-subsection">
-        <div className="section-header-inline">
-          <h3>Network Name (SSID)</h3>
-          {!renaming && <button className="btn-text" onClick={() => { setNewName(networkName); setRenaming(true); }}>✏️ Rename</button>}
-        </div>
-        {renaming ? (
-          <div className="drawer-inline-edit" style={{ marginTop: 8 }}>
-            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setRenaming(false); }}
-              autoFocus />
-            <button className="btn-primary btn-sm" onClick={handleRename} disabled={saving}>
-              {saving ? '…' : 'Save'}
-            </button>
-            <button className="btn-cancel btn-sm" onClick={() => setRenaming(false)}>Cancel</button>
+    <div className="general-settings">
+      {/* Top cards row */}
+      <div className="general-cards">
+        {/* Network Identity */}
+        <div className="general-card">
+          <div className="general-card-header">
+            <span className="general-card-icon">📡</span>
+            <h3>Network</h3>
+            {!renaming && <button className="btn-text" onClick={() => { setNewName(networkName); setRenaming(true); }}>✏️</button>}
           </div>
-        ) : (
-          <span className="dns-value" style={{ fontSize: '1.1em' }}>{networkName || '—'}</span>
-        )}
+          {renaming ? (
+            <div className="drawer-inline-edit">
+              <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setRenaming(false); }}
+                autoFocus />
+              <button className="btn-primary btn-sm" onClick={handleRename} disabled={saving}>
+                {saving ? '…' : '✓'}
+              </button>
+              <button className="btn-cancel btn-sm" onClick={() => setRenaming(false)}>✕</button>
+            </div>
+          ) : (
+            <span className="general-card-value">{networkName || '—'}</span>
+          )}
+          <div className="general-card-details">
+            {wanIp && <div className="general-detail"><span>WAN</span><span className="mono">{wanIp}</span></div>}
+            {gatewayIp && <div className="general-detail"><span>Gateway</span><span className="mono">{gatewayIp}</span></div>}
+            {timezone && <div className="general-detail"><span>Timezone</span><span>{timezone}</span></div>}
+          </div>
+        </div>
+
+        {/* Password */}
+        <div className="general-card">
+          <div className="general-card-header">
+            <span className="general-card-icon">🔑</span>
+            <h3>Wi-Fi Password</h3>
+          </div>
+          <div className="general-password">
+            <span className="general-card-value mono">
+              {showPassword ? password : '••••••••••'}
+            </span>
+            <div className="general-password-actions">
+              <button className="btn-icon-sm" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+              {password && (
+                <button className="btn-icon-sm" onClick={handleCopy}>
+                  {copied ? '✅' : '📋'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Firmware */}
+        <div className="general-card">
+          <div className="general-card-header">
+            <span className="general-card-icon">⬆️</span>
+            <h3>Firmware</h3>
+          </div>
+          {updates.target_firmware ? (
+            <>
+              <span className="general-card-value mono">{String(updates.target_firmware)}</span>
+              <div className="general-card-details">
+                <div className="general-detail">
+                  <span>Status</span>
+                  <span className={updates.update_required ? 'text-yellow' : 'text-green'}>
+                    {updates.update_required ? '⚠️ Update available' : '✅ Up to date'}
+                  </span>
+                </div>
+                {updates.has_update && (
+                  <div className="general-detail">
+                    <span>Update</span>
+                    <span className="mono">{String(updates.update_to_firmware || '')}</span>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <span className="empty-text">No firmware info</span>
+          )}
+        </div>
       </div>
 
-      {/* Wi-Fi Password */}
-      <div className="settings-subsection" style={{ marginTop: 20 }}>
-        <h3>Wi-Fi Password</h3>
-        <div className="password-display">
-          <span className="password-value mono" style={{ fontSize: '1.1em' }}>
-            {showPassword ? password : '••••••••••••'}
-          </span>
-          <button className="btn-icon-sm" onClick={() => setShowPassword(!showPassword)} title={showPassword ? 'Hide' : 'Reveal'}>
-            {showPassword ? '🙈' : '👁️'}
+      {/* Thread summary (just the status line, not raw JSON) */}
+      {thread.enabled != null && (
+        <div className="general-section">
+          <h3>🧵 Thread</h3>
+          <div className="general-info-grid">
+            <div className="general-detail"><span>Status</span><span className={thread.enabled ? 'text-green' : 'text-muted'}>{thread.enabled ? '● Enabled' : '○ Disabled'}</span></div>
+            {thread.name && <div className="general-detail"><span>Network</span><span className="mono">{String(thread.name)}</span></div>}
+            {thread.channel && <div className="general-detail"><span>Channel</span><span>{String(thread.channel)}</span></div>}
+          </div>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="general-actions-row">
+        <div className="general-section">
+          <h3>🔍 Diagnostics</h3>
+          <p className="toggle-desc">Check connectivity, DNS, and internet access.</p>
+          <button className="btn-primary" onClick={handleRunDiagnostics} disabled={diagRunning} style={{ marginTop: 8 }}>
+            {diagRunning ? <><div className="spinner" /> Running…</> : 'Run Diagnostics'}
           </button>
-          {password && (
-            <button className="btn-icon-sm" onClick={handleCopy} title="Copy">
-              {copied ? '✅' : '📋'}
+          {diagError && <div className="error-banner" style={{ marginTop: 12 }}>{diagError}</div>}
+        </div>
+
+        <div className="general-section">
+          <h3>🔄 Network Reboot</h3>
+          <p className="toggle-desc">Reboot all nodes. Network offline for ~2 min.</p>
+          {confirmReboot ? (
+            <div className="confirm-inline" style={{ marginTop: 8 }}>
+              <span>⚠️ Are you sure?</span>
+              <button className="btn-confirm btn-danger" onClick={handleRebootNetwork} disabled={rebooting}>
+                {rebooting ? 'Rebooting…' : 'Confirm'}
+              </button>
+              <button className="btn-cancel" onClick={() => setConfirmReboot(false)}>Cancel</button>
+            </div>
+          ) : (
+            <button className="btn-danger" onClick={() => setConfirmReboot(true)} style={{ marginTop: 8 }}>
+              Reboot Entire Network
             </button>
           )}
         </div>
       </div>
 
-      {/* Firmware */}
-      <div className="settings-subsection" style={{ marginTop: 20 }}>
-        <h3>Firmware</h3>
-        <div className="dns-grid">
-          {updates.current_version && (
-            <div className="dns-item">
-              <span className="dns-label">Current Version</span>
-              <span className="dns-value mono">{String(updates.current_version)}</span>
+      {/* Advanced — raw data collapsed */}
+      <details className="general-advanced">
+        <summary className="general-advanced-summary">Advanced Details</summary>
+        <div className="general-advanced-body">
+          {diagResult && (
+            <div className="general-advanced-block">
+              <h4>Last Diagnostics Result</h4>
+              <pre className="json-preview">{JSON.stringify(diagResult, null, 2)}</pre>
             </div>
           )}
-          {updates.target_firmware && (
-            <div className="dns-item">
-              <span className="dns-label">Target Firmware</span>
-              <span className="dns-value mono">{String(updates.target_firmware)}</span>
-            </div>
-          )}
-          {updates.update_required != null && (
-            <div className="dns-item">
-              <span className="dns-label">Update Status</span>
-              <span className={`dns-value ${updates.update_required ? 'text-yellow' : 'text-green'}`}>
-                {updates.update_required ? '⚠️ Update Available' : '✅ Up to Date'}
-              </span>
-            </div>
-          )}
-          {updates.is_update_in_progress != null && updates.is_update_in_progress && (
-            <div className="dns-item">
-              <span className="dns-label">Progress</span>
-              <span className="dns-value text-yellow">🔄 Update in progress…</span>
-            </div>
-          )}
-        </div>
-        {Object.keys(updates).length === 0 && (
-          <p className="empty-text">No update information available</p>
-        )}
-        {Object.keys(updates).filter(k => !['current_version','target_firmware','update_required','is_update_in_progress'].includes(k)).length > 0 && (
-          <details style={{ marginTop: 8 }}>
-            <summary className="btn-text">Show all details</summary>
-            <pre className="json-preview" style={{ marginTop: 8 }}>{JSON.stringify(updates, null, 2)}</pre>
-          </details>
-        )}
-      </div>
-
-      {/* Thread & Routing */}
-      {(Object.keys(thread).length > 0 || Object.keys(routing).length > 0) && (
-        <div className="settings-subsection" style={{ marginTop: 20 }}>
-          <h3>Thread &amp; Routing</h3>
           {Object.keys(thread).length > 0 && (
-            <details>
-              <summary className="btn-text">Thread Border Router</summary>
-              <pre className="json-preview" style={{ marginTop: 8 }}>{JSON.stringify(thread, null, 2)}</pre>
-            </details>
+            <div className="general-advanced-block">
+              <h4>Thread</h4>
+              <pre className="json-preview">{JSON.stringify(thread, null, 2)}</pre>
+            </div>
           )}
           {Object.keys(routing).length > 0 && (
-            <details style={{ marginTop: 8 }}>
-              <summary className="btn-text">Routing</summary>
-              <pre className="json-preview" style={{ marginTop: 8 }}>{JSON.stringify(routing, null, 2)}</pre>
-            </details>
+            <div className="general-advanced-block">
+              <h4>Routing</h4>
+              <pre className="json-preview">{JSON.stringify(routing, null, 2)}</pre>
+            </div>
+          )}
+          {Object.keys(updates).length > 0 && (
+            <div className="general-advanced-block">
+              <h4>Firmware Details</h4>
+              <pre className="json-preview">{JSON.stringify(updates, null, 2)}</pre>
+            </div>
+          )}
+          {Object.keys(settings).length > 0 && (
+            <div className="general-advanced-block">
+              <h4>All Network Settings</h4>
+              <pre className="json-preview">{JSON.stringify(settings, null, 2)}</pre>
+            </div>
           )}
         </div>
-      )}
-
-      {/* Diagnostics */}
-      <div className="settings-subsection" style={{ marginTop: 20 }}>
-        <h3>Diagnostics</h3>
-        <p className="toggle-desc" style={{ marginBottom: 12 }}>
-          Check connectivity, DNS resolution, and internet access.
-        </p>
-        <button className="btn-primary" onClick={handleRunDiagnostics} disabled={diagRunning}>
-          {diagRunning ? <><div className="spinner" /> Running…</> : '🔍 Run Diagnostics'}
-        </button>
-        {diagResult && <pre className="json-preview" style={{ marginTop: 12 }}>{JSON.stringify(diagResult, null, 2)}</pre>}
-        {diagError && <div className="error-banner" style={{ marginTop: 12 }}>{diagError}</div>}
-      </div>
-
-      {/* Network Reboot */}
-      <div className="settings-subsection" style={{ marginTop: 20 }}>
-        <h3>Network Reboot</h3>
-        <p className="toggle-desc" style={{ marginBottom: 12 }}>
-          Reboot all eero nodes in the network. The network will be offline for ~2 minutes.
-        </p>
-        {confirmReboot ? (
-          <div className="confirm-inline">
-            <span>⚠️ Are you sure? This will take all nodes offline.</span>
-            <button className="btn-confirm btn-danger" onClick={handleRebootNetwork} disabled={rebooting}>
-              {rebooting ? 'Rebooting…' : 'Confirm Reboot'}
-            </button>
-            <button className="btn-cancel" onClick={() => setConfirmReboot(false)}>Cancel</button>
-          </div>
-        ) : (
-          <button className="btn-danger" onClick={() => setConfirmReboot(true)}>
-            🔄 Reboot Entire Network
-          </button>
-        )}
-      </div>
-
-      {/* All settings raw */}
-      {Object.keys(settings).length > 0 && (
-        <div className="settings-subsection" style={{ marginTop: 20 }}>
-          <details>
-            <summary className="btn-text">Show all network settings</summary>
-            <pre className="json-preview" style={{ marginTop: 8 }}>{JSON.stringify(settings, null, 2)}</pre>
-          </details>
-        </div>
-      )}
+      </details>
     </div>
   );
 }

@@ -1341,6 +1341,58 @@ body {
   font-family: 'SF Mono', monospace; font-size: 0.8rem; color: var(--accent);
 }
 
+/* ── General Settings Page ─────────────────── */
+.general-settings { max-width: 900px; }
+.general-cards {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px; margin-bottom: 24px;
+}
+.general-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+.general-card-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+}
+.general-card-header h3 { font-size: 0.85rem; font-weight: 600; margin: 0; flex: 1; }
+.general-card-icon { font-size: 1.2rem; }
+.general-card-value { font-size: 1.15rem; font-weight: 600; display: block; margin-bottom: 8px; }
+.general-card-details { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.general-detail {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.8rem; color: var(--text-muted);
+}
+.general-detail span:last-child { font-weight: 500; color: var(--text); }
+.general-password { display: flex; align-items: center; gap: 8px; }
+.general-password-actions { display: flex; gap: 4px; }
+.general-section {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+}
+.general-section h3 { font-size: 0.9rem; font-weight: 600; margin: 0 0 8px; }
+.general-info-grid { display: flex; flex-direction: column; gap: 6px; }
+.general-actions-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+@media (max-width: 640px) { .general-actions-row { grid-template-columns: 1fr; } }
+
+/* Advanced collapsed section */
+.general-advanced {
+  margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px;
+}
+.general-advanced-summary {
+  font-size: 0.8rem; color: var(--text-dim); cursor: pointer;
+  list-style: none; user-select: none;
+}
+.general-advanced-summary::-webkit-details-marker { display: none; }
+.general-advanced-summary::before { content: '▸ '; }
+.general-advanced[open] .general-advanced-summary::before { content: '▾ '; }
+.general-advanced-body { margin-top: 12px; display: flex; flex-direction: column; gap: 16px; }
+.general-advanced-block h4 {
+  font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase;
+  letter-spacing: 0.5px; margin: 0 0 6px;
+}
+
 /* ── Speed Chart ───────────────────────────── */
 .speed-chart { margin-top: 16px; }
 .speed-chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
