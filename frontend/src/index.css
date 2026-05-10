@@ -530,3 +530,38 @@ body {
   .device-table { font-size: 0.75rem; }
   .device-table thead th, .device-table tbody td { padding: 6px 6px; }
 }
+
+/* ── Card Menu (⋯ dropdown) ────────────────── */
+
+.card-menu-wrapper { position: relative; flex-shrink: 0; }
+.btn-menu {
+  background: none; border: 1px solid transparent; border-radius: var(--radius-sm);
+  color: var(--text-muted); width: 32px; height: 32px; font-size: 1.2rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; letter-spacing: 2px; padding: 0;
+}
+.btn-menu:hover { border-color: var(--border); color: var(--text); background: var(--bg-card-hover); }
+.card-menu {
+  position: absolute; right: 0; top: 36px; z-index: 50;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  min-width: 170px; overflow: hidden;
+}
+.card-menu-item {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; background: none; border: none;
+  color: var(--text); padding: 10px 14px; font-size: 0.85rem;
+  cursor: pointer; text-align: left; transition: background 0.1s;
+}
+.card-menu-item:hover { background: var(--bg-card-hover); }
+.card-menu-item.danger { color: var(--red); }
+.card-menu-item.danger:hover { background: rgba(248,113,113,0.1); }
+.card-menu-item:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Sortable Table Headers ─────────────────── */
+
+.sortable-th {
+  cursor: pointer; user-select: none; white-space: nowrap;
+  transition: color 0.15s;
+}
+.sortable-th:hover { color: var(--accent); }

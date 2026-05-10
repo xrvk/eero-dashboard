@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
 
@@ -15,8 +15,52 @@ function formatBytes(bytes?: number) {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
+function rawBytes(bytes?: number) {
+  return bytes ?? 0;
+}
+
 type ViewMode = 'grid' | 'list';
 type GroupBy = 'status' | 'connection' | 'node';
+type SortCol = 'name' | 'ip' | 'mac' | 'type' | 'down' | 'up';
+type SortDir = 'asc' | 'desc';
+
+function sortDevices(devices: api.Device[], col: SortCol, dir: SortDir): api.Device[] {
+  const sorted = [...devices].sort((a, b) => {
+    let va: string | number = '';
+    let vb: string | number = '';
+    switch (col) {
+      case 'name':
+        va = (a.display_name || a.hostname || '').toLowerCase();
+        vb = (b.display_name || b.hostname || '').toLowerCase();
+        break;
+      case 'ip':
+        // Sort IPs numerically by octets
+        va = (a.ip || '').split('.').map(n => n.padStart(3, '0')).join('.');
+        vb = (b.ip || '').split('.').map(n => n.padStart(3, '0')).join('.');
+        break;
+      case 'mac':
+        va = (a.mac || '').toLowerCase();
+        vb = (b.mac || '').toLowerCase();
+        break;
+      case 'type':
+        va = a.connection_type || '';
+        vb = b.connection_type || '';
+        break;
+      case 'down':
+        va = rawBytes(a.usage?.down);
+        vb = rawBytes(b.usage?.down);
+        break;
+      case 'up':
+        va = rawBytes(a.usage?.up);
+        vb = rawBytes(b.usage?.up);
+        break;
+    }
+    if (va < vb) return -1;
+    if (va > vb) return 1;
+    return 0;
+  });
+  return dir === 'desc' ? sorted.reverse() : sorted;
+}
 
 interface DeviceListProps {
   networkId: string;
@@ -32,6 +76,22 @@ export default function DeviceList({ networkId }: DeviceListProps) {
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [groupBy, setGroupBy] = useState<GroupBy>('status');
+  const [sortCol, setSortCol] = useState<SortCol>('name');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+  const handleSort = (col: SortCol) => {
+    if (sortCol === col) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortCol(col);
+      setSortDir('asc');
+    }
+  };
+
+  const sortIndicator = (col: SortCol) => {
+    if (sortCol !== col) return ' ↕';
+    return sortDir === 'asc' ? ' ↑' : ' ↓';
+  };
 
   const handleAction = async (deviceId: string, type: 'pause' | 'block', value: boolean) => {
     setActionLoading(deviceId);
@@ -49,7 +109,6 @@ export default function DeviceList({ networkId }: DeviceListProps) {
 
   const allDevices = data?.devices ?? [];
 
-  // Filter by search
   const filtered = useMemo(() => {
     if (!search.trim()) return allDevices;
     const q = search.toLowerCase().trim();
@@ -62,22 +121,23 @@ export default function DeviceList({ networkId }: DeviceListProps) {
     });
   }, [allDevices, search]);
 
-  // Group devices
   const groups = useMemo(() => {
     const result: { label: string; devices: api.Device[] }[] = [];
 
+    const makeGroup = (label: string, devs: api.Device[]) => {
+      if (devs.length) result.push({ label, devices: sortDevices(devs, sortCol, sortDir) });
+    };
+
     if (groupBy === 'status') {
-      const connected = filtered.filter((d) => d.connected);
-      const offline = filtered.filter((d) => !d.connected);
-      if (connected.length) result.push({ label: `Connected (${connected.length})`, devices: connected });
-      if (offline.length) result.push({ label: `Offline (${offline.length})`, devices: offline });
+      makeGroup(`Connected (${filtered.filter(d => d.connected).length})`, filtered.filter(d => d.connected));
+      makeGroup(`Offline (${filtered.filter(d => !d.connected).length})`, filtered.filter(d => !d.connected));
     } else if (groupBy === 'connection') {
-      const wired = filtered.filter((d) => d.connection_type === 'wired');
-      const wireless = filtered.filter((d) => d.connection_type === 'wireless');
-      const other = filtered.filter((d) => d.connection_type !== 'wired' && d.connection_type !== 'wireless');
-      if (wired.length) result.push({ label: `🔌 Wired (${wired.length})`, devices: wired });
-      if (wireless.length) result.push({ label: `📶 Wireless (${wireless.length})`, devices: wireless });
-      if (other.length) result.push({ label: `Other (${other.length})`, devices: other });
+      const wired = filtered.filter(d => d.connection_type === 'wired');
+      const wireless = filtered.filter(d => d.connection_type === 'wireless');
+      const other = filtered.filter(d => d.connection_type !== 'wired' && d.connection_type !== 'wireless');
+      makeGroup(`🔌 Wired (${wired.length})`, wired);
+      makeGroup(`📶 Wireless (${wireless.length})`, wireless);
+      makeGroup(`Other (${other.length})`, other);
     } else if (groupBy === 'node') {
       const byNode = new Map<string, api.Device[]>();
       for (const d of filtered) {
@@ -87,12 +147,12 @@ export default function DeviceList({ networkId }: DeviceListProps) {
         byNode.get(nodeName)!.push(d);
       }
       for (const [name, devs] of byNode) {
-        result.push({ label: `📡 ${name} (${devs.length})`, devices: devs });
+        makeGroup(`📡 ${name} (${devs.length})`, devs);
       }
     }
 
     return result;
-  }, [filtered, groupBy]);
+  }, [filtered, groupBy, sortCol, sortDir]);
 
   if (loading) return <div className="card loading-card"><div className="spinner" /> Loading devices…</div>;
   if (error) return <div className="card error-card">Error: {error}</div>;
@@ -171,9 +231,9 @@ export default function DeviceList({ networkId }: DeviceListProps) {
                 <DeviceCard
                   key={d.mac || extractId(d.url)}
                   device={d}
+                  networkId={networkId}
                   actionLoading={actionLoading}
-                  onPause={() => setConfirmAction({ mac: d.mac!, type: 'pause' })}
-                  onBlock={() => setConfirmAction({ mac: d.mac!, type: 'block' })}
+                  onAction={(mac, type) => setConfirmAction({ mac, type })}
                 />
               ))}
             </div>
@@ -182,12 +242,12 @@ export default function DeviceList({ networkId }: DeviceListProps) {
               <thead>
                 <tr>
                   <th></th>
-                  <th>Name</th>
-                  <th>IP Address</th>
-                  <th>MAC Address</th>
-                  <th>Type</th>
-                  <th>Usage ↓</th>
-                  <th>Usage ↑</th>
+                  <th className="sortable-th" onClick={() => handleSort('name')}>Name{sortIndicator('name')}</th>
+                  <th className="sortable-th" onClick={() => handleSort('ip')}>IP Address{sortIndicator('ip')}</th>
+                  <th className="sortable-th" onClick={() => handleSort('mac')}>MAC Address{sortIndicator('mac')}</th>
+                  <th className="sortable-th" onClick={() => handleSort('type')}>Type{sortIndicator('type')}</th>
+                  <th className="sortable-th" onClick={() => handleSort('down')}>Usage ↓{sortIndicator('down')}</th>
+                  <th className="sortable-th" onClick={() => handleSort('up')}>Usage ↑{sortIndicator('up')}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -228,12 +288,25 @@ export default function DeviceList({ networkId }: DeviceListProps) {
   );
 }
 
-function DeviceCard({ device: d, actionLoading, onPause, onBlock }: {
+function DeviceCard({ device: d, networkId, actionLoading, onAction }: {
   device: api.Device;
+  networkId: string;
   actionLoading: string | null;
-  onPause: () => void;
-  onBlock: () => void;
+  onAction: (mac: string, type: 'pause' | 'block') => void;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
+
   return (
     <div className={`device-card ${d.connected ? 'connected' : 'offline'}`}>
       <div className="device-icon">{getDeviceIcon(d)}</div>
@@ -255,9 +328,30 @@ function DeviceCard({ device: d, actionLoading, onPause, onBlock }: {
         )}
       </div>
       {d.connected && (
-        <div className="device-actions">
-          <button className="btn-action" title="Pause internet" disabled={actionLoading === d.mac} onClick={onPause}>⏸️</button>
-          <button className="btn-action" title="Block device" disabled={actionLoading === d.mac} onClick={onBlock}>🚫</button>
+        <div className="card-menu-wrapper" ref={menuRef}>
+          <button
+            className="btn-menu"
+            onClick={() => setMenuOpen(!menuOpen)}
+            title="Actions"
+          >⋯</button>
+          {menuOpen && (
+            <div className="card-menu">
+              <button
+                className="card-menu-item"
+                disabled={actionLoading === d.mac}
+                onClick={() => { setMenuOpen(false); onAction(d.mac!, 'pause'); }}
+              >
+                ⏸️ Pause Internet
+              </button>
+              <button
+                className="card-menu-item danger"
+                disabled={actionLoading === d.mac}
+                onClick={() => { setMenuOpen(false); onAction(d.mac!, 'block'); }}
+              >
+                🚫 Block Device
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
