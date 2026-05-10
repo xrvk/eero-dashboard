@@ -264,7 +264,7 @@ export function PortForwardsSettings({ networkId }: { networkId: string }) {
                   <td>
                     <button className={`btn-action btn-delete ${confirmDelete === fid ? 'confirming' : ''}`}
                       disabled={deleting === fid} onClick={() => handleDelete(String(f.url || ''))}
-                    >{confirmDelete === fid ? '⚠️' : '🗑️'}</button>
+                    >{confirmDelete === fid ? 'Confirm?' : '×'}</button>
                   </td>
                 </tr>
               );
@@ -348,7 +348,7 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
                   <td>
                     <button className={`btn-action btn-delete ${confirmDelete === rid ? 'confirming' : ''}`}
                       onClick={() => handleDelete(String(r.url || ''))}
-                    >{confirmDelete === rid ? '⚠️' : '🗑️'}</button>
+                    >{confirmDelete === rid ? 'Confirm?' : '×'}</button>
                   </td>
                 </tr>
               );
@@ -543,7 +543,7 @@ export function BlacklistSettings({ networkId }: { networkId: string }) {
                         disabled={removing === did}
                         onClick={() => handleRemove(did)}
                       >
-                        {confirmRemove === did ? '⚠️ Confirm' : '🗑️'}
+                        {confirmRemove === did ? 'Confirm?' : '×'}
                       </button>
                     </td>
                   </tr>
