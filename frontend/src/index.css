@@ -710,3 +710,16 @@ body {
 }
 .device-signal { flex-shrink: 0; }
 .band-bar-fill.band-poor { background: var(--red); }
+
+/* ── Inline table form row ──────────────────── */
+.form-row td { padding: 6px 8px !important; }
+.form-row input, .form-row select {
+  width: 100%; padding: 6px 8px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 0.8rem; font-family: 'SF Mono', monospace; outline: none;
+}
+.form-row input:focus, .form-row select:focus { border-color: var(--accent); }
+.form-row input::placeholder { color: var(--text-dim); }
+.form-row input[type="number"] { -moz-appearance: textfield; }
+.form-row input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }

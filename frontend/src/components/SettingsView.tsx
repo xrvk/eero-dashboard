@@ -168,21 +168,31 @@ function PortForwardingSection({ networkId }: { networkId: string }) {
         </button>
       </div>
 
-      {showFwdForm && (
-        <div className="inline-form">
-          <input placeholder="Device IP" value={fwdForm.ip} onChange={e => setFwdForm({ ...fwdForm, ip: e.target.value })} />
-          <input placeholder="Ext. port" type="number" value={fwdForm.gateway_port} onChange={e => setFwdForm({ ...fwdForm, gateway_port: e.target.value })} />
-          <input placeholder="Int. port" type="number" value={fwdForm.client_port} onChange={e => setFwdForm({ ...fwdForm, client_port: e.target.value })} />
-          <select value={fwdForm.protocol} onChange={e => setFwdForm({ ...fwdForm, protocol: e.target.value })}>
-            <option value="tcp">TCP</option>
-            <option value="udp">UDP</option>
-            <option value="tcp_udp">Both</option>
-          </select>
-          <input placeholder="Description" value={fwdForm.description} onChange={e => setFwdForm({ ...fwdForm, description: e.target.value })} />
-          <button className="btn-primary btn-sm" onClick={handleCreateForward} disabled={saving || !fwdForm.ip || !fwdForm.gateway_port}>
-            {saving ? '…' : 'Create'}
-          </button>
-        </div>
+      {showFwdForm && (fwdList as Record<string, unknown>[]).length === 0 && (
+        <table className="data-table">
+          <thead>
+            <tr><th>Ext. Port</th><th>Int. Port</th><th>Protocol</th><th>Device IP</th><th>Desc</th><th></th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr className="form-row">
+              <td><input type="number" placeholder="80" value={fwdForm.gateway_port} onChange={e => setFwdForm({ ...fwdForm, gateway_port: e.target.value })} /></td>
+              <td><input type="number" placeholder="80" value={fwdForm.client_port} onChange={e => setFwdForm({ ...fwdForm, client_port: e.target.value })} /></td>
+              <td>
+                <select value={fwdForm.protocol} onChange={e => setFwdForm({ ...fwdForm, protocol: e.target.value })}>
+                  <option value="tcp">TCP</option><option value="udp">UDP</option><option value="tcp_udp">Both</option>
+                </select>
+              </td>
+              <td><input placeholder="192.168.86.x" value={fwdForm.ip} onChange={e => setFwdForm({ ...fwdForm, ip: e.target.value })} /></td>
+              <td><input placeholder="label" value={fwdForm.description} onChange={e => setFwdForm({ ...fwdForm, description: e.target.value })} /></td>
+              <td></td>
+              <td>
+                <button className="btn-primary btn-sm" onClick={handleCreateForward} disabled={saving || !fwdForm.ip || !fwdForm.gateway_port}>
+                  {saving ? '…' : 'Add'}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       )}
 
       {(fwdList as Record<string, unknown>[]).length > 0 ? (
@@ -191,6 +201,25 @@ function PortForwardingSection({ networkId }: { networkId: string }) {
             <tr><th>Ext. Port</th><th>Int. Port</th><th>Protocol</th><th>Device IP</th><th>Desc</th><th>Enabled</th><th></th></tr>
           </thead>
           <tbody>
+            {showFwdForm && (
+              <tr className="form-row">
+                <td><input type="number" placeholder="80" value={fwdForm.gateway_port} onChange={e => setFwdForm({ ...fwdForm, gateway_port: e.target.value })} /></td>
+                <td><input type="number" placeholder="80" value={fwdForm.client_port} onChange={e => setFwdForm({ ...fwdForm, client_port: e.target.value })} /></td>
+                <td>
+                  <select value={fwdForm.protocol} onChange={e => setFwdForm({ ...fwdForm, protocol: e.target.value })}>
+                    <option value="tcp">TCP</option><option value="udp">UDP</option><option value="tcp_udp">Both</option>
+                  </select>
+                </td>
+                <td><input placeholder="192.168.86.x" value={fwdForm.ip} onChange={e => setFwdForm({ ...fwdForm, ip: e.target.value })} /></td>
+                <td><input placeholder="label" value={fwdForm.description} onChange={e => setFwdForm({ ...fwdForm, description: e.target.value })} /></td>
+                <td></td>
+                <td>
+                  <button className="btn-primary btn-sm" onClick={handleCreateForward} disabled={saving || !fwdForm.ip || !fwdForm.gateway_port}>
+                    {saving ? '…' : 'Add'}
+                  </button>
+                </td>
+              </tr>
+            )}
             {(fwdList as Record<string, unknown>[]).map((f, i) => {
               const fid = String(f.url || '').replace(/\/$/, '').split('/').pop() || String(i);
               return (
@@ -221,15 +250,24 @@ function PortForwardingSection({ networkId }: { networkId: string }) {
         </button>
       </div>
 
-      {showResForm && (
-        <div className="inline-form">
-          <input placeholder="IP address" value={resForm.ip} onChange={e => setResForm({ ...resForm, ip: e.target.value })} />
-          <input placeholder="MAC address" value={resForm.mac} onChange={e => setResForm({ ...resForm, mac: e.target.value })} />
-          <input placeholder="Description" value={resForm.description} onChange={e => setResForm({ ...resForm, description: e.target.value })} />
-          <button className="btn-primary btn-sm" onClick={handleCreateReservation} disabled={saving || !resForm.ip || !resForm.mac}>
-            {saving ? '…' : 'Create'}
-          </button>
-        </div>
+      {showResForm && (resList as Record<string, unknown>[]).length === 0 && (
+        <table className="data-table">
+          <thead>
+            <tr><th>IP</th><th>MAC</th><th>Name</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr className="form-row">
+              <td><input placeholder="192.168.86.x" value={resForm.ip} onChange={e => setResForm({ ...resForm, ip: e.target.value })} /></td>
+              <td><input placeholder="aa:bb:cc:dd:ee:ff" value={resForm.mac} onChange={e => setResForm({ ...resForm, mac: e.target.value })} /></td>
+              <td><input placeholder="label" value={resForm.description} onChange={e => setResForm({ ...resForm, description: e.target.value })} /></td>
+              <td>
+                <button className="btn-primary btn-sm" onClick={handleCreateReservation} disabled={saving || !resForm.ip || !resForm.mac}>
+                  {saving ? '…' : 'Add'}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       )}
 
       {(resList as Record<string, unknown>[]).length > 0 ? (
@@ -238,6 +276,18 @@ function PortForwardingSection({ networkId }: { networkId: string }) {
             <tr><th>IP</th><th>MAC</th><th>Name</th><th></th></tr>
           </thead>
           <tbody>
+            {showResForm && (
+              <tr className="form-row">
+                <td><input placeholder="192.168.86.x" value={resForm.ip} onChange={e => setResForm({ ...resForm, ip: e.target.value })} /></td>
+                <td><input placeholder="aa:bb:cc:dd:ee:ff" value={resForm.mac} onChange={e => setResForm({ ...resForm, mac: e.target.value })} /></td>
+                <td><input placeholder="label" value={resForm.description} onChange={e => setResForm({ ...resForm, description: e.target.value })} /></td>
+                <td>
+                  <button className="btn-primary btn-sm" onClick={handleCreateReservation} disabled={saving || !resForm.ip || !resForm.mac}>
+                    {saving ? '…' : 'Add'}
+                  </button>
+                </td>
+              </tr>
+            )}
             {(resList as Record<string, unknown>[]).map((r, i) => (
               <tr key={i}>
                 <td>{String(r.ip ?? '—')}</td>
