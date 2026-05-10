@@ -936,43 +936,6 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           )}
         </div>
       </div>
-
-      {/* Advanced — raw data collapsed */}
-      <details className="general-advanced">
-        <summary className="general-advanced-summary">Advanced Details</summary>
-        <div className="general-advanced-body">
-          {diagResult && (
-            <div className="general-advanced-block">
-              <h4>Last Diagnostics Result</h4>
-              <pre className="json-preview">{JSON.stringify(diagResult, null, 2)}</pre>
-            </div>
-          )}
-          {Object.keys(thread).length > 0 && (
-            <div className="general-advanced-block">
-              <h4>Thread</h4>
-              <pre className="json-preview">{JSON.stringify(thread, null, 2)}</pre>
-            </div>
-          )}
-          {Object.keys(routing).length > 0 && (
-            <div className="general-advanced-block">
-              <h4>Routing</h4>
-              <pre className="json-preview">{JSON.stringify(routing, null, 2)}</pre>
-            </div>
-          )}
-          {Object.keys(updates).length > 0 && (
-            <div className="general-advanced-block">
-              <h4>Firmware Details</h4>
-              <pre className="json-preview">{JSON.stringify(updates, null, 2)}</pre>
-            </div>
-          )}
-          {Object.keys(settings).length > 0 && (
-            <div className="general-advanced-block">
-              <h4>All Network Settings</h4>
-              <pre className="json-preview">{JSON.stringify(settings, null, 2)}</pre>
-            </div>
-          )}
-        </div>
-      </details>
     </div>
   );
 }
