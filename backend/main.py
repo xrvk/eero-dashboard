@@ -593,6 +593,427 @@ async def reboot_eero(network_id: str, eero_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ── Wi-Fi Password ──────────────────────────────────────────────────────────
+
+
+@app.get("/api/networks/{network_id}/password")
+async def get_password(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_password(network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Network Name ─────────────────────────────────────────────────────────────
+
+
+class NetworkNameRequest(BaseModel):
+    name: str
+
+
+@app.post("/api/networks/{network_id}/name")
+async def set_network_name(network_id: str, req: NetworkNameRequest):
+    client = await get_client()
+    try:
+        resp = await client.set_network_name(req.name, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Guest Network ────────────────────────────────────────────────────────────
+
+
+class GuestNetworkRequest(BaseModel):
+    enabled: bool
+    name: str | None = None
+    password: str | None = None
+
+
+@app.post("/api/networks/{network_id}/guest")
+async def set_guest_network(network_id: str, req: GuestNetworkRequest):
+    client = await get_client()
+    try:
+        resp = await client.set_guest_network(
+            req.enabled, name=req.name, password=req.password, network_id=network_id
+        )
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Device Detail & Actions ──────────────────────────────────────────────────
+
+
+@app.get("/api/networks/{network_id}/devices/{device_id}")
+async def get_device(network_id: str, device_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_device(device_id, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class DeviceNicknameRequest(BaseModel):
+    nickname: str
+
+
+@app.post("/api/networks/{network_id}/devices/{device_id}/nickname")
+async def set_device_nickname(network_id: str, device_id: str, req: DeviceNicknameRequest):
+    client = await get_client()
+    try:
+        resp = await client.set_device_nickname(device_id, req.nickname, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class DevicePriorityRequest(BaseModel):
+    prioritized: bool
+    duration_minutes: int | None = None
+
+
+@app.get("/api/networks/{network_id}/devices/{device_id}/priority")
+async def get_device_priority(network_id: str, device_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_device_priority(device_id, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/networks/{network_id}/devices/{device_id}/priority")
+async def set_device_priority(network_id: str, device_id: str, req: DevicePriorityRequest):
+    client = await get_client()
+    try:
+        resp = await client.set_device_priority(
+            device_id, req.prioritized, duration_minutes=req.duration_minutes, network_id=network_id
+        )
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Node LED & Nightlight ────────────────────────────────────────────────────
+
+
+@app.get("/api/networks/{network_id}/eeros/{eero_id}/led")
+async def get_led_status(network_id: str, eero_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_led_status(eero_id, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class LedRequest(BaseModel):
+    enabled: bool
+
+
+class LedBrightnessRequest(BaseModel):
+    brightness: int
+
+
+@app.post("/api/networks/{network_id}/eeros/{eero_id}/led")
+async def set_led(network_id: str, eero_id: str, req: LedRequest):
+    client = await get_client()
+    try:
+        resp = await client.set_led(eero_id, req.enabled, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/networks/{network_id}/eeros/{eero_id}/led/brightness")
+async def set_led_brightness(network_id: str, eero_id: str, req: LedBrightnessRequest):
+    client = await get_client()
+    try:
+        resp = await client.set_led_brightness(eero_id, req.brightness, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/networks/{network_id}/eeros/{eero_id}/nightlight")
+async def get_nightlight(network_id: str, eero_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_nightlight(eero_id, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class NightlightRequest(BaseModel):
+    enabled: bool | None = None
+    brightness: int | None = None
+    schedule_enabled: bool | None = None
+    schedule_on: str | None = None
+    schedule_off: str | None = None
+    ambient_light_enabled: bool | None = None
+
+
+@app.post("/api/networks/{network_id}/eeros/{eero_id}/nightlight")
+async def set_nightlight(network_id: str, eero_id: str, req: NightlightRequest):
+    client = await get_client()
+    try:
+        kwargs: dict = {}
+        for field in ["enabled", "brightness", "schedule_enabled", "schedule_on", "schedule_off", "ambient_light_enabled"]:
+            val = getattr(req, field)
+            if val is not None:
+                kwargs[field] = val
+        resp = await client.set_nightlight(eero_id, network_id=network_id, **kwargs)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── SQM / QoS ────────────────────────────────────────────────────────────────
+
+
+@app.get("/api/networks/{network_id}/sqm")
+async def get_sqm(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_sqm_settings(network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class SqmEnabledRequest(BaseModel):
+    enabled: bool
+
+
+class SqmConfigureRequest(BaseModel):
+    enabled: bool
+    upload_mbps: int | None = None
+    download_mbps: int | None = None
+
+
+@app.post("/api/networks/{network_id}/sqm")
+async def set_sqm_enabled(network_id: str, req: SqmEnabledRequest):
+    client = await get_client()
+    try:
+        resp = await client.set_sqm_enabled(req.enabled, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/networks/{network_id}/sqm/configure")
+async def configure_sqm(network_id: str, req: SqmConfigureRequest):
+    client = await get_client()
+    try:
+        resp = await client.configure_sqm(
+            req.enabled, upload_mbps=req.upload_mbps, download_mbps=req.download_mbps, network_id=network_id
+        )
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/networks/{network_id}/sqm/auto")
+async def set_sqm_auto(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.set_sqm_auto(network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Profile Content Filtering ────────────────────────────────────────────────
+
+
+class ContentFilterRequest(BaseModel):
+    filters: dict
+
+
+@app.post("/api/networks/{network_id}/profiles/{profile_id}/content-filter")
+async def update_content_filter(network_id: str, profile_id: str, req: ContentFilterRequest):
+    client = await get_client()
+    try:
+        resp = await client._api.profiles.update_profile_content_filter(network_id, profile_id, req.filters)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Profile Domain Block List ────────────────────────────────────────────────
+
+
+class BlockListRequest(BaseModel):
+    domains: list[str]
+    block: bool = True
+
+
+@app.post("/api/networks/{network_id}/profiles/{profile_id}/block-list")
+async def update_block_list(network_id: str, profile_id: str, req: BlockListRequest):
+    client = await get_client()
+    try:
+        resp = await client._api.profiles.update_profile_block_list(network_id, profile_id, req.domains, block=req.block)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Profile Schedule ─────────────────────────────────────────────────────────
+
+
+class ScheduleRequest(BaseModel):
+    time_blocks: list[dict]
+
+
+class WeekdayBedtimeRequest(BaseModel):
+    start_time: str
+    end_time: str
+
+
+@app.post("/api/networks/{network_id}/profiles/{profile_id}/schedule/set")
+async def set_profile_schedule(network_id: str, profile_id: str, req: ScheduleRequest):
+    client = await get_client()
+    try:
+        resp = await client.set_profile_schedule(profile_id, req.time_blocks, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/networks/{network_id}/profiles/{profile_id}/schedule/weekday-bedtime")
+async def set_weekday_bedtime(network_id: str, profile_id: str, req: WeekdayBedtimeRequest):
+    client = await get_client()
+    try:
+        resp = await client._api.schedule.set_weekday_bedtime(
+            network_id, profile_id, req.start_time, req.end_time
+        )
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/networks/{network_id}/profiles/{profile_id}/schedule/weekend-bedtime")
+async def set_weekend_bedtime(network_id: str, profile_id: str, req: WeekdayBedtimeRequest):
+    client = await get_client()
+    try:
+        resp = await client._api.schedule.set_weekend_bedtime(
+            network_id, profile_id, req.start_time, req.end_time
+        )
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/networks/{network_id}/profiles/{profile_id}/schedule")
+async def clear_profile_schedule(network_id: str, profile_id: str):
+    client = await get_client()
+    try:
+        resp = await client.clear_profile_schedule(profile_id, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Firmware Updates ─────────────────────────────────────────────────────────
+
+
+@app.get("/api/networks/{network_id}/updates")
+async def get_updates(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_updates(network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Network Reboot ───────────────────────────────────────────────────────────
+
+
+@app.post("/api/networks/{network_id}/reboot")
+async def reboot_network(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.reboot_network(network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Thread / Smart Home ─────────────────────────────────────────────────────
+
+
+@app.get("/api/networks/{network_id}/thread")
+async def get_thread(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_thread(network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/networks/{network_id}/routing")
+async def get_routing(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_routing(network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Device Blacklist ─────────────────────────────────────────────────────────
+
+
+@app.get("/api/networks/{network_id}/blacklist")
+async def get_blacklist(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_blacklist(network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/networks/{network_id}/blacklist/{device_id}")
+async def add_to_blacklist(network_id: str, device_id: str):
+    client = await get_client()
+    try:
+        resp = await client._api.blacklist.add_to_blacklist(network_id, device_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/networks/{network_id}/blacklist/{device_id}")
+async def remove_from_blacklist(network_id: str, device_id: str):
+    client = await get_client()
+    try:
+        resp = await client._api.blacklist.remove_from_blacklist(network_id, device_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── General Network Settings ────────────────────────────────────────────────
+
+
+@app.get("/api/networks/{network_id}/settings")
+async def get_settings(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_settings(network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     import uvicorn
 

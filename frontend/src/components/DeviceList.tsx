@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
+import DeviceDrawer from './DeviceDrawer';
 
 function extractId(url?: string) {
   if (!url) return '';
@@ -241,6 +242,14 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
 
   return (
     <div className="device-list">
+      {selectedDevice && (
+        <DeviceDrawer
+          networkId={networkId}
+          device={selectedDevice}
+          onClose={() => setSelectedDevice(null)}
+          onRefresh={() => { refetch(); setSelectedDevice(null); }}
+        />
+      )}
       {confirmAction && (
         <div className="confirm-overlay" onClick={() => setConfirmAction(null)}>
           <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
@@ -273,64 +282,6 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
                 {actionLoading ? 'Saving…' : renameName.trim() ? 'Save' : 'Reset to default'}
               </button>
               <button className="btn-cancel" onClick={() => setRenameTarget(null)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Device Detail Panel */}
-      {selectedDevice && (
-        <div className="confirm-overlay" onClick={() => setSelectedDevice(null)}>
-          <div className="device-detail-panel" onClick={(e) => e.stopPropagation()}>
-            <DetailHeader
-              device={selectedDevice}
-              networkId={networkId}
-              onClose={() => setSelectedDevice(null)}
-              onRenamed={refetch}
-            />
-
-            <div className="detail-grid">
-              <DetailRow label="MAC Address" value={selectedDevice.mac} mono />
-              <DetailRow label="IP Address" value={selectedDevice.ip} mono
-                action={onNavigate ? { label: 'Reserve →', onClick: () => {
-                  if (selectedDevice.ip) navigator.clipboard.writeText(selectedDevice.ip);
-                  setSelectedDevice(null);
-                  onNavigate('settings-reservations');
-                } } : undefined}
-              />
-              <DetailRow label="Manufacturer" value={(selectedDevice as Record<string, unknown>).manufacturer as string} />
-              <DetailRow label="Connection" value={selectedDevice.wireless ? 'Wireless' : 'Wired'} />
-              <DetailRow label="Status" value={selectedDevice.connected ? '● Online' : '○ Offline'} className={selectedDevice.connected ? 'status-connected' : ''} />
-              {selectedDevice.wireless && (() => {
-                const conn = getConn(selectedDevice);
-                return conn ? (
-                  <>
-                    <DetailRow label="Band" value={freqToBand(conn.frequency)} />
-                    <DetailRow label="Signal" value={conn.signal} />
-                    <DetailRow label="Link Speed" value={formatRate(conn.rx_rate_info?.rate_bps)} />
-                    {conn.rx_rate_info?.channel_width && (
-                      <DetailRow label="Channel Width" value={conn.rx_rate_info.channel_width.replace('WIDTH_', '')} />
-                    )}
-                    {conn.rx_rate_info?.phy_type && (
-                      <DetailRow label="PHY" value={conn.rx_rate_info.phy_type} />
-                    )}
-                  </>
-                ) : null;
-              })()}
-              {(() => {
-                const src = (selectedDevice as Record<string, unknown>).source as Record<string, unknown> | undefined;
-                return src?.display_name ? <DetailRow label="Connected to" value={src.display_name as string} /> : null;
-              })()}
-              <DetailRow label="Device Type" value={(selectedDevice as Record<string, unknown>).device_type as string} />
-              {(selectedDevice as Record<string, unknown>).last_active && (
-                <DetailRow label="Last Active" value={new Date((selectedDevice as Record<string, unknown>).last_active as string).toLocaleString()} />
-              )}
-              {(selectedDevice as Record<string, unknown>).first_active && (
-                <DetailRow label="Session Start" value={new Date((selectedDevice as Record<string, unknown>).first_active as string).toLocaleString()} />
-              )}
-              {(selectedDevice as Record<string, unknown>).auth && (
-                <DetailRow label="Auth" value={(selectedDevice as Record<string, unknown>).auth as string} />
-              )}
             </div>
           </div>
         </div>
@@ -651,85 +602,4 @@ function getDeviceIcon(d: api.Device) {
   if (type.includes('printer')) return '🖨️';
   if (name.includes('switch') || name.includes('playstation') || name.includes('xbox') || name.includes('nintendo')) return '🎮';
   return '🌐';
-}
-
-function DetailHeader({ device, networkId, onClose, onRenamed }: {
-  device: api.Device;
-  networkId: string;
-  onClose: () => void;
-  onRenamed: () => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(device.display_name || device.hostname || '');
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await api.renameDevice(networkId, device.mac!, name.trim());
-      onRenamed();
-      setEditing(false);
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Rename failed');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="detail-header">
-      <div className="detail-title">
-        <span className="detail-icon">{getDeviceIcon(device)}</span>
-        <div>
-          {editing ? (
-            <div className="detail-name-edit">
-              <input
-                className="detail-name-input"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false); }}
-                autoFocus
-                placeholder="Leave empty to reset"
-              />
-              <button className="btn-primary btn-sm" onClick={handleSave} disabled={saving}>
-                {saving ? '…' : '✓'}
-              </button>
-              <button className="btn-cancel btn-sm" onClick={() => setEditing(false)}>✕</button>
-            </div>
-          ) : (
-            <h2
-              className="detail-name-editable"
-              onDoubleClick={() => setEditing(true)}
-              title="Double-click to rename"
-            >
-              {device.display_name || device.hostname || 'Unknown'}
-              <span className="detail-edit-hint">✏️</span>
-            </h2>
-          )}
-          {device.hostname && (device.display_name || device.nickname) && device.hostname !== (device.display_name || device.nickname) && (
-            <span className="detail-hostname">{device.hostname}</span>
-          )}
-        </div>
-      </div>
-      <button className="btn-menu" onClick={onClose}>✕</button>
-    </div>
-  );
-}
-
-function DetailRow({ label, value, mono, className, action }: {
-  label: string; value?: string | null; mono?: boolean; className?: string;
-  action?: { label: string; onClick: () => void };
-}) {
-  if (!value) return null;
-  return (
-    <div className="detail-row">
-      <span className="detail-label">{label}</span>
-      <span className="detail-value-group">
-        <span className={`detail-value ${mono ? 'mono' : ''} ${className || ''}`}>{value}</span>
-        {action && (
-          <button className="detail-action-link" onClick={action.onClick}>{action.label}</button>
-        )}
-      </span>
-    </div>
-  );
 }

@@ -389,12 +389,23 @@ export function DiagnosticsSettings({ networkId }: { networkId: string }) {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState('');
+  const [rebooting, setRebooting] = useState(false);
+  const [confirmReboot, setConfirmReboot] = useState(false);
 
   const handleRun = async () => {
     setRunning(true); setError('');
     try { setResult(await api.runDiagnostics(networkId)); }
     catch (e) { setError(e instanceof Error ? e.message : 'Failed'); }
     finally { setRunning(false); }
+  };
+
+  const handleRebootNetwork = async () => {
+    setRebooting(true);
+    try {
+      await api.rebootNetwork(networkId);
+      setConfirmReboot(false);
+    } catch (e) { alert(e instanceof Error ? e.message : 'Reboot failed'); }
+    finally { setRebooting(false); }
   };
 
   return (
@@ -407,6 +418,412 @@ export function DiagnosticsSettings({ networkId }: { networkId: string }) {
       </button>
       {result && <pre className="json-preview" style={{ marginTop: 16 }}>{JSON.stringify(result, null, 2)}</pre>}
       {error && <div className="error-banner" style={{ marginTop: 16 }}>{error}</div>}
+
+      <div className="settings-subsection" style={{ marginTop: 32 }}>
+        <h3>Network Reboot</h3>
+        <p className="toggle-desc" style={{ marginBottom: 12 }}>
+          Reboot all eero nodes in the network. The network will be offline for ~2 minutes.
+        </p>
+        {confirmReboot ? (
+          <div className="confirm-inline">
+            <span>⚠️ Are you sure? This will take all nodes offline.</span>
+            <button className="btn-confirm btn-danger" onClick={handleRebootNetwork} disabled={rebooting}>
+              {rebooting ? 'Rebooting…' : 'Confirm Reboot'}
+            </button>
+            <button className="btn-cancel" onClick={() => setConfirmReboot(false)}>Cancel</button>
+          </div>
+        ) : (
+          <button className="btn-danger" onClick={() => setConfirmReboot(true)}>
+            🔄 Reboot Entire Network
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── SQM / QoS ───────────────────────────────────────
+
+export function SqmSettings({ networkId }: { networkId: string }) {
+  const { data, loading, error, refetch } = useFetch(
+    () => api.getSqm(networkId), [networkId]
+  );
+  const [saving, setSaving] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [uploadMbps, setUploadMbps] = useState('');
+  const [downloadMbps, setDownloadMbps] = useState('');
+
+  if (loading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
+  if (error) return <div className="card error-card">Error: {error}</div>;
+
+  const sqm = data as Record<string, unknown> || {};
+  const enabled = !!sqm.enabled;
+  const currentUpload = sqm.upload_bandwidth_mbps as number | undefined;
+  const currentDownload = sqm.download_bandwidth_mbps as number | undefined;
+  const mode = (sqm.mode as string) || 'auto';
+
+  const handleToggle = async () => {
+    setSaving(true);
+    try {
+      await api.setSqmEnabled(networkId, !enabled);
+      await refetch();
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  const handleAuto = async () => {
+    setSaving(true);
+    try {
+      await api.setSqmAuto(networkId);
+      await refetch();
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  const startManual = () => {
+    setUploadMbps(currentUpload ? String(currentUpload) : '');
+    setDownloadMbps(currentDownload ? String(currentDownload) : '');
+    setEditMode(true);
+  };
+
+  const handleSaveManual = async () => {
+    setSaving(true);
+    try {
+      await api.configureSqm(
+        networkId,
+        true,
+        uploadMbps ? Number(uploadMbps) : undefined,
+        downloadMbps ? Number(downloadMbps) : undefined
+      );
+      await refetch();
+      setEditMode(false);
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div>
+      <div className="toggle-row" style={{ marginBottom: 20 }}>
+        <div className="toggle-info">
+          <span className="toggle-name">Smart Queue Management</span>
+          <span className="toggle-desc">Reduce bufferbloat and latency for gaming, video calls, and streaming</span>
+        </div>
+        <label className="toggle-switch">
+          <input type="checkbox" checked={enabled} disabled={saving} onChange={handleToggle} />
+          <span className="toggle-slider" />
+        </label>
+      </div>
+
+      {enabled && (
+        <div className="sqm-config">
+          <div className="dns-grid" style={{ marginBottom: 16 }}>
+            <div className="dns-item">
+              <span className="dns-label">Mode</span>
+              <span className="dns-value">{mode}</span>
+            </div>
+            {currentUpload != null && (
+              <div className="dns-item">
+                <span className="dns-label">Upload Limit</span>
+                <span className="dns-value">{currentUpload} Mbps</span>
+              </div>
+            )}
+            {currentDownload != null && (
+              <div className="dns-item">
+                <span className="dns-label">Download Limit</span>
+                <span className="dns-value">{currentDownload} Mbps</span>
+              </div>
+            )}
+          </div>
+
+          {editMode ? (
+            <div className="sqm-edit-form">
+              <div className="form-field">
+                <label>Upload (Mbps)</label>
+                <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)}
+                  placeholder="e.g. 50" min="1" />
+              </div>
+              <div className="form-field">
+                <label>Download (Mbps)</label>
+                <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)}
+                  placeholder="e.g. 500" min="1" />
+              </div>
+              <div className="dns-edit-actions">
+                <button className="btn-primary" onClick={handleSaveManual} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+                <button className="btn-cancel" onClick={() => setEditMode(false)}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <div className="sqm-mode-buttons">
+              <button className="btn-primary btn-sm" onClick={handleAuto} disabled={saving}>
+                Auto Optimize
+              </button>
+              <button className="btn-text" onClick={startManual}>
+                ✏️ Set Manual Limits
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Firmware Updates ────────────────────────────────
+
+export function UpdatesSettings({ networkId }: { networkId: string }) {
+  const { data, loading, error } = useFetch(
+    () => api.getUpdates(networkId), [networkId]
+  );
+
+  if (loading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
+  if (error) return <div className="card error-card">Error: {error}</div>;
+
+  const updates = data as Record<string, unknown> || {};
+
+  return (
+    <div>
+      <div className="dns-grid">
+        {updates.current_version && (
+          <div className="dns-item">
+            <span className="dns-label">Current Version</span>
+            <span className="dns-value mono">{String(updates.current_version)}</span>
+          </div>
+        )}
+        {updates.target_firmware && (
+          <div className="dns-item">
+            <span className="dns-label">Target Firmware</span>
+            <span className="dns-value mono">{String(updates.target_firmware)}</span>
+          </div>
+        )}
+        {updates.update_required != null && (
+          <div className="dns-item">
+            <span className="dns-label">Update Status</span>
+            <span className={`dns-value ${updates.update_required ? 'text-yellow' : 'text-green'}`}>
+              {updates.update_required ? '⚠️ Update Available' : '✅ Up to Date'}
+            </span>
+          </div>
+        )}
+        {updates.is_update_in_progress != null && updates.is_update_in_progress && (
+          <div className="dns-item">
+            <span className="dns-label">Progress</span>
+            <span className="dns-value text-yellow">🔄 Update in progress…</span>
+          </div>
+        )}
+      </div>
+      {Object.keys(updates).length === 0 && (
+        <p className="empty-text">No update information available</p>
+      )}
+      {/* Show raw data for any extra fields */}
+      {Object.keys(updates).filter(k => !['current_version','target_firmware','update_required','is_update_in_progress'].includes(k)).length > 0 && (
+        <details style={{ marginTop: 16 }}>
+          <summary className="btn-text">Show all details</summary>
+          <pre className="json-preview" style={{ marginTop: 8 }}>{JSON.stringify(updates, null, 2)}</pre>
+        </details>
+      )}
+    </div>
+  );
+}
+
+// ── Thread / Smart Home ────────────────────────────
+
+export function ThreadSettings({ networkId }: { networkId: string }) {
+  const { data: threadData, loading: threadLoading, error: threadError } = useFetch(
+    () => api.getThread(networkId), [networkId]
+  );
+  const { data: routingData, loading: routingLoading } = useFetch(
+    () => api.getRouting(networkId), [networkId]
+  );
+
+  if (threadLoading || routingLoading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
+  if (threadError) return <div className="card error-card">Error: {threadError}</div>;
+
+  const thread = threadData as Record<string, unknown> || {};
+  const routing = routingData as Record<string, unknown> || {};
+
+  return (
+    <div>
+      <div className="settings-subsection">
+        <h3>Thread Border Router</h3>
+        {Object.keys(thread).length > 0 ? (
+          <pre className="json-preview">{JSON.stringify(thread, null, 2)}</pre>
+        ) : (
+          <p className="empty-text">No Thread data available. Thread may not be enabled on this network.</p>
+        )}
+      </div>
+
+      <div className="settings-subsection" style={{ marginTop: 20 }}>
+        <h3>Routing</h3>
+        {Object.keys(routing).length > 0 ? (
+          <pre className="json-preview">{JSON.stringify(routing, null, 2)}</pre>
+        ) : (
+          <p className="empty-text">No routing data available</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Device Blacklist ────────────────────────────────
+
+export function BlacklistSettings({ networkId }: { networkId: string }) {
+  const { data, loading, error, refetch } = useFetch(
+    () => api.getBlacklist(networkId), [networkId]
+  );
+  const [removing, setRemoving] = useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+
+  const handleRemove = async (deviceId: string) => {
+    if (confirmRemove !== deviceId) { setConfirmRemove(deviceId); return; }
+    setRemoving(deviceId);
+    try {
+      await api.removeFromBlacklist(networkId, deviceId);
+      await refetch();
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setRemoving(null); setConfirmRemove(null); }
+  };
+
+  if (loading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
+  if (error) return <div className="card error-card">Error: {error}</div>;
+
+  const blacklist = Array.isArray(data) ? data :
+    (data as Record<string, unknown>)?.blacklist ? ((data as Record<string, unknown>).blacklist as unknown[]) : [];
+
+  return (
+    <div>
+      <p className="toggle-desc" style={{ marginBottom: 16 }}>
+        Permanently blocked devices. Unlike temporary blocks, blacklisted devices cannot reconnect until removed.
+      </p>
+
+      {(blacklist as Record<string, unknown>[]).length > 0 ? (
+        <table className="data-table">
+          <thead>
+            <tr><th>Device</th><th>MAC</th><th></th></tr>
+          </thead>
+          <tbody>
+            {(blacklist as Record<string, unknown>[]).map((d, i) => {
+              const did = String(d.mac || d.url || i);
+              return (
+                <tr key={i}>
+                  <td>{String(d.display_name || d.hostname || d.nickname || 'Unknown')}</td>
+                  <td className="td-mono">{String(d.mac || '—')}</td>
+                  <td>
+                    <button
+                      className={`btn-action btn-delete ${confirmRemove === did ? 'confirming' : ''}`}
+                      disabled={removing === did}
+                      onClick={() => handleRemove(did)}
+                    >
+                      {confirmRemove === did ? '⚠️ Confirm' : '🗑️'}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      ) : (
+        <div className="empty-state">
+          <p className="empty-icon">🚫</p>
+          <p className="empty-text">No blacklisted devices</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── General Settings ────────────────────────────────
+
+export function GeneralSettings({ networkId }: { networkId: string }) {
+  const { data: settingsData, loading: sLoading, error: sError } = useFetch(
+    () => api.getSettings(networkId), [networkId]
+  );
+  const { data: passwordData, loading: pLoading } = useFetch(
+    () => api.getPassword(networkId), [networkId]
+  );
+  const [renaming, setRenaming] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  if (sLoading || pLoading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
+  if (sError) return <div className="card error-card">Error: {sError}</div>;
+
+  const settings = settingsData as Record<string, unknown> || {};
+  const pw = passwordData as Record<string, unknown> || {};
+  const password = String(pw.password || pw.key || '');
+  const networkName = String(settings.name || settings.ssid || '');
+
+  const handleRename = async () => {
+    if (!newName.trim()) return;
+    setSaving(true);
+    try {
+      await api.setNetworkName(networkId, newName.trim());
+      setRenaming(false);
+      window.location.reload();
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(password);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* ignore */ }
+  };
+
+  return (
+    <div>
+      {/* Network Name */}
+      <div className="settings-subsection">
+        <div className="section-header-inline">
+          <h3>Network Name (SSID)</h3>
+          {!renaming && <button className="btn-text" onClick={() => { setNewName(networkName); setRenaming(true); }}>✏️ Rename</button>}
+        </div>
+        {renaming ? (
+          <div className="drawer-inline-edit" style={{ marginTop: 8 }}>
+            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setRenaming(false); }}
+              autoFocus />
+            <button className="btn-primary btn-sm" onClick={handleRename} disabled={saving}>
+              {saving ? '…' : 'Save'}
+            </button>
+            <button className="btn-cancel btn-sm" onClick={() => setRenaming(false)}>Cancel</button>
+          </div>
+        ) : (
+          <span className="dns-value" style={{ fontSize: '1.1em' }}>{networkName || '—'}</span>
+        )}
+      </div>
+
+      {/* Wi-Fi Password */}
+      <div className="settings-subsection" style={{ marginTop: 20 }}>
+        <h3>Wi-Fi Password</h3>
+        <div className="password-display">
+          <span className="password-value mono" style={{ fontSize: '1.1em' }}>
+            {showPassword ? password : '••••••••••••'}
+          </span>
+          <button className="btn-icon-sm" onClick={() => setShowPassword(!showPassword)} title={showPassword ? 'Hide' : 'Reveal'}>
+            {showPassword ? '🙈' : '👁️'}
+          </button>
+          {password && (
+            <button className="btn-icon-sm" onClick={handleCopy} title="Copy">
+              {copied ? '✅' : '📋'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* All settings raw */}
+      {Object.keys(settings).length > 0 && (
+        <div className="settings-subsection" style={{ marginTop: 20 }}>
+          <details>
+            <summary className="btn-text">Show all network settings</summary>
+            <pre className="json-preview" style={{ marginTop: 8 }}>{JSON.stringify(settings, null, 2)}</pre>
+          </details>
+        </div>
+      )}
     </div>
   );
 }

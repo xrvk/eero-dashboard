@@ -234,3 +234,155 @@ export const deleteReservation = (networkId: string, reservationId: string) =>
 // Reboot
 export const rebootEero = (networkId: string, eeroId: string) =>
   request(`/networks/${networkId}/eeros/${eeroId}/reboot`, { method: 'POST' });
+
+// Wi-Fi Password
+export const getPassword = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/password`);
+
+// Network Name
+export const setNetworkName = (networkId: string, name: string) =>
+  request(`/networks/${networkId}/name`, {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  });
+
+// Guest Network
+export const setGuestNetwork = (networkId: string, enabled: boolean, name?: string, password?: string) =>
+  request(`/networks/${networkId}/guest`, {
+    method: 'POST',
+    body: JSON.stringify({ enabled, name, password }),
+  });
+
+// Device Detail
+export const getDevice = (networkId: string, deviceId: string) =>
+  request<Device>(`/networks/${networkId}/devices/${deviceId}`);
+
+// Device Nickname
+export const setDeviceNickname = (networkId: string, deviceId: string, nickname: string) =>
+  request(`/networks/${networkId}/devices/${deviceId}/nickname`, {
+    method: 'POST',
+    body: JSON.stringify({ nickname }),
+  });
+
+// Device Priority
+export const getDevicePriority = (networkId: string, deviceId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/devices/${deviceId}/priority`);
+
+export const setDevicePriority = (networkId: string, deviceId: string, prioritized: boolean, durationMinutes?: number) =>
+  request(`/networks/${networkId}/devices/${deviceId}/priority`, {
+    method: 'POST',
+    body: JSON.stringify({ prioritized, duration_minutes: durationMinutes }),
+  });
+
+// Node LED
+export const getLedStatus = (networkId: string, eeroId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/eeros/${eeroId}/led`);
+
+export const setLed = (networkId: string, eeroId: string, enabled: boolean) =>
+  request(`/networks/${networkId}/eeros/${eeroId}/led`, {
+    method: 'POST',
+    body: JSON.stringify({ enabled }),
+  });
+
+export const setLedBrightness = (networkId: string, eeroId: string, brightness: number) =>
+  request(`/networks/${networkId}/eeros/${eeroId}/led/brightness`, {
+    method: 'POST',
+    body: JSON.stringify({ brightness }),
+  });
+
+// Nightlight
+export const getNightlight = (networkId: string, eeroId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/eeros/${eeroId}/nightlight`);
+
+export const setNightlight = (networkId: string, eeroId: string, settings: {
+  enabled?: boolean; brightness?: number; schedule_enabled?: boolean;
+  schedule_on?: string; schedule_off?: string; ambient_light_enabled?: boolean;
+}) =>
+  request(`/networks/${networkId}/eeros/${eeroId}/nightlight`, {
+    method: 'POST',
+    body: JSON.stringify(settings),
+  });
+
+// SQM / QoS
+export const getSqm = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/sqm`);
+
+export const setSqmEnabled = (networkId: string, enabled: boolean) =>
+  request(`/networks/${networkId}/sqm`, {
+    method: 'POST',
+    body: JSON.stringify({ enabled }),
+  });
+
+export const configureSqm = (networkId: string, enabled: boolean, uploadMbps?: number, downloadMbps?: number) =>
+  request(`/networks/${networkId}/sqm/configure`, {
+    method: 'POST',
+    body: JSON.stringify({ enabled, upload_mbps: uploadMbps, download_mbps: downloadMbps }),
+  });
+
+export const setSqmAuto = (networkId: string) =>
+  request(`/networks/${networkId}/sqm/auto`, { method: 'POST' });
+
+// Content Filtering
+export const updateContentFilter = (networkId: string, profileId: string, filters: Record<string, boolean>) =>
+  request(`/networks/${networkId}/profiles/${profileId}/content-filter`, {
+    method: 'POST',
+    body: JSON.stringify({ filters }),
+  });
+
+// Domain Block List
+export const updateBlockList = (networkId: string, profileId: string, domains: string[], block = true) =>
+  request(`/networks/${networkId}/profiles/${profileId}/block-list`, {
+    method: 'POST',
+    body: JSON.stringify({ domains, block }),
+  });
+
+// Profile Schedule
+export const setProfileScheduleFull = (networkId: string, profileId: string, timeBlocks: Record<string, unknown>[]) =>
+  request(`/networks/${networkId}/profiles/${profileId}/schedule/set`, {
+    method: 'POST',
+    body: JSON.stringify({ time_blocks: timeBlocks }),
+  });
+
+export const setWeekdayBedtime = (networkId: string, profileId: string, startTime: string, endTime: string) =>
+  request(`/networks/${networkId}/profiles/${profileId}/schedule/weekday-bedtime`, {
+    method: 'POST',
+    body: JSON.stringify({ start_time: startTime, end_time: endTime }),
+  });
+
+export const setWeekendBedtime = (networkId: string, profileId: string, startTime: string, endTime: string) =>
+  request(`/networks/${networkId}/profiles/${profileId}/schedule/weekend-bedtime`, {
+    method: 'POST',
+    body: JSON.stringify({ start_time: startTime, end_time: endTime }),
+  });
+
+export const clearProfileSchedule = (networkId: string, profileId: string) =>
+  request(`/networks/${networkId}/profiles/${profileId}/schedule`, { method: 'DELETE' });
+
+// Firmware Updates
+export const getUpdates = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/updates`);
+
+// Network Reboot
+export const rebootNetwork = (networkId: string) =>
+  request(`/networks/${networkId}/reboot`, { method: 'POST' });
+
+// Thread / Smart Home
+export const getThread = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/thread`);
+
+export const getRouting = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/routing`);
+
+// Blacklist
+export const getBlacklist = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/blacklist`);
+
+export const addToBlacklist = (networkId: string, deviceId: string) =>
+  request(`/networks/${networkId}/blacklist/${deviceId}`, { method: 'POST' });
+
+export const removeFromBlacklist = (networkId: string, deviceId: string) =>
+  request(`/networks/${networkId}/blacklist/${deviceId}`, { method: 'DELETE' });
+
+// General Settings
+export const getSettings = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/settings`);
