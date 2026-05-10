@@ -151,9 +151,10 @@ export default function DeviceList({ networkId }: DeviceListProps) {
   };
 
   const handleRename = async () => {
-    if (!renameTarget || !renameName.trim()) return;
+    if (!renameTarget) return;
     setActionLoading(renameTarget.mac);
     try {
+      // Empty string resets to eero default (hostname/manufacturer)
       await api.renameDevice(networkId, renameTarget.mac, renameName.trim());
       await refetch();
       setRenameTarget(null);
@@ -261,13 +262,13 @@ export default function DeviceList({ networkId }: DeviceListProps) {
               type="text"
               value={renameName}
               onChange={(e) => setRenameName(e.target.value)}
-              placeholder="Device name"
+              placeholder="Leave empty to reset to default"
               autoFocus
               onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); }}
             />
             <div className="confirm-actions" style={{ marginTop: 16 }}>
-              <button className="btn-confirm" onClick={handleRename} disabled={!renameName.trim() || actionLoading === renameTarget.mac}>
-                {actionLoading ? 'Saving…' : 'Save'}
+              <button className="btn-confirm" onClick={handleRename} disabled={actionLoading === renameTarget.mac}>
+                {actionLoading ? 'Saving…' : renameName.trim() ? 'Save' : 'Reset to default'}
               </button>
               <button className="btn-cancel" onClick={() => setRenameTarget(null)}>Cancel</button>
             </div>
