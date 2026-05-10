@@ -1,5 +1,6 @@
 services:
   eero-dashboard:
+    image: ghcr.io/xrvk/eero-dashboard:latest
     build: .
     ports:
       - "8420:8420"
