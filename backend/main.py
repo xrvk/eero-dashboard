@@ -392,6 +392,20 @@ async def get_profile_schedule(network_id: str, profile_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class ProfileDevicesRequest(BaseModel):
+    device_urls: list[str]
+
+
+@app.put("/api/networks/{network_id}/profiles/{profile_id}/devices")
+async def set_profile_devices(network_id: str, profile_id: str, req: ProfileDevicesRequest):
+    client = await get_client()
+    try:
+        resp = await client.set_profile_devices(profile_id, req.device_urls, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ── Security Settings ────────────────────────────────────────────────────────
 
 
@@ -452,6 +466,72 @@ async def get_reservations(network_id: str):
     client = await get_client()
     try:
         resp = await client.get_reservations(network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class CreateForwardRequest(BaseModel):
+    ip: str
+    gateway_port: int
+    client_port: int
+    protocol: str = "tcp"
+    description: str = ""
+    enabled: bool = True
+
+
+@app.post("/api/networks/{network_id}/forwards")
+async def create_forward(network_id: str, req: CreateForwardRequest):
+    client = await get_client()
+    try:
+        resp = await client._api.forwards.create_forward(network_id, {
+            "ip": req.ip,
+            "gateway_port": req.gateway_port,
+            "client_port": req.client_port,
+            "protocol": req.protocol,
+            "description": req.description,
+            "enabled": req.enabled,
+        })
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/networks/{network_id}/forwards/{forward_id}")
+async def delete_forward(network_id: str, forward_id: str):
+    client = await get_client()
+    try:
+        resp = await client._api.forwards.delete_forward(network_id, forward_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class CreateReservationRequest(BaseModel):
+    ip: str
+    mac: str
+    description: str = ""
+
+
+@app.post("/api/networks/{network_id}/reservations")
+async def create_reservation(network_id: str, req: CreateReservationRequest):
+    client = await get_client()
+    try:
+        resp = await client._api.reservations.create_reservation(network_id, {
+            "ip": req.ip,
+            "mac": req.mac,
+            "description": req.description,
+        })
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/networks/{network_id}/reservations/{reservation_id}")
+async def delete_reservation(network_id: str, reservation_id: str):
+    client = await get_client()
+    try:
+        resp = await client._api.reservations.delete_reservation(network_id, reservation_id)
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -635,3 +635,71 @@ body {
 @media (max-width: 700px) {
   .activity-summary { grid-template-columns: 1fr; }
 }
+
+/* ── Profile Device Management ──────────────── */
+
+.profile-device-list {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+}
+.profile-device-chip {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 99px; padding: 3px 10px; font-size: 0.73rem;
+  color: var(--text-muted); white-space: nowrap;
+}
+.profile-card .btn-text { margin-top: 10px; font-size: 0.8rem; }
+
+.device-picker {
+  margin-top: 12px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px;
+}
+.picker-search {
+  width: 100%; padding: 7px 10px; margin-bottom: 8px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 0.8rem; outline: none;
+}
+.picker-search:focus { border-color: var(--accent); }
+.picker-list {
+  max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px;
+}
+.picker-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 8px; border-radius: 4px; cursor: pointer;
+  font-size: 0.8rem; transition: background 0.1s;
+}
+.picker-item:hover { background: var(--bg-card-hover); }
+.picker-item.selected { background: rgba(79,140,255,0.1); }
+.picker-item input { accent-color: var(--accent); }
+.picker-name { flex: 1; }
+.picker-online { color: var(--green); font-size: 0.6rem; }
+.picker-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+}
+.picker-count { font-size: 0.75rem; color: var(--text-muted); }
+
+/* ── Inline Forms (Port Forward / Reservation) ─ */
+
+.section-header-inline {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.btn-sm { padding: 5px 14px; font-size: 0.78rem; }
+.btn-delete {
+  background: none; border: 1px solid transparent; font-size: 0.85rem;
+}
+.btn-delete:hover { border-color: var(--red); }
+
+.inline-form {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;
+  padding: 12px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.inline-form input, .inline-form select {
+  padding: 7px 10px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-size: 0.8rem;
+  outline: none; min-width: 100px; flex: 1;
+}
+.inline-form input:focus, .inline-form select:focus { border-color: var(--accent); }
+.inline-form input::placeholder { color: var(--text-dim); }
+.inline-form input[type="number"] { max-width: 100px; }

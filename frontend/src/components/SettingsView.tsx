@@ -138,14 +138,72 @@ function SpeedTestSection({ networkId }: { networkId: string }) {
 // ── Port Forwarding ─────────────────────────────────
 
 function PortForwardingSection({ networkId }: { networkId: string }) {
-  const { data: forwards, loading: fwdLoading } = useFetch(
+  const { data: forwards, loading: fwdLoading, refetch: refetchFwd } = useFetch(
     () => api.getForwards(networkId),
     [networkId]
   );
-  const { data: reservations, loading: resLoading } = useFetch(
+  const { data: reservations, loading: resLoading, refetch: refetchRes } = useFetch(
     () => api.getReservations(networkId),
     [networkId]
   );
+  const [showFwdForm, setShowFwdForm] = useState(false);
+  const [showResForm, setShowResForm] = useState(false);
+  const [fwdForm, setFwdForm] = useState({ ip: '', gateway_port: '', client_port: '', protocol: 'tcp', description: '' });
+  const [resForm, setResForm] = useState({ ip: '', mac: '', description: '' });
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  const handleCreateForward = async () => {
+    setSaving(true);
+    try {
+      await api.createForward(networkId, {
+        ip: fwdForm.ip,
+        gateway_port: Number(fwdForm.gateway_port),
+        client_port: Number(fwdForm.client_port),
+        protocol: fwdForm.protocol,
+        description: fwdForm.description,
+      });
+      setShowFwdForm(false);
+      setFwdForm({ ip: '', gateway_port: '', client_port: '', protocol: 'tcp', description: '' });
+      await refetchFwd();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to create forward');
+    } finally { setSaving(false); }
+  };
+
+  const handleDeleteForward = async (fwdUrl: string) => {
+    const fwdId = fwdUrl.replace(/\/$/, '').split('/').pop() || '';
+    setDeleting(fwdId);
+    try {
+      await api.deleteForward(networkId, fwdId);
+      await refetchFwd();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to delete');
+    } finally { setDeleting(null); }
+  };
+
+  const handleCreateReservation = async () => {
+    setSaving(true);
+    try {
+      await api.createReservation(networkId, resForm);
+      setShowResForm(false);
+      setResForm({ ip: '', mac: '', description: '' });
+      await refetchRes();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to create reservation');
+    } finally { setSaving(false); }
+  };
+
+  const handleDeleteReservation = async (resUrl: string) => {
+    const resId = resUrl.replace(/\/$/, '').split('/').pop() || '';
+    setDeleting(resId);
+    try {
+      await api.deleteReservation(networkId, resId);
+      await refetchRes();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to delete');
+    } finally { setDeleting(null); }
+  };
 
   if (fwdLoading || resLoading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
 
@@ -159,39 +217,92 @@ function PortForwardingSection({ networkId }: { networkId: string }) {
 
   return (
     <div className="settings-section">
-      <h2>Port Forwards</h2>
+      <div className="section-header-inline">
+        <h2>Port Forwards</h2>
+        <button className="btn-primary btn-sm" onClick={() => setShowFwdForm(!showFwdForm)}>
+          {showFwdForm ? '✕ Cancel' : '+ Add'}
+        </button>
+      </div>
+
+      {showFwdForm && (
+        <div className="inline-form">
+          <input placeholder="Device IP" value={fwdForm.ip} onChange={e => setFwdForm({ ...fwdForm, ip: e.target.value })} />
+          <input placeholder="Ext. port" type="number" value={fwdForm.gateway_port} onChange={e => setFwdForm({ ...fwdForm, gateway_port: e.target.value })} />
+          <input placeholder="Int. port" type="number" value={fwdForm.client_port} onChange={e => setFwdForm({ ...fwdForm, client_port: e.target.value })} />
+          <select value={fwdForm.protocol} onChange={e => setFwdForm({ ...fwdForm, protocol: e.target.value })}>
+            <option value="tcp">TCP</option>
+            <option value="udp">UDP</option>
+            <option value="tcp_udp">Both</option>
+          </select>
+          <input placeholder="Description" value={fwdForm.description} onChange={e => setFwdForm({ ...fwdForm, description: e.target.value })} />
+          <button className="btn-primary btn-sm" onClick={handleCreateForward} disabled={saving || !fwdForm.ip || !fwdForm.gateway_port}>
+            {saving ? '…' : 'Create'}
+          </button>
+        </div>
+      )}
+
       {(fwdList as Record<string, unknown>[]).length > 0 ? (
         <table className="data-table">
           <thead>
-            <tr><th>Port</th><th>Protocol</th><th>Device IP</th><th>Enabled</th></tr>
+            <tr><th>Ext. Port</th><th>Int. Port</th><th>Protocol</th><th>Device IP</th><th>Desc</th><th>Enabled</th><th></th></tr>
           </thead>
           <tbody>
-            {(fwdList as Record<string, unknown>[]).map((f, i) => (
-              <tr key={i}>
-                <td>{String(f.port ?? f.external_port ?? '—')}</td>
-                <td>{String(f.protocol ?? '—')}</td>
-                <td>{String(f.ip ?? f.lan_ip ?? '—')}</td>
-                <td>{f.enabled !== false ? '✅' : '❌'}</td>
-              </tr>
-            ))}
+            {(fwdList as Record<string, unknown>[]).map((f, i) => {
+              const fid = String(f.url || '').replace(/\/$/, '').split('/').pop() || String(i);
+              return (
+                <tr key={i}>
+                  <td>{String(f.gateway_port ?? f.port ?? '—')}</td>
+                  <td>{String(f.client_port ?? f.port ?? '—')}</td>
+                  <td>{String(f.protocol ?? '—')}</td>
+                  <td>{String(f.ip ?? '—')}</td>
+                  <td>{String(f.description ?? '—')}</td>
+                  <td>{f.enabled !== false ? '✅' : '❌'}</td>
+                  <td>
+                    <button className="btn-action btn-delete" title="Delete" disabled={deleting === fid}
+                      onClick={() => handleDeleteForward(String(f.url || ''))}>🗑️</button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       ) : (
         <p className="empty-text">No port forwards configured</p>
       )}
 
-      <h3 style={{ marginTop: 20 }}>DHCP Reservations</h3>
+      <div className="section-header-inline" style={{ marginTop: 24 }}>
+        <h3>DHCP Reservations</h3>
+        <button className="btn-primary btn-sm" onClick={() => setShowResForm(!showResForm)}>
+          {showResForm ? '✕ Cancel' : '+ Add'}
+        </button>
+      </div>
+
+      {showResForm && (
+        <div className="inline-form">
+          <input placeholder="IP address" value={resForm.ip} onChange={e => setResForm({ ...resForm, ip: e.target.value })} />
+          <input placeholder="MAC address" value={resForm.mac} onChange={e => setResForm({ ...resForm, mac: e.target.value })} />
+          <input placeholder="Description" value={resForm.description} onChange={e => setResForm({ ...resForm, description: e.target.value })} />
+          <button className="btn-primary btn-sm" onClick={handleCreateReservation} disabled={saving || !resForm.ip || !resForm.mac}>
+            {saving ? '…' : 'Create'}
+          </button>
+        </div>
+      )}
+
       {(resList as Record<string, unknown>[]).length > 0 ? (
         <table className="data-table">
           <thead>
-            <tr><th>IP</th><th>MAC</th><th>Name</th></tr>
+            <tr><th>IP</th><th>MAC</th><th>Name</th><th></th></tr>
           </thead>
           <tbody>
             {(resList as Record<string, unknown>[]).map((r, i) => (
               <tr key={i}>
                 <td>{String(r.ip ?? '—')}</td>
                 <td>{String(r.mac ?? '—')}</td>
-                <td>{String(r.hostname ?? r.nickname ?? '—')}</td>
+                <td>{String(r.description ?? r.hostname ?? r.nickname ?? '—')}</td>
+                <td>
+                  <button className="btn-action btn-delete" title="Delete"
+                    onClick={() => handleDeleteReservation(String(r.url || ''))}>🗑️</button>
+                </td>
               </tr>
             ))}
           </tbody>

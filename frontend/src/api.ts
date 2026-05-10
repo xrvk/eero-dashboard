@@ -163,6 +163,12 @@ export const setBlockedApps = (networkId: string, profileId: string, application
     body: JSON.stringify({ applications }),
   });
 
+export const setProfileDevices = (networkId: string, profileId: string, deviceUrls: string[]) =>
+  request(`/networks/${networkId}/profiles/${profileId}/devices`, {
+    method: 'PUT',
+    body: JSON.stringify({ device_urls: deviceUrls }),
+  });
+
 export const getProfileSchedule = (networkId: string, profileId: string) =>
   request<Record<string, unknown>>(`/networks/${networkId}/profiles/${profileId}/schedule`);
 
@@ -186,8 +192,22 @@ export const updateSecurity = (networkId: string, settings: {
 export const getForwards = (networkId: string) =>
   request<Record<string, unknown>>(`/networks/${networkId}/forwards`);
 
+export const createForward = (networkId: string, data: {
+  ip: string; gateway_port: number; client_port: number; protocol?: string; description?: string; enabled?: boolean;
+}) =>
+  request(`/networks/${networkId}/forwards`, { method: 'POST', body: JSON.stringify(data) });
+
+export const deleteForward = (networkId: string, forwardId: string) =>
+  request(`/networks/${networkId}/forwards/${forwardId}`, { method: 'DELETE' });
+
 export const getReservations = (networkId: string) =>
   request<Record<string, unknown>>(`/networks/${networkId}/reservations`);
+
+export const createReservation = (networkId: string, data: { ip: string; mac: string; description?: string }) =>
+  request(`/networks/${networkId}/reservations`, { method: 'POST', body: JSON.stringify(data) });
+
+export const deleteReservation = (networkId: string, reservationId: string) =>
+  request(`/networks/${networkId}/reservations/${reservationId}`, { method: 'DELETE' });
 
 // Reboot
 export const rebootEero = (networkId: string, eeroId: string) =>
