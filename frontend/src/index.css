@@ -1393,6 +1393,16 @@ body {
   letter-spacing: 0.5px; margin: 0 0 6px;
 }
 
+/* ── Settings Page Wrapper ─────────────────── */
+.settings-page { max-width: 800px; }
+.settings-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+}
+.settings-card h3 { font-size: 0.9rem; font-weight: 600; margin: 0 0 4px; }
+.settings-card .toggle-row:last-child { border-bottom: none; }
+.settings-card .device-table { margin-top: 4px; }
+
 /* ── Speed Chart ───────────────────────────── */
 .speed-chart { margin-top: 16px; }
 .speed-chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }

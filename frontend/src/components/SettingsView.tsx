@@ -32,24 +32,26 @@ export function SecuritySettings({ networkId }: { networkId: string }) {
   ];
 
   return (
-    <div className="toggle-list">
-      {toggles.map((t) => {
-        const val = settings[t.key];
-        const isOn = typeof val === 'boolean' ? val : !!val;
-        return (
-          <div key={t.key} className="toggle-row">
-            <div className="toggle-info">
-              <span className="toggle-name">{t.label}</span>
-              <span className="toggle-desc">{t.desc}</span>
+    <div className="settings-page">
+      <div className="settings-card">
+        {toggles.map((t) => {
+          const val = settings[t.key];
+          const isOn = typeof val === 'boolean' ? val : !!val;
+          return (
+            <div key={t.key} className="toggle-row">
+              <div className="toggle-info">
+                <span className="toggle-name">{t.label}</span>
+                <span className="toggle-desc">{t.desc}</span>
+              </div>
+              <label className="toggle-switch">
+                <input type="checkbox" checked={isOn} disabled={saving}
+                  onChange={() => handleToggle(t.key, !isOn, t.apiKey)} />
+                <span className="toggle-slider" />
+              </label>
             </div>
-            <label className="toggle-switch">
-              <input type="checkbox" checked={isOn} disabled={saving}
-                onChange={() => handleToggle(t.key, !isOn, t.apiKey)} />
-              <span className="toggle-slider" />
-            </label>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -73,7 +75,6 @@ export function DnsSettings({ networkId }: { networkId: string }) {
   const customIps = (dns?.custom as { ips?: string[] })?.ips ?? [];
   const parentIps = (dns?.parent as { ips?: string[] })?.ips ?? [];
   const caching = dns?.caching as boolean | undefined;
-  const ddns = (data as Record<string, unknown>)?.ddns as { enabled?: boolean; subdomain?: string } | undefined;
 
   const startEditing = () => {
     setDnsMode(mode);
@@ -104,21 +105,21 @@ export function DnsSettings({ networkId }: { networkId: string }) {
   };
 
   return (
-    <div>
-      {/* Caching toggle */}
-      <div className="toggle-row" style={{ marginBottom: 16 }}>
-        <div className="toggle-info">
-          <span className="toggle-name">DNS Caching</span>
-          <span className="toggle-desc">Cache DNS lookups locally for faster resolution</span>
+    <div className="settings-page">
+      <div className="settings-card">
+        <div className="toggle-row">
+          <div className="toggle-info">
+            <span className="toggle-name">DNS Caching</span>
+            <span className="toggle-desc">Cache DNS lookups locally for faster resolution</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" checked={!!caching} disabled={saving} onChange={handleCachingToggle} />
+            <span className="toggle-slider" />
+          </label>
         </div>
-        <label className="toggle-switch">
-          <input type="checkbox" checked={!!caching} disabled={saving} onChange={handleCachingToggle} />
-          <span className="toggle-slider" />
-        </label>
       </div>
 
-      {/* DNS Mode */}
-      <div className="settings-subsection">
+      <div className="settings-card">
         <div className="section-header-inline">
           <h3>DNS Servers</h3>
           {!editing && (
@@ -174,12 +175,6 @@ export function DnsSettings({ networkId }: { networkId: string }) {
                 <span className="dns-label">Mode</span>
                 <span className="dns-value">{mode}</span>
               </div>
-              {ddns && (
-                <div className="dns-item">
-                  <span className="dns-label">Dynamic DNS</span>
-                  <span className="dns-value">{ddns.enabled ? `✅ ${ddns.subdomain || ''}` : 'Disabled'}</span>
-                </div>
-              )}
             </div>
 
             {customIps.length > 0 && (
@@ -251,52 +246,54 @@ export function PortForwardsSettings({ networkId }: { networkId: string }) {
     (forwards as Record<string, unknown>)?.forwards ? (forwards as { forwards: unknown[] }).forwards : [];
 
   return (
-    <div>
-      <div className="section-header-inline" style={{ marginBottom: 12 }}>
-        <span className="results-counter">{(list as unknown[]).length} forward{(list as unknown[]).length !== 1 ? 's' : ''}</span>
-        <button className="btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
-          {showForm ? '✕ Cancel' : '+ Add'}
-        </button>
-      </div>
-      <table className="data-table">
-        <thead>
-          <tr><th>Ext. Port</th><th>Int. Port</th><th>Protocol</th><th>Device IP</th><th>Desc</th><th>On</th><th></th></tr>
-        </thead>
-        <tbody>
-          {showForm && (
-            <tr className="form-row">
-              <td><input type="number" placeholder="80" value={form.gateway_port} onChange={e => setForm({ ...form, gateway_port: e.target.value })} /></td>
-              <td><input type="number" placeholder="80" value={form.client_port} onChange={e => setForm({ ...form, client_port: e.target.value })} /></td>
-              <td><select value={form.protocol} onChange={e => setForm({ ...form, protocol: e.target.value })}><option value="tcp">TCP</option><option value="udp">UDP</option><option value="tcp_udp">Both</option></select></td>
-              <td><input placeholder="192.168.86.x" value={form.ip} onChange={e => setForm({ ...form, ip: e.target.value })} /></td>
-              <td><input placeholder="label" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></td>
-              <td></td>
-              <td><button className="btn-primary btn-sm" onClick={handleCreate} disabled={saving || !form.ip || !form.gateway_port}>{saving ? '…' : 'Add'}</button></td>
-            </tr>
-          )}
-          {(list as Record<string, unknown>[]).map((f, i) => {
-            const fid = String(f.url || '').replace(/\/$/, '').split('/').pop() || String(i);
-            return (
-              <tr key={i}>
-                <td>{String(f.gateway_port ?? '—')}</td>
-                <td>{String(f.client_port ?? '—')}</td>
-                <td>{String(f.protocol ?? '—')}</td>
-                <td>{String(f.ip ?? '—')}</td>
-                <td>{String(f.description ?? '—')}</td>
-                <td>{f.enabled !== false ? '✅' : '❌'}</td>
-                <td>
-                  <button className={`btn-action btn-delete ${confirmDelete === fid ? 'confirming' : ''}`}
-                    disabled={deleting === fid} onClick={() => handleDelete(String(f.url || ''))}
-                  >{confirmDelete === fid ? '⚠️' : '🗑️'}</button>
-                </td>
+    <div className="settings-page">
+      <div className="settings-card">
+        <div className="section-header-inline" style={{ marginBottom: 12 }}>
+          <span className="results-counter">{(list as unknown[]).length} forward{(list as unknown[]).length !== 1 ? 's' : ''}</span>
+          <button className="btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
+            {showForm ? '✕ Cancel' : '+ Add'}
+          </button>
+        </div>
+        <table className="device-table">
+          <thead>
+            <tr><th>Ext. Port</th><th>Int. Port</th><th>Protocol</th><th>Device IP</th><th>Desc</th><th>On</th><th></th></tr>
+          </thead>
+          <tbody>
+            {showForm && (
+              <tr className="form-row">
+                <td><input type="number" placeholder="80" value={form.gateway_port} onChange={e => setForm({ ...form, gateway_port: e.target.value })} /></td>
+                <td><input type="number" placeholder="80" value={form.client_port} onChange={e => setForm({ ...form, client_port: e.target.value })} /></td>
+                <td><select value={form.protocol} onChange={e => setForm({ ...form, protocol: e.target.value })}><option value="tcp">TCP</option><option value="udp">UDP</option><option value="tcp_udp">Both</option></select></td>
+                <td><input placeholder="192.168.86.x" value={form.ip} onChange={e => setForm({ ...form, ip: e.target.value })} /></td>
+                <td><input placeholder="label" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></td>
+                <td></td>
+                <td><button className="btn-primary btn-sm" onClick={handleCreate} disabled={saving || !form.ip || !form.gateway_port}>{saving ? '…' : 'Add'}</button></td>
               </tr>
-            );
-          })}
-          {(list as unknown[]).length === 0 && !showForm && (
-            <tr><td colSpan={7} className="empty-text" style={{ textAlign: 'center', padding: 20 }}>No port forwards</td></tr>
-          )}
-        </tbody>
-      </table>
+            )}
+            {(list as Record<string, unknown>[]).map((f, i) => {
+              const fid = String(f.url || '').replace(/\/$/, '').split('/').pop() || String(i);
+              return (
+                <tr key={i}>
+                  <td>{String(f.gateway_port ?? '—')}</td>
+                  <td>{String(f.client_port ?? '—')}</td>
+                  <td>{String(f.protocol ?? '—')}</td>
+                  <td className="td-mono">{String(f.ip ?? '—')}</td>
+                  <td>{String(f.description ?? '—')}</td>
+                  <td>{f.enabled !== false ? '✅' : '❌'}</td>
+                  <td>
+                    <button className={`btn-action btn-delete ${confirmDelete === fid ? 'confirming' : ''}`}
+                      disabled={deleting === fid} onClick={() => handleDelete(String(f.url || ''))}
+                    >{confirmDelete === fid ? '⚠️' : '🗑️'}</button>
+                  </td>
+                </tr>
+              );
+            })}
+            {(list as unknown[]).length === 0 && !showForm && (
+              <tr><td colSpan={7} className="empty-text" style={{ textAlign: 'center', padding: 20 }}>No port forwards</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -339,104 +336,47 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
     (reservations as Record<string, unknown>)?.reservations ? (reservations as { reservations: unknown[] }).reservations : [];
 
   return (
-    <div>
-      <div className="section-header-inline" style={{ marginBottom: 12 }}>
-        <span className="results-counter">{(list as unknown[]).length} reservation{(list as unknown[]).length !== 1 ? 's' : ''}</span>
-        <button className="btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
-          {showForm ? '✕ Cancel' : '+ Add'}
-        </button>
-      </div>
-      <table className="data-table">
-        <thead>
-          <tr><th>IP</th><th>MAC</th><th>Name</th><th></th></tr>
-        </thead>
-        <tbody>
-          {showForm && (
-            <tr className="form-row">
-              <td><input placeholder="192.168.86.x" value={form.ip} onChange={e => setForm({ ...form, ip: e.target.value })} /></td>
-              <td><input placeholder="aa:bb:cc:dd:ee:ff" value={form.mac} onChange={e => setForm({ ...form, mac: e.target.value })} /></td>
-              <td><input placeholder="label" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></td>
-              <td><button className="btn-primary btn-sm" onClick={handleCreate} disabled={saving || !form.ip || !form.mac}>{saving ? '…' : 'Add'}</button></td>
-            </tr>
-          )}
-          {(list as Record<string, unknown>[]).map((r, i) => {
-            const rid = String(r.url || '').replace(/\/$/, '').split('/').pop() || String(i);
-            return (
-              <tr key={i}>
-                <td>{String(r.ip ?? '—')}</td>
-                <td>{String(r.mac ?? '—')}</td>
-                <td>{String(r.description ?? r.hostname ?? r.nickname ?? '—')}</td>
-                <td>
-                  <button className={`btn-action btn-delete ${confirmDelete === rid ? 'confirming' : ''}`}
-                    onClick={() => handleDelete(String(r.url || ''))}
-                  >{confirmDelete === rid ? '⚠️' : '🗑️'}</button>
-                </td>
-              </tr>
-            );
-          })}
-          {(list as unknown[]).length === 0 && !showForm && (
-            <tr><td colSpan={4} className="empty-text" style={{ textAlign: 'center', padding: 20 }}>No DHCP reservations</td></tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-// ── Diagnostics ─────────────────────────────────────
-
-export function DiagnosticsSettings({ networkId }: { networkId: string }) {
-  const [running, setRunning] = useState(false);
-  const [result, setResult] = useState<Record<string, unknown> | null>(null);
-  const [error, setError] = useState('');
-  const [rebooting, setRebooting] = useState(false);
-  const [confirmReboot, setConfirmReboot] = useState(false);
-
-  const handleRun = async () => {
-    setRunning(true); setError('');
-    try { setResult(await api.runDiagnostics(networkId)); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Failed'); }
-    finally { setRunning(false); }
-  };
-
-  const handleRebootNetwork = async () => {
-    setRebooting(true);
-    try {
-      await api.rebootNetwork(networkId);
-      setConfirmReboot(false);
-    } catch (e) { alert(e instanceof Error ? e.message : 'Reboot failed'); }
-    finally { setRebooting(false); }
-  };
-
-  return (
-    <div>
-      <p className="empty-text" style={{ marginBottom: 16 }}>
-        Run network diagnostics to check connectivity, DNS resolution, and internet access.
-      </p>
-      <button className="btn-primary" onClick={handleRun} disabled={running}>
-        {running ? <><div className="spinner" /> Running…</> : '🔍 Run Diagnostics'}
-      </button>
-      {result && <pre className="json-preview" style={{ marginTop: 16 }}>{JSON.stringify(result, null, 2)}</pre>}
-      {error && <div className="error-banner" style={{ marginTop: 16 }}>{error}</div>}
-
-      <div className="settings-subsection" style={{ marginTop: 32 }}>
-        <h3>Network Reboot</h3>
-        <p className="toggle-desc" style={{ marginBottom: 12 }}>
-          Reboot all eero nodes in the network. The network will be offline for ~2 minutes.
-        </p>
-        {confirmReboot ? (
-          <div className="confirm-inline">
-            <span>⚠️ Are you sure? This will take all nodes offline.</span>
-            <button className="btn-confirm btn-danger" onClick={handleRebootNetwork} disabled={rebooting}>
-              {rebooting ? 'Rebooting…' : 'Confirm Reboot'}
-            </button>
-            <button className="btn-cancel" onClick={() => setConfirmReboot(false)}>Cancel</button>
-          </div>
-        ) : (
-          <button className="btn-danger" onClick={() => setConfirmReboot(true)}>
-            🔄 Reboot Entire Network
+    <div className="settings-page">
+      <div className="settings-card">
+        <div className="section-header-inline" style={{ marginBottom: 12 }}>
+          <span className="results-counter">{(list as unknown[]).length} reservation{(list as unknown[]).length !== 1 ? 's' : ''}</span>
+          <button className="btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
+            {showForm ? '✕ Cancel' : '+ Add'}
           </button>
-        )}
+        </div>
+        <table className="device-table">
+          <thead>
+            <tr><th>IP</th><th>MAC</th><th>Name</th><th></th></tr>
+          </thead>
+          <tbody>
+            {showForm && (
+              <tr className="form-row">
+                <td><input placeholder="192.168.86.x" value={form.ip} onChange={e => setForm({ ...form, ip: e.target.value })} /></td>
+                <td><input placeholder="aa:bb:cc:dd:ee:ff" value={form.mac} onChange={e => setForm({ ...form, mac: e.target.value })} /></td>
+                <td><input placeholder="label" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></td>
+                <td><button className="btn-primary btn-sm" onClick={handleCreate} disabled={saving || !form.ip || !form.mac}>{saving ? '…' : 'Add'}</button></td>
+              </tr>
+            )}
+            {(list as Record<string, unknown>[]).map((r, i) => {
+              const rid = String(r.url || '').replace(/\/$/, '').split('/').pop() || String(i);
+              return (
+                <tr key={i}>
+                  <td className="td-mono">{String(r.ip ?? '—')}</td>
+                  <td className="td-mono">{String(r.mac ?? '—')}</td>
+                  <td>{String(r.description ?? r.hostname ?? r.nickname ?? '—')}</td>
+                  <td>
+                    <button className={`btn-action btn-delete ${confirmDelete === rid ? 'confirming' : ''}`}
+                      onClick={() => handleDelete(String(r.url || ''))}
+                    >{confirmDelete === rid ? '⚠️' : '🗑️'}</button>
+                  </td>
+                </tr>
+              );
+            })}
+            {(list as unknown[]).length === 0 && !showForm && (
+              <tr><td colSpan={4} className="empty-text" style={{ textAlign: 'center', padding: 20 }}>No DHCP reservations</td></tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -502,163 +442,70 @@ export function SqmSettings({ networkId }: { networkId: string }) {
   };
 
   return (
-    <div>
-      <div className="toggle-row" style={{ marginBottom: 20 }}>
-        <div className="toggle-info">
-          <span className="toggle-name">Smart Queue Management</span>
-          <span className="toggle-desc">Reduce bufferbloat and latency for gaming, video calls, and streaming</span>
-        </div>
-        <label className="toggle-switch">
-          <input type="checkbox" checked={enabled} disabled={saving} onChange={handleToggle} />
-          <span className="toggle-slider" />
-        </label>
-      </div>
-
-      {enabled && (
-        <div className="sqm-config">
-          <div className="dns-grid" style={{ marginBottom: 16 }}>
-            <div className="dns-item">
-              <span className="dns-label">Mode</span>
-              <span className="dns-value">{mode}</span>
-            </div>
-            {currentUpload != null && (
-              <div className="dns-item">
-                <span className="dns-label">Upload Limit</span>
-                <span className="dns-value">{currentUpload} Mbps</span>
-              </div>
-            )}
-            {currentDownload != null && (
-              <div className="dns-item">
-                <span className="dns-label">Download Limit</span>
-                <span className="dns-value">{currentDownload} Mbps</span>
-              </div>
-            )}
+    <div className="settings-page">
+      <div className="settings-card">
+        <div className="toggle-row">
+          <div className="toggle-info">
+            <span className="toggle-name">Smart Queue Management</span>
+            <span className="toggle-desc">Reduce bufferbloat and latency for gaming, video calls, and streaming</span>
           </div>
+          <label className="toggle-switch">
+            <input type="checkbox" checked={enabled} disabled={saving} onChange={handleToggle} />
+            <span className="toggle-slider" />
+          </label>
+        </div>
 
-          {editMode ? (
-            <div className="sqm-edit-form">
-              <div className="form-field">
-                <label>Upload (Mbps)</label>
-                <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)}
-                  placeholder="e.g. 50" min="1" />
+        {enabled && (
+          <div className="sqm-config">
+            <div className="dns-grid" style={{ marginBottom: 16, marginTop: 16 }}>
+              <div className="dns-item">
+                <span className="dns-label">Mode</span>
+                <span className="dns-value">{mode}</span>
               </div>
-              <div className="form-field">
-                <label>Download (Mbps)</label>
-                <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)}
-                  placeholder="e.g. 500" min="1" />
+              {currentUpload != null && (
+                <div className="dns-item">
+                  <span className="dns-label">Upload Limit</span>
+                  <span className="dns-value">{currentUpload} Mbps</span>
+                </div>
+              )}
+              {currentDownload != null && (
+                <div className="dns-item">
+                  <span className="dns-label">Download Limit</span>
+                  <span className="dns-value">{currentDownload} Mbps</span>
+                </div>
+              )}
+            </div>
+
+            {editMode ? (
+              <div className="sqm-edit-form">
+                <div className="form-field">
+                  <label>Upload (Mbps)</label>
+                  <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)}
+                    placeholder="e.g. 50" min="1" />
+                </div>
+                <div className="form-field">
+                  <label>Download (Mbps)</label>
+                  <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)}
+                    placeholder="e.g. 500" min="1" />
+                </div>
+                <div className="dns-edit-actions">
+                  <button className="btn-primary" onClick={handleSaveManual} disabled={saving}>
+                    {saving ? 'Saving…' : 'Save'}
+                  </button>
+                  <button className="btn-cancel" onClick={() => setEditMode(false)}>Cancel</button>
+                </div>
               </div>
-              <div className="dns-edit-actions">
-                <button className="btn-primary" onClick={handleSaveManual} disabled={saving}>
-                  {saving ? 'Saving…' : 'Save'}
+            ) : (
+              <div className="sqm-mode-buttons">
+                <button className="btn-primary btn-sm" onClick={handleAuto} disabled={saving}>
+                  Auto Optimize
                 </button>
-                <button className="btn-cancel" onClick={() => setEditMode(false)}>Cancel</button>
+                <button className="btn-text" onClick={startManual}>
+                  ✏️ Set Manual Limits
+                </button>
               </div>
-            </div>
-          ) : (
-            <div className="sqm-mode-buttons">
-              <button className="btn-primary btn-sm" onClick={handleAuto} disabled={saving}>
-                Auto Optimize
-              </button>
-              <button className="btn-text" onClick={startManual}>
-                ✏️ Set Manual Limits
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Firmware Updates ────────────────────────────────
-
-export function UpdatesSettings({ networkId }: { networkId: string }) {
-  const { data, loading, error } = useFetch(
-    () => api.getUpdates(networkId), [networkId]
-  );
-
-  if (loading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
-  if (error) return <div className="card error-card">Error: {error}</div>;
-
-  const updates = data as Record<string, unknown> || {};
-
-  return (
-    <div>
-      <div className="dns-grid">
-        {updates.current_version && (
-          <div className="dns-item">
-            <span className="dns-label">Current Version</span>
-            <span className="dns-value mono">{String(updates.current_version)}</span>
+            )}
           </div>
-        )}
-        {updates.target_firmware && (
-          <div className="dns-item">
-            <span className="dns-label">Target Firmware</span>
-            <span className="dns-value mono">{String(updates.target_firmware)}</span>
-          </div>
-        )}
-        {updates.update_required != null && (
-          <div className="dns-item">
-            <span className="dns-label">Update Status</span>
-            <span className={`dns-value ${updates.update_required ? 'text-yellow' : 'text-green'}`}>
-              {updates.update_required ? '⚠️ Update Available' : '✅ Up to Date'}
-            </span>
-          </div>
-        )}
-        {updates.is_update_in_progress != null && updates.is_update_in_progress && (
-          <div className="dns-item">
-            <span className="dns-label">Progress</span>
-            <span className="dns-value text-yellow">🔄 Update in progress…</span>
-          </div>
-        )}
-      </div>
-      {Object.keys(updates).length === 0 && (
-        <p className="empty-text">No update information available</p>
-      )}
-      {/* Show raw data for any extra fields */}
-      {Object.keys(updates).filter(k => !['current_version','target_firmware','update_required','is_update_in_progress'].includes(k)).length > 0 && (
-        <details style={{ marginTop: 16 }}>
-          <summary className="btn-text">Show all details</summary>
-          <pre className="json-preview" style={{ marginTop: 8 }}>{JSON.stringify(updates, null, 2)}</pre>
-        </details>
-      )}
-    </div>
-  );
-}
-
-// ── Thread / Smart Home ────────────────────────────
-
-export function ThreadSettings({ networkId }: { networkId: string }) {
-  const { data: threadData, loading: threadLoading, error: threadError } = useFetch(
-    () => api.getThread(networkId), [networkId]
-  );
-  const { data: routingData, loading: routingLoading } = useFetch(
-    () => api.getRouting(networkId), [networkId]
-  );
-
-  if (threadLoading || routingLoading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
-  if (threadError) return <div className="card error-card">Error: {threadError}</div>;
-
-  const thread = threadData as Record<string, unknown> || {};
-  const routing = routingData as Record<string, unknown> || {};
-
-  return (
-    <div>
-      <div className="settings-subsection">
-        <h3>Thread Border Router</h3>
-        {Object.keys(thread).length > 0 ? (
-          <pre className="json-preview">{JSON.stringify(thread, null, 2)}</pre>
-        ) : (
-          <p className="empty-text">No Thread data available. Thread may not be enabled on this network.</p>
-        )}
-      </div>
-
-      <div className="settings-subsection" style={{ marginTop: 20 }}>
-        <h3>Routing</h3>
-        {Object.keys(routing).length > 0 ? (
-          <pre className="json-preview">{JSON.stringify(routing, null, 2)}</pre>
-        ) : (
-          <p className="empty-text">No routing data available</p>
         )}
       </div>
     </div>
@@ -691,43 +538,45 @@ export function BlacklistSettings({ networkId }: { networkId: string }) {
     (data as Record<string, unknown>)?.blacklist ? ((data as Record<string, unknown>).blacklist as unknown[]) : [];
 
   return (
-    <div>
-      <p className="toggle-desc" style={{ marginBottom: 16 }}>
-        Permanently blocked devices. Unlike temporary blocks, blacklisted devices cannot reconnect until removed.
-      </p>
+    <div className="settings-page">
+      <div className="settings-card">
+        <p className="toggle-desc" style={{ marginBottom: 16 }}>
+          Permanently blocked devices cannot reconnect until removed.
+        </p>
 
-      {(blacklist as Record<string, unknown>[]).length > 0 ? (
-        <table className="data-table">
-          <thead>
-            <tr><th>Device</th><th>MAC</th><th></th></tr>
-          </thead>
-          <tbody>
-            {(blacklist as Record<string, unknown>[]).map((d, i) => {
-              const did = String(d.mac || d.url || i);
-              return (
-                <tr key={i}>
-                  <td>{String(d.display_name || d.hostname || d.nickname || 'Unknown')}</td>
-                  <td className="td-mono">{String(d.mac || '—')}</td>
-                  <td>
-                    <button
-                      className={`btn-action btn-delete ${confirmRemove === did ? 'confirming' : ''}`}
-                      disabled={removing === did}
-                      onClick={() => handleRemove(did)}
-                    >
-                      {confirmRemove === did ? '⚠️ Confirm' : '🗑️'}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      ) : (
-        <div className="empty-state">
-          <p className="empty-icon">🚫</p>
-          <p className="empty-text">No blacklisted devices</p>
-        </div>
-      )}
+        {(blacklist as Record<string, unknown>[]).length > 0 ? (
+          <table className="device-table">
+            <thead>
+              <tr><th>Device</th><th>MAC</th><th></th></tr>
+            </thead>
+            <tbody>
+              {(blacklist as Record<string, unknown>[]).map((d, i) => {
+                const did = String(d.mac || d.url || i);
+                return (
+                  <tr key={i}>
+                    <td>{String(d.display_name || d.hostname || d.nickname || 'Unknown')}</td>
+                    <td className="td-mono">{String(d.mac || '—')}</td>
+                    <td>
+                      <button
+                        className={`btn-action btn-delete ${confirmRemove === did ? 'confirming' : ''}`}
+                        disabled={removing === did}
+                        onClick={() => handleRemove(did)}
+                      >
+                        {confirmRemove === did ? '⚠️ Confirm' : '🗑️'}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div className="empty-state">
+            <p className="empty-icon">🚫</p>
+            <p className="empty-text">No blacklisted devices</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
