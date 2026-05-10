@@ -565,3 +565,28 @@ body {
   transition: color 0.15s;
 }
 .sortable-th:hover { color: var(--accent); }
+
+/* ── Status Toggle (All / Online / Offline) ── */
+
+.status-toggle {
+  display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.status-btn {
+  background: var(--bg-card); border: none; color: var(--text-muted);
+  padding: 5px 12px; font-size: 0.78rem; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; gap: 5px;
+  border-right: 1px solid var(--border);
+}
+.status-btn:last-child { border-right: none; }
+.status-btn:hover:not(.active) { color: var(--text); background: var(--bg-card-hover); }
+.status-btn.active { background: var(--accent); color: #fff; }
+.status-btn.active.online { background: var(--green); }
+.status-btn.active.offline { background: var(--text-dim); }
+.status-count {
+  background: rgba(255,255,255,0.15); border-radius: 99px;
+  padding: 0 6px; font-size: 0.7rem; font-weight: 700; min-width: 18px;
+  text-align: center;
+}
+.status-btn:not(.active) .status-count { background: var(--border); }

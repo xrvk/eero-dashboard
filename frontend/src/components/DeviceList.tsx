@@ -20,7 +20,8 @@ function rawBytes(bytes?: number) {
 }
 
 type ViewMode = 'grid' | 'list';
-type GroupBy = 'status' | 'connection' | 'node';
+type GroupBy = 'connection' | 'node' | 'none';
+type StatusFilter = 'all' | 'online' | 'offline';
 type SortCol = 'name' | 'ip' | 'mac' | 'type' | 'down' | 'up';
 type SortDir = 'asc' | 'desc';
 
@@ -75,7 +76,8 @@ export default function DeviceList({ networkId }: DeviceListProps) {
   const [confirmAction, setConfirmAction] = useState<{ mac: string; type: 'pause' | 'block' } | null>(null);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [groupBy, setGroupBy] = useState<GroupBy>('status');
+  const [groupBy, setGroupBy] = useState<GroupBy>('none');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('online');
   const [sortCol, setSortCol] = useState<SortCol>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
@@ -110,16 +112,21 @@ export default function DeviceList({ networkId }: DeviceListProps) {
   const allDevices = data?.devices ?? [];
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return allDevices;
+    let result = allDevices;
+    // Status filter
+    if (statusFilter === 'online') result = result.filter(d => d.connected);
+    else if (statusFilter === 'offline') result = result.filter(d => !d.connected);
+    // Search filter
+    if (!search.trim()) return result;
     const q = search.toLowerCase().trim();
-    return allDevices.filter((d) => {
+    return result.filter((d) => {
       const name = (d.display_name || d.hostname || '').toLowerCase();
       const ip = (d.ip || '').toLowerCase();
       const mac = (d.mac || '').toLowerCase();
       const manufacturer = (d.manufacturer || '').toLowerCase();
       return name.includes(q) || ip.includes(q) || mac.includes(q) || manufacturer.includes(q);
     });
-  }, [allDevices, search]);
+  }, [allDevices, search, statusFilter]);
 
   const groups = useMemo(() => {
     const result: { label: string; devices: api.Device[] }[] = [];
@@ -128,9 +135,8 @@ export default function DeviceList({ networkId }: DeviceListProps) {
       if (devs.length) result.push({ label, devices: sortDevices(devs, sortCol, sortDir) });
     };
 
-    if (groupBy === 'status') {
-      makeGroup(`Connected (${filtered.filter(d => d.connected).length})`, filtered.filter(d => d.connected));
-      makeGroup(`Offline (${filtered.filter(d => !d.connected).length})`, filtered.filter(d => !d.connected));
+    if (groupBy === 'none') {
+      makeGroup(`All (${filtered.length})`, filtered);
     } else if (groupBy === 'connection') {
       const wired = filtered.filter(d => d.connection_type === 'wired');
       const wireless = filtered.filter(d => d.connection_type === 'wireless');
@@ -188,10 +194,21 @@ export default function DeviceList({ networkId }: DeviceListProps) {
           )}
         </div>
         <div className="toolbar-controls">
+          <div className="status-toggle">
+            <button className={`status-btn ${statusFilter === 'all' ? 'active' : ''}`} onClick={() => setStatusFilter('all')}>
+              All <span className="status-count">{allDevices.length}</span>
+            </button>
+            <button className={`status-btn online ${statusFilter === 'online' ? 'active' : ''}`} onClick={() => setStatusFilter('online')}>
+              Online <span className="status-count">{allDevices.filter(d => d.connected).length}</span>
+            </button>
+            <button className={`status-btn offline ${statusFilter === 'offline' ? 'active' : ''}`} onClick={() => setStatusFilter('offline')}>
+              Offline <span className="status-count">{allDevices.filter(d => !d.connected).length}</span>
+            </button>
+          </div>
           <div className="group-select">
             <label>Group:</label>
             <select value={groupBy} onChange={(e) => setGroupBy(e.target.value as GroupBy)}>
-              <option value="status">Online / Offline</option>
+              <option value="none">None</option>
               <option value="connection">Connection Type</option>
               <option value="node">eero Node</option>
             </select>
