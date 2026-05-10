@@ -6,4 +6,6 @@ __pycache__/
 backend/.venv/
 backend/venv/
 backend/.eero_credentials
+backend/.eero_session
 .DS_Store
+.github/copilot-instructions.md
