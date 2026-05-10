@@ -114,6 +114,7 @@ export default function DeviceList({ networkId }: DeviceListProps) {
   const [confirmAction, setConfirmAction] = useState<{ mac: string; type: 'pause' | 'block' } | null>(null);
   const [renameTarget, setRenameTarget] = useState<{ mac: string; name: string } | null>(null);
   const [renameName, setRenameName] = useState('');
+  const [selectedDevice, setSelectedDevice] = useState<api.Device | null>(null);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [groupBy, setGroupBy] = useState<GroupBy>('none');
@@ -276,6 +277,64 @@ export default function DeviceList({ networkId }: DeviceListProps) {
         </div>
       )}
 
+      {/* Device Detail Panel */}
+      {selectedDevice && (
+        <div className="confirm-overlay" onClick={() => setSelectedDevice(null)}>
+          <div className="device-detail-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="detail-header">
+              <div className="detail-title">
+                <span className="detail-icon">{getDeviceIcon(selectedDevice)}</span>
+                <div>
+                  <h2>{selectedDevice.display_name || selectedDevice.hostname || 'Unknown'}</h2>
+                  {selectedDevice.nickname && selectedDevice.hostname && selectedDevice.nickname !== selectedDevice.hostname && (
+                    <span className="detail-hostname">{selectedDevice.hostname}</span>
+                  )}
+                </div>
+              </div>
+              <button className="btn-menu" onClick={() => setSelectedDevice(null)}>✕</button>
+            </div>
+
+            <div className="detail-grid">
+              <DetailRow label="MAC Address" value={selectedDevice.mac} mono />
+              <DetailRow label="IP Address" value={selectedDevice.ip} mono />
+              <DetailRow label="Manufacturer" value={(selectedDevice as Record<string, unknown>).manufacturer as string} />
+              <DetailRow label="Connection" value={selectedDevice.wireless ? 'Wireless' : 'Wired'} />
+              <DetailRow label="Status" value={selectedDevice.connected ? '● Online' : '○ Offline'} className={selectedDevice.connected ? 'status-connected' : ''} />
+              {selectedDevice.wireless && (() => {
+                const conn = getConn(selectedDevice);
+                return conn ? (
+                  <>
+                    <DetailRow label="Band" value={freqToBand(conn.frequency)} />
+                    <DetailRow label="Signal" value={conn.signal} />
+                    <DetailRow label="Link Speed" value={formatRate(conn.rx_rate_info?.rate_bps)} />
+                    {conn.rx_rate_info?.channel_width && (
+                      <DetailRow label="Channel Width" value={conn.rx_rate_info.channel_width.replace('WIDTH_', '')} />
+                    )}
+                    {conn.rx_rate_info?.phy_type && (
+                      <DetailRow label="PHY" value={conn.rx_rate_info.phy_type} />
+                    )}
+                  </>
+                ) : null;
+              })()}
+              {(() => {
+                const src = (selectedDevice as Record<string, unknown>).source as Record<string, unknown> | undefined;
+                return src?.display_name ? <DetailRow label="Connected to" value={src.display_name as string} /> : null;
+              })()}
+              <DetailRow label="Device Type" value={(selectedDevice as Record<string, unknown>).device_type as string} />
+              {(selectedDevice as Record<string, unknown>).last_active && (
+                <DetailRow label="Last Active" value={new Date((selectedDevice as Record<string, unknown>).last_active as string).toLocaleString()} />
+              )}
+              {(selectedDevice as Record<string, unknown>).first_active && (
+                <DetailRow label="Session Start" value={new Date((selectedDevice as Record<string, unknown>).first_active as string).toLocaleString()} />
+              )}
+              {(selectedDevice as Record<string, unknown>).auth && (
+                <DetailRow label="Auth" value={(selectedDevice as Record<string, unknown>).auth as string} />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="device-toolbar">
         <div className="toolbar-row">
@@ -359,6 +418,7 @@ export default function DeviceList({ networkId }: DeviceListProps) {
                   actionLoading={actionLoading}
                   onAction={(mac, type) => setConfirmAction({ mac, type })}
                   onRename={(mac, name) => { setRenameTarget({ mac, name }); setRenameName(name); }}
+                  onClick={() => setSelectedDevice(d)}
                 />
               ))}
             </div>
@@ -449,12 +509,13 @@ export default function DeviceList({ networkId }: DeviceListProps) {
   );
 }
 
-function DeviceCard({ device: d, networkId, actionLoading, onAction, onRename }: {
+function DeviceCard({ device: d, networkId, actionLoading, onAction, onRename, onClick }: {
   device: api.Device;
   networkId: string;
   actionLoading: string | null;
   onAction: (mac: string, type: 'pause' | 'block') => void;
   onRename: (mac: string, currentName: string) => void;
+  onClick: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -471,7 +532,7 @@ function DeviceCard({ device: d, networkId, actionLoading, onAction, onRename }:
   }, [menuOpen]);
 
   return (
-    <div className={`device-card ${d.connected ? 'connected' : 'offline'}`}>
+    <div className={`device-card ${d.connected ? 'connected' : 'offline'}`} onClick={onClick} style={{ cursor: 'pointer' }}>
       <div className="device-icon">{getDeviceIcon(d)}</div>
       <div className="device-info">
         <span className="device-name">{d.display_name || d.hostname || 'Unknown'}</span>
@@ -483,7 +544,7 @@ function DeviceCard({ device: d, networkId, actionLoading, onAction, onRename }:
           </span>
         )}
       </div>
-      <div className="card-right">
+      <div className="card-right" onClick={(e) => e.stopPropagation()}>
         {d.connected && (
           <div className="card-menu-wrapper" ref={menuRef}>
             <button
@@ -535,4 +596,16 @@ function getDeviceIcon(d: api.Device) {
   if (type.includes('printer')) return '🖨️';
   if (name.includes('switch') || name.includes('playstation') || name.includes('xbox') || name.includes('nintendo')) return '🎮';
   return '🌐';
+}
+
+function DetailRow({ label, value, mono, className }: {
+  label: string; value?: string | null; mono?: boolean; className?: string;
+}) {
+  if (!value) return null;
+  return (
+    <div className="detail-row">
+      <span className="detail-label">{label}</span>
+      <span className={`detail-value ${mono ? 'mono' : ''} ${className || ''}`}>{value}</span>
+    </div>
+  );
 }

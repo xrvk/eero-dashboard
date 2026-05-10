@@ -1085,3 +1085,28 @@ body {
 
 /* ── Settings parent item ───────────────────── */
 .sidebar-section-parent { font-weight: 600 !important; }
+
+/* ── Device Detail Panel ────────────────────── */
+.device-detail-panel {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px 28px;
+  width: 100%; max-width: 480px; animation: slideUp 0.2s ease-out;
+}
+.detail-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+}
+.detail-title { display: flex; align-items: center; gap: 12px; }
+.detail-title h2 { font-size: 1.15rem; font-weight: 700; }
+.detail-icon { font-size: 1.8rem; }
+.detail-hostname { font-size: 0.78rem; color: var(--text-dim); font-family: 'SF Mono', monospace; }
+
+.detail-grid { display: flex; flex-direction: column; gap: 2px; }
+.detail-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 4px; border-bottom: 1px solid rgba(42,46,61,0.3);
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-label { font-size: 0.8rem; color: var(--text-muted); }
+.detail-value { font-size: 0.85rem; font-weight: 500; text-align: right; }
+.detail-value.mono { font-family: 'SF Mono', monospace; font-size: 0.82rem; color: var(--text-muted); }
