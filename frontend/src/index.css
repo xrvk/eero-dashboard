@@ -1130,3 +1130,13 @@ body {
   border-radius: var(--radius-sm); color: var(--text);
   font-size: 1rem; font-weight: 600; outline: none; min-width: 180px;
 }
+
+/* ── Detail Action Link ─────────────────────── */
+.detail-value-group { display: flex; align-items: center; gap: 8px; }
+.detail-action-link {
+  background: none; border: none; color: var(--accent);
+  font-size: 0.72rem; font-weight: 600; cursor: pointer;
+  padding: 2px 6px; border-radius: 4px; white-space: nowrap;
+  transition: all 0.15s;
+}
+.detail-action-link:hover { background: rgba(110,160,255,0.1); }

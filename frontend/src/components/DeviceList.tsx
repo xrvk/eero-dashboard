@@ -103,9 +103,10 @@ function sortDevices(devices: api.Device[], col: SortCol, dir: SortDir): api.Dev
 
 interface DeviceListProps {
   networkId: string;
+  onNavigate?: (tab: string) => void;
 }
 
-export default function DeviceList({ networkId }: DeviceListProps) {
+export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
   const { data, loading, error, refetch } = useFetch(
     () => api.getDevices(networkId),
     [networkId]
@@ -290,7 +291,9 @@ export default function DeviceList({ networkId }: DeviceListProps) {
 
             <div className="detail-grid">
               <DetailRow label="MAC Address" value={selectedDevice.mac} mono />
-              <DetailRow label="IP Address" value={selectedDevice.ip} mono />
+              <DetailRow label="IP Address" value={selectedDevice.ip} mono
+                action={onNavigate ? { label: 'Reserve →', onClick: () => { setSelectedDevice(null); onNavigate('settings-reservations'); } } : undefined}
+              />
               <DetailRow label="Manufacturer" value={(selectedDevice as Record<string, unknown>).manufacturer as string} />
               <DetailRow label="Connection" value={selectedDevice.wireless ? 'Wireless' : 'Wired'} />
               <DetailRow label="Status" value={selectedDevice.connected ? '● Online' : '○ Offline'} className={selectedDevice.connected ? 'status-connected' : ''} />
@@ -655,14 +658,20 @@ function DetailHeader({ device, networkId, onClose, onRenamed }: {
   );
 }
 
-function DetailRow({ label, value, mono, className }: {
+function DetailRow({ label, value, mono, className, action }: {
   label: string; value?: string | null; mono?: boolean; className?: string;
+  action?: { label: string; onClick: () => void };
 }) {
   if (!value) return null;
   return (
     <div className="detail-row">
       <span className="detail-label">{label}</span>
-      <span className={`detail-value ${mono ? 'mono' : ''} ${className || ''}`}>{value}</span>
+      <span className="detail-value-group">
+        <span className={`detail-value ${mono ? 'mono' : ''} ${className || ''}`}>{value}</span>
+        {action && (
+          <button className="detail-action-link" onClick={action.onClick}>{action.label}</button>
+        )}
+      </span>
     </div>
   );
 }

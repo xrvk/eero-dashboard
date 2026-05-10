@@ -191,7 +191,7 @@ export default function App() {
 
         {selectedNetwork && (
           <div className="tab-content">
-            {tab === 'devices' && <DeviceList networkId={selectedNetwork} />}
+            {tab === 'devices' && <DeviceList networkId={selectedNetwork} onNavigate={(t) => setTab(t as typeof tab)} />}
             {tab === 'activity' && <ActivityView networkId={selectedNetwork} />}
             {tab === 'profiles' && <ProfileManager networkId={selectedNetwork} />}
             {tab === 'settings-security' && <SecuritySettings networkId={selectedNetwork} />}
