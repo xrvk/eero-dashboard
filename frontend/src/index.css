@@ -1005,3 +1005,30 @@ body {
   .toolbar-row { flex-wrap: wrap; }
   .filter-group { flex-wrap: wrap; }
 }
+
+/* ── Sidebar Settings Group ─────────────────── */
+.sidebar-group { margin-top: 8px; }
+.sidebar-group .sidebar-section-label { padding: 8px 12px 4px; }
+.sidebar-sub { padding-left: 22px !important; font-size: 0.82rem !important; }
+
+/* ── DNS Display ────────────────────────────── */
+.dns-grid {
+  display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.dns-item { display: flex; flex-direction: column; gap: 2px; }
+.dns-label {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-dim); font-weight: 600;
+}
+.dns-value { font-size: 0.9rem; font-weight: 500; }
+.dns-servers { margin-top: 12px; }
+.dns-servers .dns-label { margin-bottom: 6px; }
+.dns-server-list { display: flex; gap: 6px; flex-wrap: wrap; }
+.dns-server-chip {
+  background: rgba(110,160,255,0.1); border: 1px solid rgba(110,160,255,0.2);
+  color: var(--accent); border-radius: var(--radius-sm);
+  padding: 4px 12px; font-family: 'SF Mono', monospace; font-size: 0.82rem;
+}
+.dns-server-chip.muted {
+  background: var(--bg); border-color: var(--border); color: var(--text-muted);
+}

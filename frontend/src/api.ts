@@ -188,6 +188,10 @@ export const updateSecurity = (networkId: string, settings: {
     body: JSON.stringify(settings),
   });
 
+// DNS
+export const getDns = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/dns`);
+
 // Port Forwarding & Reservations
 export const getForwards = (networkId: string) =>
   request<Record<string, unknown>>(`/networks/${networkId}/forwards`);

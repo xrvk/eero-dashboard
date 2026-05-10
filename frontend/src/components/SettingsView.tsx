@@ -2,44 +2,11 @@ import { useState } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
 
-interface SettingsViewProps {
-  networkId: string;
-}
-
-type SettingsTab = 'security' | 'network' | 'diagnostics';
-
-export default function SettingsView({ networkId }: SettingsViewProps) {
-  const [subtab, setSubtab] = useState<SettingsTab>('security');
-
-  return (
-    <div className="settings-view">
-      <div className="settings-subtabs">
-        <button className={`settings-subtab ${subtab === 'security' ? 'active' : ''}`} onClick={() => setSubtab('security')}>
-          Security
-        </button>
-        <button className={`settings-subtab ${subtab === 'network' ? 'active' : ''}`} onClick={() => setSubtab('network')}>
-          Network
-        </button>
-        <button className={`settings-subtab ${subtab === 'diagnostics' ? 'active' : ''}`} onClick={() => setSubtab('diagnostics')}>
-          Diagnostics
-        </button>
-      </div>
-
-      <div className="settings-content">
-        {subtab === 'security' && <SecuritySection networkId={networkId} />}
-        {subtab === 'network' && <NetworkSection networkId={networkId} />}
-        {subtab === 'diagnostics' && <DiagnosticsSection networkId={networkId} />}
-      </div>
-    </div>
-  );
-}
-
 // ── Security ────────────────────────────────────────
 
-function SecuritySection({ networkId }: { networkId: string }) {
+export function SecuritySettings({ networkId }: { networkId: string }) {
   const { data, loading, error, refetch } = useFetch(
-    () => api.getSecurity(networkId),
-    [networkId]
+    () => api.getSecurity(networkId), [networkId]
   );
   const [saving, setSaving] = useState(false);
 
@@ -48,11 +15,8 @@ function SecuritySection({ networkId }: { networkId: string }) {
     try {
       await api.updateSecurity(networkId, { [apiKey || key]: value });
       await refetch();
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to update');
-    } finally {
-      setSaving(false);
-    }
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSaving(false); }
   };
 
   if (loading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
@@ -79,12 +43,8 @@ function SecuritySection({ networkId }: { networkId: string }) {
               <span className="toggle-desc">{t.desc}</span>
             </div>
             <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={isOn}
-                disabled={saving}
-                onChange={() => handleToggle(t.key, !isOn, t.apiKey)}
-              />
+              <input type="checkbox" checked={isOn} disabled={saving}
+                onChange={() => handleToggle(t.key, !isOn, t.apiKey)} />
               <span className="toggle-slider" />
             </label>
           </div>
@@ -94,9 +54,78 @@ function SecuritySection({ networkId }: { networkId: string }) {
   );
 }
 
-// ── Network (Port Forwards + DHCP Reservations) ─────
+// ── Network (DNS + Port Forwards + DHCP) ────────────
 
-function NetworkSection({ networkId }: { networkId: string }) {
+export function NetworkSettings({ networkId }: { networkId: string }) {
+  return (
+    <div className="settings-view">
+      <DnsSection networkId={networkId} />
+      <PortForwardingSection networkId={networkId} />
+    </div>
+  );
+}
+
+function DnsSection({ networkId }: { networkId: string }) {
+  const { data, loading, error } = useFetch(
+    () => api.getDns(networkId), [networkId]
+  );
+
+  if (loading) return <div className="card loading-card"><div className="spinner" /> Loading DNS…</div>;
+  if (error) return <div className="card error-card">Error: {error}</div>;
+
+  const dns = (data as Record<string, unknown>)?.dns as Record<string, unknown> | undefined;
+  const mode = dns?.mode as string || '—';
+  const customIps = (dns?.custom as { ips?: string[] })?.ips ?? [];
+  const parentIps = (dns?.parent as { ips?: string[] })?.ips ?? [];
+  const caching = dns?.caching;
+  const ddns = (data as Record<string, unknown>)?.ddns as { enabled?: boolean; subdomain?: string } | undefined;
+
+  return (
+    <div className="settings-subsection">
+      <h3>DNS</h3>
+      <div className="dns-grid">
+        <div className="dns-item">
+          <span className="dns-label">Mode</span>
+          <span className="dns-value">{mode}</span>
+        </div>
+        <div className="dns-item">
+          <span className="dns-label">Caching</span>
+          <span className="dns-value">{caching ? '✅ Enabled' : '❌ Disabled'}</span>
+        </div>
+        {ddns && (
+          <div className="dns-item">
+            <span className="dns-label">Dynamic DNS</span>
+            <span className="dns-value">{ddns.enabled ? `✅ ${ddns.subdomain || ''}` : '❌ Disabled'}</span>
+          </div>
+        )}
+      </div>
+
+      {customIps.length > 0 && (
+        <div className="dns-servers">
+          <span className="dns-label">Custom DNS Servers</span>
+          <div className="dns-server-list">
+            {customIps.map((ip, i) => (
+              <span key={i} className="dns-server-chip">{ip}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {parentIps.length > 0 && (
+        <div className="dns-servers">
+          <span className="dns-label">ISP DNS (upstream)</span>
+          <div className="dns-server-list">
+            {parentIps.map((ip, i) => (
+              <span key={i} className="dns-server-chip muted">{ip}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PortForwardingSection({ networkId }: { networkId: string }) {
   const { data: forwards, loading: fwdLoading, refetch: refetchFwd } = useFetch(
     () => api.getForwards(networkId), [networkId]
   );
@@ -172,7 +201,7 @@ function NetworkSection({ networkId }: { networkId: string }) {
         </div>
         <table className="data-table">
           <thead>
-            <tr><th>Ext. Port</th><th>Int. Port</th><th>Protocol</th><th>Device IP</th><th>Desc</th><th>Enabled</th><th></th></tr>
+            <tr><th>Ext. Port</th><th>Int. Port</th><th>Protocol</th><th>Device IP</th><th>Desc</th><th>On</th><th></th></tr>
           </thead>
           <tbody>
             {showFwdForm && (
@@ -197,11 +226,9 @@ function NetworkSection({ networkId }: { networkId: string }) {
                   <td>{String(f.description ?? '—')}</td>
                   <td>{f.enabled !== false ? '✅' : '❌'}</td>
                   <td>
-                    <button
-                      className={`btn-action btn-delete ${confirmDelete === `fwd-${fid}` ? 'confirming' : ''}`}
+                    <button className={`btn-action btn-delete ${confirmDelete === `fwd-${fid}` ? 'confirming' : ''}`}
                       title={confirmDelete === `fwd-${fid}` ? 'Click again to confirm' : 'Delete'}
-                      disabled={deleting === fid}
-                      onClick={() => handleDeleteForward(String(f.url || ''))}
+                      disabled={deleting === fid} onClick={() => handleDeleteForward(String(f.url || ''))}
                     >{confirmDelete === `fwd-${fid}` ? '⚠️' : '🗑️'}</button>
                   </td>
                 </tr>
@@ -242,8 +269,7 @@ function NetworkSection({ networkId }: { networkId: string }) {
                   <td>{String(r.mac ?? '—')}</td>
                   <td>{String(r.description ?? r.hostname ?? r.nickname ?? '—')}</td>
                   <td>
-                    <button
-                      className={`btn-action btn-delete ${confirmDelete === `res-${rid}` ? 'confirming' : ''}`}
+                    <button className={`btn-action btn-delete ${confirmDelete === `res-${rid}` ? 'confirming' : ''}`}
                       title={confirmDelete === `res-${rid}` ? 'Click again to confirm' : 'Delete'}
                       onClick={() => handleDeleteReservation(String(r.url || ''))}
                     >{confirmDelete === `res-${rid}` ? '⚠️' : '🗑️'}</button>
@@ -263,7 +289,7 @@ function NetworkSection({ networkId }: { networkId: string }) {
 
 // ── Diagnostics ─────────────────────────────────────
 
-function DiagnosticsSection({ networkId }: { networkId: string }) {
+export function DiagnosticsSettings({ networkId }: { networkId: string }) {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState('');
@@ -288,3 +314,4 @@ function DiagnosticsSection({ networkId }: { networkId: string }) {
     </div>
   );
 }
+
