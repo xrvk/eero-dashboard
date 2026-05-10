@@ -1,4 +1,4 @@
-:root {
+:root, :root[data-theme="dark"] {
   --bg: #0f1117;
   --bg-card: #1a1d27;
   --bg-card-hover: #22263a;
@@ -14,6 +14,40 @@
   --red: #f87171;
   --radius: 12px;
   --radius-sm: 8px;
+}
+
+:root[data-theme="light"] {
+  --bg: #f5f6fa;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f0f1f5;
+  --bg-input: #eef0f4;
+  --border: #d8dbe5;
+  --text: #1a1d27;
+  --text-muted: #5c6170;
+  --text-dim: #8b90a0;
+  --accent: #3b7dff;
+  --accent-hover: #2a6ce6;
+  --green: #0d9668;
+  --yellow: #d97706;
+  --red: #dc2626;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg: #f5f6fa;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f0f1f5;
+    --bg-input: #eef0f4;
+    --border: #d8dbe5;
+    --text: #1a1d27;
+    --text-muted: #5c6170;
+    --text-dim: #8b90a0;
+    --accent: #3b7dff;
+    --accent-hover: #2a6ce6;
+    --green: #0d9668;
+    --yellow: #d97706;
+    --red: #dc2626;
+  }
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1265,3 +1299,20 @@ body {
 .btn-danger:hover { background: rgba(248,113,113,0.2); border-color: var(--red); }
 .confirm-inline { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .confirm-inline span { font-size: 0.9rem; color: var(--yellow); }
+
+/* ── Theme Toggle ──────────────────────────── */
+.btn-theme {
+  background: none; border: 1px solid var(--border); color: var(--text-muted);
+  padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer;
+  font-size: 0.78rem; transition: all 0.15s; width: 100%; text-align: left;
+}
+.btn-theme:hover { color: var(--text); border-color: var(--accent); }
+
+/* ── Speed Chart ───────────────────────────── */
+.speed-chart { margin-top: 16px; }
+.speed-chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.speed-chart-header h4 { font-size: 0.85rem; font-weight: 600; margin: 0; }
+.speed-chart-legend { display: flex; gap: 12px; }
+.legend-item { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: var(--text-muted); }
+.legend-color { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.speed-chart-svg { width: 100%; max-height: 180px; }

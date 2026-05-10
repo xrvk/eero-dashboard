@@ -21,10 +21,10 @@ export interface AuthStatus {
 
 export const getAuthStatus = () => request<AuthStatus>('/auth/status');
 
-export const login = (email: string) =>
+export const login = (identifier: string) =>
   request<{ status: string; message: string }>('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ identifier }),
   });
 
 export const verify = (code: string) =>
@@ -120,6 +120,15 @@ export const getActivityCategories = (networkId: string) =>
 // Speed Test
 export const runSpeedTest = (networkId: string) =>
   request<Record<string, unknown>>(`/networks/${networkId}/speed-test`, { method: 'POST' });
+
+export interface SpeedHistoryEntry {
+  date: string;
+  up: number | null;
+  down: number | null;
+}
+
+export const getSpeedHistory = (networkId: string) =>
+  request<{ history: SpeedHistoryEntry[]; retention_days: number }>(`/networks/${networkId}/speed-history`);
 
 // Diagnostics
 export const getDiagnostics = (networkId: string) =>

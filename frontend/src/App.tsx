@@ -23,6 +23,22 @@ export default function App() {
   const [tab, setTab] = useState<'devices' | 'activity' | 'profiles' | 'guest' | 'settings-general' | 'settings-security' | 'settings-dns' | 'settings-sqm' | 'settings-forwards' | 'settings-reservations' | 'settings-blacklist' | 'settings-updates' | 'settings-thread' | 'settings-diagnostics'>('devices');
   const settingsOpen = true; // always expanded
 
+  // Theme
+  type Theme = 'dark' | 'light' | 'auto';
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('theme') as Theme) || 'dark');
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+    const root = document.documentElement;
+    if (theme === 'auto') {
+      root.removeAttribute('data-theme');
+    } else {
+      root.setAttribute('data-theme', theme);
+    }
+  }, [theme]);
+
+  const cycleTheme = () => setTheme(t => t === 'dark' ? 'light' : t === 'light' ? 'auto' : 'dark');
+
   const checkAuth = useCallback(async () => {
     try {
       const status = await api.getAuthStatus();
@@ -177,6 +193,9 @@ export default function App() {
         )}
 
         <div className="sidebar-footer">
+          <button className="btn-theme" onClick={cycleTheme} title={`Theme: ${theme}`}>
+            {theme === 'dark' ? '🌙' : theme === 'light' ? '☀️' : '🌗'} {theme.charAt(0).toUpperCase() + theme.slice(1)}
+          </button>
           {auth.name && <span className="sidebar-user">{auth.name}</span>}
           <button className="btn-logout" onClick={handleLogout}>Sign out</button>
         </div>

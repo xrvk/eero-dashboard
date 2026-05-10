@@ -6,7 +6,7 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ onAuthenticated }: LoginFormProps) {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [code, setCode] = useState('');
   const [step, setStep] = useState<'email' | 'verify'>('email');
   const [loading, setLoading] = useState(false);
@@ -18,7 +18,7 @@ export default function LoginForm({ onAuthenticated }: LoginFormProps) {
     setLoading(true);
     setError('');
     try {
-      const res = await api.login(email);
+      const res = await api.login(identifier);
       setMessage(res.message);
       setStep('verify');
     } catch (err: unknown) {
@@ -59,17 +59,17 @@ export default function LoginForm({ onAuthenticated }: LoginFormProps) {
 
         {step === 'email' ? (
           <form onSubmit={handleLogin}>
-            <label htmlFor="email">Email or Phone</label>
+            <label htmlFor="identifier">Email or Phone</label>
             <input
-              id="email"
+              id="identifier"
               type="text"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com or +1 555-0123"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               required
               autoFocus
             />
-            <button type="submit" disabled={loading || !email}>
+            <button type="submit" disabled={loading || !identifier}>
               {loading ? 'Sending…' : 'Continue'}
             </button>
           </form>

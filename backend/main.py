@@ -1,15 +1,22 @@
 import asyncio
+import json
 import os
+import re
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from eero import EeroClient
 
 COOKIE_FILE = str(Path(__file__).parent / ".eero_session")
+DATA_DIR = Path(__file__).parent / "data"
+SPEED_HISTORY_FILE = DATA_DIR / "speed_history.json"
+SPEED_HISTORY_DAYS = int(os.environ.get("SPEED_HISTORY_DAYS", "365"))
 
 # Module-level client reference
 _client: EeroClient | None = None
@@ -52,11 +59,21 @@ app.add_middleware(
 )
 
 
+# ── Health ────────────────────────────────────────────────────────────────────
+
+
+@app.get("/api/health")
+async def health():
+    global _client
+    authenticated = _client is not None and _client.is_authenticated
+    return {"status": "ok", "version": "1.0.0", "authenticated": authenticated}
+
+
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
 
 class LoginRequest(BaseModel):
-    email: str
+    identifier: str
 
 
 class VerifyRequest(BaseModel):
@@ -89,8 +106,10 @@ async def login(req: LoginRequest):
         _client = _make_client()
         await _client.__aenter__()
     try:
-        await _client.login(req.email)
-        return {"status": "verification_required", "message": "Check your email for a verification code."}
+        await _client.login(req.identifier)
+        is_phone = bool(re.match(r'^[\+\d\s\-\(\)]+$', req.identifier.strip()))
+        channel = "phone" if is_phone else "email"
+        return {"status": "verification_required", "message": f"Check your {channel} for a verification code."}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -288,14 +307,58 @@ async def get_activity_categories(network_id: str):
 # ── Speed Test ────────────────────────────────────────────────────────────────
 
 
+def _save_speed_result(network_id: str, result: dict) -> None:
+    """Append a speed test result and prune old entries."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    history: list = []
+    if SPEED_HISTORY_FILE.exists():
+        try:
+            history = json.loads(SPEED_HISTORY_FILE.read_text())
+        except (json.JSONDecodeError, OSError):
+            history = []
+
+    up_data = result.get("up", result.get("speed", {}).get("up", {}))
+    down_data = result.get("down", result.get("speed", {}).get("down", {}))
+    entry = {
+        "network_id": network_id,
+        "date": result.get("date", datetime.now(timezone.utc).isoformat()),
+        "up": up_data.get("value") if isinstance(up_data, dict) else up_data,
+        "down": down_data.get("value") if isinstance(down_data, dict) else down_data,
+    }
+    history.append(entry)
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=SPEED_HISTORY_DAYS)
+    history = [
+        h for h in history
+        if datetime.fromisoformat(h["date"].replace("Z", "+00:00")) > cutoff
+    ]
+
+    SPEED_HISTORY_FILE.write_text(json.dumps(history, indent=2))
+
+
 @app.post("/api/networks/{network_id}/speed-test")
 async def run_speed_test(network_id: str):
     client = await get_client()
     try:
         resp = await client.run_speed_test(network_id)
-        return resp.get("data", resp)
+        data = resp.get("data", resp)
+        speed = data.get("speed", data)
+        _save_speed_result(network_id, speed if isinstance(speed, dict) else data)
+        return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/networks/{network_id}/speed-history")
+async def get_speed_history(network_id: str):
+    if not SPEED_HISTORY_FILE.exists():
+        return {"history": [], "retention_days": SPEED_HISTORY_DAYS}
+    try:
+        history = json.loads(SPEED_HISTORY_FILE.read_text())
+        filtered = [h for h in history if h.get("network_id") == network_id]
+        return {"history": filtered, "retention_days": SPEED_HISTORY_DAYS}
+    except (json.JSONDecodeError, OSError):
+        return {"history": [], "retention_days": SPEED_HISTORY_DAYS}
 
 
 # ── Diagnostics ───────────────────────────────────────────────────────────────
@@ -1040,6 +1103,13 @@ async def get_settings(network_id: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Static Files (production / Docker mode) ──────────────────────────────────
+
+STATIC_DIR = Path(__file__).parent / "static"
+if STATIC_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
 
 
 if __name__ == "__main__":

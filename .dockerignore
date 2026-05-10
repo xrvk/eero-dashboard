@@ -5,8 +5,13 @@ __pycache__/
 *.py[cod]
 backend/.venv/
 backend/venv/
-backend/.eero_credentials
 backend/.eero_session
+backend/.eero_credentials
 backend/data/
 .DS_Store
-.github/copilot-instructions.md
+.git
+.github
+.gitignore
+frontend/node_modules/
+frontend/dist/
+*.md

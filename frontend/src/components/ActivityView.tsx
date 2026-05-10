@@ -60,12 +60,20 @@ export default function ActivityView({ networkId }: ActivityViewProps) {
     try {
       const resp = await api.runSpeedTest(networkId);
       setSpeedResult(resp);
+      refetchHistory();
     } catch (e) {
       setSpeedError(e instanceof Error ? e.message : 'Speed test failed');
     } finally {
       setSpeedRunning(false);
     }
   };
+
+  // Speed test history
+  const { data: historyData, refetch: refetchHistory } = useFetch(
+    () => api.getSpeedHistory(networkId),
+    [networkId]
+  );
+  const speedHistory = historyData?.history ?? [];
 
   const devices = (devData?.devices ?? []) as ConnectedDevice[];
   const connected = devices.filter(d => d.connected);
@@ -136,6 +144,10 @@ export default function ActivityView({ networkId }: ActivityViewProps) {
         </button>
         {speedResult && <pre className="json-preview">{JSON.stringify(speedResult, null, 2)}</pre>}
         {speedError && <div className="error-banner">{speedError}</div>}
+        {speedHistory.length > 1 && <SpeedChart history={speedHistory} />}
+        {speedHistory.length === 1 && (
+          <p className="empty-text" style={{ marginTop: 12 }}>Run more speed tests to see trends</p>
+        )}
       </div>
 
       {/* Summary row */}
@@ -249,6 +261,75 @@ export default function ActivityView({ networkId }: ActivityViewProps) {
       <p className="empty-text" style={{ marginTop: 16 }}>
         ℹ️ Bandwidth history and per-device usage require eero Plus.
       </p>
+    </div>
+  );
+}
+
+function SpeedChart({ history }: { history: api.SpeedHistoryEntry[] }) {
+  const W = 600, H = 160, PAD = 40;
+  const sorted = [...history].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const downs = sorted.map(h => h.down ?? 0);
+  const ups = sorted.map(h => h.up ?? 0);
+  const allVals = [...downs, ...ups];
+  const maxVal = Math.max(...allVals, 1);
+  const minVal = Math.min(...allVals);
+
+  const x = (i: number) => PAD + (i / Math.max(sorted.length - 1, 1)) * (W - PAD * 2);
+  const y = (v: number) => H - PAD - ((v - minVal) / (maxVal - minVal || 1)) * (H - PAD * 2);
+
+  const toPath = (vals: number[]) =>
+    vals.map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+
+  const formatDate = (d: string) => {
+    const dt = new Date(d);
+    return `${dt.getMonth() + 1}/${dt.getDate()}`;
+  };
+
+  // Show ~5 date labels
+  const labelStep = Math.max(1, Math.floor(sorted.length / 5));
+
+  return (
+    <div className="speed-chart" style={{ marginTop: 16 }}>
+      <div className="speed-chart-header">
+        <h4>Speed History</h4>
+        <div className="speed-chart-legend">
+          <span className="legend-item"><span className="legend-color" style={{ background: 'var(--accent)' }} /> Download</span>
+          <span className="legend-item"><span className="legend-color" style={{ background: 'var(--green)' }} /> Upload</span>
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="speed-chart-svg">
+        {/* Grid lines */}
+        {[0, 0.25, 0.5, 0.75, 1].map(f => {
+          const val = minVal + f * (maxVal - minVal);
+          const yPos = y(val);
+          return (
+            <g key={f}>
+              <line x1={PAD} x2={W - PAD} y1={yPos} y2={yPos} stroke="var(--border)" strokeWidth="0.5" />
+              <text x={PAD - 4} y={yPos + 3} textAnchor="end" fill="var(--text-dim)" fontSize="9">
+                {val.toFixed(0)}
+              </text>
+            </g>
+          );
+        })}
+        {/* Date labels */}
+        {sorted.map((h, i) => i % labelStep === 0 || i === sorted.length - 1 ? (
+          <text key={i} x={x(i)} y={H - 4} textAnchor="middle" fill="var(--text-dim)" fontSize="9">
+            {formatDate(h.date)}
+          </text>
+        ) : null)}
+        {/* Lines */}
+        <path d={toPath(downs)} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" />
+        <path d={toPath(ups)} fill="none" stroke="var(--green)" strokeWidth="2" strokeLinejoin="round" />
+        {/* Dots */}
+        {downs.map((v, i) => (
+          <circle key={`d${i}`} cx={x(i)} cy={y(v)} r="3" fill="var(--accent)" />
+        ))}
+        {ups.map((v, i) => (
+          <circle key={`u${i}`} cx={x(i)} cy={y(v)} r="3" fill="var(--green)" />
+        ))}
+      </svg>
+      <p className="empty-text" style={{ fontSize: '0.75rem' }}>{sorted.length} test{sorted.length !== 1 ? 's' : ''} recorded</p>
     </div>
   );
 }
