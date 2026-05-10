@@ -192,6 +192,18 @@ export const updateSecurity = (networkId: string, settings: {
 export const getDns = (networkId: string) =>
   request<Record<string, unknown>>(`/networks/${networkId}/dns`);
 
+export const setDnsMode = (networkId: string, mode: string, customServers?: string[]) =>
+  request(`/networks/${networkId}/dns/mode`, {
+    method: 'POST',
+    body: JSON.stringify({ mode, custom_servers: customServers }),
+  });
+
+export const setDnsCaching = (networkId: string, enabled: boolean) =>
+  request(`/networks/${networkId}/dns/caching`, {
+    method: 'POST',
+    body: JSON.stringify({ enabled }),
+  });
+
 // Port Forwarding & Reservations
 export const getForwards = (networkId: string) =>
   request<Record<string, unknown>>(`/networks/${networkId}/forwards`);

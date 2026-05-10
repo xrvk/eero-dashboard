@@ -213,6 +213,35 @@ async def get_dns(network_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class DnsModeRequest(BaseModel):
+    mode: str
+    custom_servers: list[str] | None = None
+
+
+class DnsCachingRequest(BaseModel):
+    enabled: bool
+
+
+@app.post("/api/networks/{network_id}/dns/mode")
+async def set_dns_mode(network_id: str, req: DnsModeRequest):
+    client = await get_client()
+    try:
+        resp = await client.set_dns_mode(req.mode, custom_servers=req.custom_servers, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/networks/{network_id}/dns/caching")
+async def set_dns_caching(network_id: str, req: DnsCachingRequest):
+    client = await get_client()
+    try:
+        resp = await client.set_dns_caching(req.enabled, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ── Activity ──────────────────────────────────────────────────────────────────
 
 

@@ -1032,3 +1032,44 @@ body {
 .dns-server-chip.muted {
   background: var(--bg); border-color: var(--border); color: var(--text-muted);
 }
+
+/* ── Sidebar Collapsible Settings ───────────── */
+.sidebar-expand-icon {
+  margin-left: auto; font-size: 0.7rem; color: var(--text-dim);
+  transition: transform 0.15s;
+}
+.sidebar-sub-items {
+  display: flex; flex-direction: column; gap: 1px;
+  animation: fadeIn 0.15s ease-out;
+}
+.sidebar-sub-items .sidebar-sub {
+  padding: 7px 12px 7px 36px !important;
+  font-size: 0.8rem !important;
+  border-left: none;
+}
+
+/* ── DNS Edit Form ──────────────────────────── */
+.dns-edit-form {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 16px;
+}
+.dns-mode-select { display: flex; flex-direction: column; gap: 6px; }
+.dns-mode-option {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.15s;
+}
+.dns-mode-option:hover { background: var(--bg-card-hover); }
+.dns-mode-option.selected { border-color: var(--accent); background: rgba(110,160,255,0.05); }
+.dns-mode-option input { margin-top: 3px; accent-color: var(--accent); }
+.dns-mode-label { font-weight: 600; font-size: 0.9rem; display: block; }
+.dns-mode-desc { font-size: 0.78rem; color: var(--text-muted); display: block; }
+.dns-input-label { font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 6px; }
+.dns-input {
+  width: 100%; padding: 10px 12px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: 'SF Mono', monospace; font-size: 0.85rem; outline: none;
+}
+.dns-input:focus { border-color: var(--accent); }
+.dns-edit-actions { display: flex; gap: 8px; margin-top: 16px; }

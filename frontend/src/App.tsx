@@ -5,7 +5,7 @@ import LoginForm from './components/LoginForm';
 import DeviceList from './components/DeviceList';
 import ActivityView from './components/ActivityView';
 import ProfileManager from './components/ProfileManager';
-import { SecuritySettings, NetworkSettings, DiagnosticsSettings } from './components/SettingsView';
+import { SecuritySettings, DnsSettings, PortForwardsSettings, DhcpReservationsSettings, DiagnosticsSettings } from './components/SettingsView';
 
 function getNetworkId(n: api.Network): string {
   if (n.id != null) return String(n.id);
@@ -19,7 +19,8 @@ export default function App() {
   const [networks, setNetworks] = useState<api.Network[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [networkDetail, setNetworkDetail] = useState<api.Network | null>(null);
-  const [tab, setTab] = useState<'devices' | 'activity' | 'profiles' | 'settings-security' | 'settings-network' | 'settings-diagnostics'>('devices');
+  const [tab, setTab] = useState<'devices' | 'activity' | 'profiles' | 'settings-security' | 'settings-dns' | 'settings-forwards' | 'settings-reservations' | 'settings-diagnostics'>('devices');
+  const settingsOpen = tab.startsWith('settings-');
 
   const checkAuth = useCallback(async () => {
     try {
@@ -96,18 +97,32 @@ export default function App() {
           <button className={`sidebar-item ${tab === 'profiles' ? 'active' : ''}`} onClick={() => setTab('profiles')}>
             <span className="sidebar-icon">👤</span> Profiles
           </button>
-          <div className="sidebar-group">
-            <span className="sidebar-section-label">Settings</span>
-            <button className={`sidebar-item sidebar-sub ${tab === 'settings-security' ? 'active' : ''}`} onClick={() => setTab('settings-security')}>
-              <span className="sidebar-icon">🔒</span> Security
-            </button>
-            <button className={`sidebar-item sidebar-sub ${tab === 'settings-network' ? 'active' : ''}`} onClick={() => setTab('settings-network')}>
-              <span className="sidebar-icon">🌐</span> Network
-            </button>
-            <button className={`sidebar-item sidebar-sub ${tab === 'settings-diagnostics' ? 'active' : ''}`} onClick={() => setTab('settings-diagnostics')}>
-              <span className="sidebar-icon">🔍</span> Diagnostics
-            </button>
-          </div>
+          <button
+            className={`sidebar-item ${settingsOpen ? 'active' : ''}`}
+            onClick={() => setTab(settingsOpen ? 'devices' : 'settings-security')}
+          >
+            <span className="sidebar-icon">⚙️</span> Settings
+            <span className="sidebar-expand-icon">{settingsOpen ? '▾' : '▸'}</span>
+          </button>
+          {settingsOpen && (
+            <div className="sidebar-sub-items">
+              <button className={`sidebar-item sidebar-sub ${tab === 'settings-security' ? 'active' : ''}`} onClick={() => setTab('settings-security')}>
+                Security
+              </button>
+              <button className={`sidebar-item sidebar-sub ${tab === 'settings-dns' ? 'active' : ''}`} onClick={() => setTab('settings-dns')}>
+                DNS
+              </button>
+              <button className={`sidebar-item sidebar-sub ${tab === 'settings-forwards' ? 'active' : ''}`} onClick={() => setTab('settings-forwards')}>
+                Port Forwards
+              </button>
+              <button className={`sidebar-item sidebar-sub ${tab === 'settings-reservations' ? 'active' : ''}`} onClick={() => setTab('settings-reservations')}>
+                DHCP Reservations
+              </button>
+              <button className={`sidebar-item sidebar-sub ${tab === 'settings-diagnostics' ? 'active' : ''}`} onClick={() => setTab('settings-diagnostics')}>
+                Diagnostics
+              </button>
+            </div>
+          )}
         </nav>
 
         {eeros.length > 0 && (
@@ -158,7 +173,9 @@ export default function App() {
             tab === 'activity' ? 'Network Health' :
             tab === 'profiles' ? 'Profiles' :
             tab === 'settings-security' ? 'Security' :
-            tab === 'settings-network' ? 'Network' :
+            tab === 'settings-dns' ? 'DNS' :
+            tab === 'settings-forwards' ? 'Port Forwards' :
+            tab === 'settings-reservations' ? 'DHCP Reservations' :
             'Diagnostics'
           }</h1>
           {networkDetail && (
@@ -181,7 +198,9 @@ export default function App() {
             {tab === 'activity' && <ActivityView networkId={selectedNetwork} />}
             {tab === 'profiles' && <ProfileManager networkId={selectedNetwork} />}
             {tab === 'settings-security' && <SecuritySettings networkId={selectedNetwork} />}
-            {tab === 'settings-network' && <NetworkSettings networkId={selectedNetwork} />}
+            {tab === 'settings-dns' && <DnsSettings networkId={selectedNetwork} />}
+            {tab === 'settings-forwards' && <PortForwardsSettings networkId={selectedNetwork} />}
+            {tab === 'settings-reservations' && <DhcpReservationsSettings networkId={selectedNetwork} />}
             {tab === 'settings-diagnostics' && <DiagnosticsSettings networkId={selectedNetwork} />}
           </div>
         )}
