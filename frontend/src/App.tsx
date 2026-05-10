@@ -194,6 +194,14 @@ export default function App() {
         )}
 
         <div className="sidebar-footer">
+          {networkDetail?.speed?.down && (
+            <div className="sidebar-speed">
+              <span className="sidebar-section-label">Last Speed Test</span>
+              <span className="sidebar-speed-values">
+                ↓{(networkDetail.speed.down as { value: number }).value.toFixed(0)} ↑{(networkDetail.speed.up as { value: number })?.value.toFixed(0)} {(networkDetail.speed.down as { units: string }).units}
+              </span>
+            </div>
+          )}
           {auth.name && <span className="sidebar-user">{auth.name}</span>}
         </div>
       </aside>
@@ -216,18 +224,6 @@ export default function App() {
             tab === 'settings-thread' ? 'Thread' :
             'Diagnostics'
           }</h1>
-          {networkDetail && (
-            <div className="header-stats">
-              <span className={`header-pill status-${networkDetail.status}`}>
-                {networkDetail.status === 'connected' || networkDetail.status === 'green' ? '● Online' : '● ' + (networkDetail.status || 'Unknown')}
-              </span>
-              {networkDetail.speed?.down && (
-                <span className="header-pill">
-                  ↓{networkDetail.speed.down.value} ↑{networkDetail.speed.up?.value} {networkDetail.speed.down.units}
-                </span>
-              )}
-            </div>
-          )}
           <div className="header-actions">
             <div className="theme-dropdown">
               <button className="btn-header-icon" onClick={() => setThemeMenuOpen(!themeMenuOpen)} title="Theme">
