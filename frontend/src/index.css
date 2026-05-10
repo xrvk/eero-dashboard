@@ -1335,7 +1335,7 @@ body {
 /* ── Sidebar Speed ─────────────────────────── */
 .sidebar-speed {
   display: flex; flex-direction: column; gap: 2px;
-  padding: 8px 0; border-top: 1px solid var(--border); margin-bottom: 8px;
+  padding: 8px 0; margin-bottom: 8px;
 }
 .sidebar-speed-values {
   font-family: 'SF Mono', monospace; font-size: 0.8rem; color: var(--accent);
