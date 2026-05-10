@@ -35,7 +35,7 @@ export default function ActivityView({ networkId }: ActivityViewProps) {
   );
 
   const [speedRunning, setSpeedRunning] = useState(false);
-  const [speedResult, setSpeedResult] = useState<Record<string, unknown> | null>(null);
+  const [speedSuccess, setSpeedSuccess] = useState(false);
   const [speedError, setSpeedError] = useState('');
   const [rebooting, setRebooting] = useState<string | null>(null);
   const [confirmReboot, setConfirmReboot] = useState<string | null>(null);
@@ -56,11 +56,12 @@ export default function ActivityView({ networkId }: ActivityViewProps) {
   const handleSpeedTest = async () => {
     setSpeedRunning(true);
     setSpeedError('');
-    setSpeedResult(null);
+    setSpeedSuccess(false);
     try {
-      const resp = await api.runSpeedTest(networkId);
-      setSpeedResult(resp);
+      await api.runSpeedTest(networkId);
+      setSpeedSuccess(true);
       refetchHistory();
+      setTimeout(() => setSpeedSuccess(false), 5000);
     } catch (e) {
       setSpeedError(e instanceof Error ? e.message : 'Speed test failed');
     } finally {
@@ -130,7 +131,7 @@ export default function ActivityView({ networkId }: ActivityViewProps) {
         <button className="btn-primary" onClick={handleSpeedTest} disabled={speedRunning}>
           {speedRunning ? <><div className="spinner" /> Running (~30s)…</> : '🚀 Run Speed Test'}
         </button>
-        {speedResult && <pre className="json-preview">{JSON.stringify(speedResult, null, 2)}</pre>}
+        {speedSuccess && <div className="speed-success">✅ Speed test complete</div>}
         {speedError && <div className="error-banner">{speedError}</div>}
         {speedHistory.length > 1 && <SpeedChart history={speedHistory} />}
         {speedHistory.length === 1 && (
