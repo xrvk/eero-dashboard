@@ -26,19 +26,59 @@ The easiest way to run eero Dashboard. A single container serves both the fronte
 
 **Prerequisites:** [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
 
+#### Option A: Pre-built image from GHCR (fastest)
+
+Create a `docker-compose.yml`:
+
+```yaml
+services:
+  eero-dashboard:
+    image: ghcr.io/xrvk/eero-dashboard:latest
+    container_name: eero-dashboard
+    ports:
+      - "8420:8420"
+    volumes:
+      - eero-data:/app/data
+    environment:
+      - SPEED_HISTORY_DAYS=365
+    restart: unless-stopped
+
+volumes:
+  eero-data:
+```
+
+Then run:
+
 ```bash
-git clone https://github.com/xrvk/eero-dashboard.git
-cd eero-dashboard
 docker compose up -d
 ```
 
-The dashboard is now running at **http://localhost:8420**.
-
-To rebuild after pulling updates:
+To update to the latest version:
 
 ```bash
+docker compose pull && docker compose up -d
+```
+
+#### Option B: Build from source
+
+```bash
+git clone https://github.com/xrvk/eero-dashboard.git
+cd eero-dashboard
 docker compose up -d --build
 ```
+
+### Synology NAS (Container Manager)
+
+1. Create a folder: **File Station → docker → eero-dashboard**
+2. Place the `docker-compose.yml` from Option A above into that folder
+3. Open **Container Manager → Project → Create**
+4. Set **Project name** to `eero-dashboard`
+5. Set **Path** to `/docker/eero-dashboard`
+6. It will auto-detect the compose file — click **Next → Done**
+
+The dashboard will be available at `http://<NAS-IP>:8420`.
+
+### Common commands
 
 To stop:
 
