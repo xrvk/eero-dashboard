@@ -600,8 +600,9 @@ async def reboot_eero(network_id: str, eero_id: str):
 async def get_password(network_id: str):
     client = await get_client()
     try:
-        resp = await client.get_password(network_id=network_id)
-        return resp.get("data", resp)
+        resp = await client.get_network(network_id=network_id)
+        data = resp.get("data", resp)
+        return {"password": data.get("password", "")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -706,7 +707,11 @@ async def get_led_status(network_id: str, eero_id: str):
     client = await get_client()
     try:
         resp = await client.get_led_status(eero_id, network_id=network_id)
-        return resp.get("data", resp)
+        data = resp.get("data", resp)
+        return {
+            "led_on": data.get("led_on", False),
+            "brightness": data.get("led_brightness", 100),
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -781,7 +786,9 @@ async def get_sqm(network_id: str):
     client = await get_client()
     try:
         resp = await client.get_sqm_settings(network_id=network_id)
-        return resp.get("data", resp)
+        data = resp.get("data", resp)
+        sqm = data.get("sqm", data) if isinstance(data, dict) else data
+        return sqm
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -927,7 +934,9 @@ async def get_updates(network_id: str):
     client = await get_client()
     try:
         resp = await client.get_updates(network_id=network_id)
-        return resp.get("data", resp)
+        data = resp.get("data", resp)
+        updates = data.get("updates", data) if isinstance(data, dict) else data
+        return updates
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1008,8 +1017,27 @@ async def remove_from_blacklist(network_id: str, device_id: str):
 async def get_settings(network_id: str):
     client = await get_client()
     try:
-        resp = await client.get_settings(network_id=network_id)
-        return resp.get("data", resp)
+        resp = await client.get_network(network_id=network_id)
+        data = resp.get("data", resp)
+        return {
+            "name": data.get("name", ""),
+            "password": data.get("password", ""),
+            "timezone": data.get("timezone", ""),
+            "sqm": data.get("sqm", {}),
+            "upnp": data.get("upnp"),
+            "ipv6_upstream": data.get("ipv6_upstream"),
+            "band_steering": data.get("band_steering"),
+            "wpa3": data.get("wpa3"),
+            "thread": data.get("thread"),
+            "guest_network": data.get("guest_network", {}),
+            "dns": data.get("dns", {}),
+            "premium_status": data.get("premium_status", ""),
+            "updates": data.get("updates", {}),
+            "speed": data.get("speed", {}),
+            "wan_ip": data.get("wan_ip", ""),
+            "gateway_ip": data.get("gateway_ip", ""),
+            "status": data.get("status", ""),
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
