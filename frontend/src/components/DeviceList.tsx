@@ -208,7 +208,12 @@ export default function DeviceList({ networkId }: DeviceListProps) {
   }, [filtered, groupBy, sortCol, sortDir]);
 
   if (loading) return <div className="card loading-card"><div className="spinner" /> Loading devices…</div>;
-  if (error) return <div className="card error-card">Error: {error}</div>;
+  if (error) return (
+    <div className="card error-card">
+      <span>⚠️ Failed to load devices: {error}</span>
+      <button className="btn-primary btn-sm" onClick={refetch} style={{ marginLeft: 16 }}>Retry</button>
+    </div>
+  );
 
   return (
     <div className="device-list">
@@ -375,7 +380,18 @@ export default function DeviceList({ networkId }: DeviceListProps) {
 
       {filtered.length === 0 && (
         <div className="empty-state">
-          <p className="empty-text">No devices match your search</p>
+          {search ? (
+            <>
+              <p className="empty-icon">🔍</p>
+              <p className="empty-text">No devices match "{search}"</p>
+              <p className="empty-hint">Try searching by name, IP, MAC, or manufacturer</p>
+            </>
+          ) : (
+            <>
+              <p className="empty-icon">🌐</p>
+              <p className="empty-text">No {statusFilter !== 'all' ? statusFilter : ''} devices {bandFilter !== 'all' ? `(${bandFilter})` : ''}</p>
+            </>
+          )}
         </div>
       )}
     </div>

@@ -811,3 +811,79 @@ body {
 
 /* ── Toggle row padding ─────────────────────── */
 .toggle-row { padding: 14px 12px; }
+
+/* ── Header pill badges ─────────────────────── */
+.header-pill {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 99px; padding: 5px 14px; font-size: 0.8rem;
+  font-weight: 500; white-space: nowrap;
+  color: var(--text-muted);
+}
+.header-pill.status-connected, .header-pill.status-green { color: var(--green); border-color: rgba(52,211,153,0.3); }
+
+/* ── Delete confirm state ───────────────────── */
+.btn-delete.confirming {
+  border-color: var(--red) !important;
+  background: rgba(248,113,113,0.1);
+  animation: pulse-border 0.6s ease-in-out infinite alternate;
+}
+@keyframes pulse-border { from { border-color: var(--red); } to { border-color: rgba(248,113,113,0.4); } }
+
+/* ── Improved empty states ──────────────────── */
+.empty-state {
+  text-align: center; padding: 40px 20px;
+  background: rgba(0,0,0,0.15); border-radius: var(--radius);
+  border: 1px dashed var(--border);
+}
+.empty-icon { font-size: 2.5rem; margin-bottom: 8px; }
+.empty-hint { font-size: 0.78rem; color: var(--text-dim); margin-top: 6px; }
+
+/* ── Device card hover shadow ───────────────── */
+.device-card.connected:hover {
+  box-shadow: 0 4px 16px rgba(110,160,255,0.08);
+}
+
+/* ── Speed test hero numbers ────────────────── */
+.speed-value { font-size: 2.8rem; font-weight: 800; letter-spacing: -0.02em; }
+.speed-dir { font-size: 1.2rem; }
+.speed-unit { font-size: 0.9rem; }
+.speed-result { gap: 40px; padding: 16px 0; }
+
+/* ── Bar charts taller with gradients ───────── */
+.band-bar-track { height: 12px; }
+.band-bar-fill.band-24GHz { background: linear-gradient(90deg, var(--yellow), #e8b500); }
+.band-bar-fill.band-5GHz { background: linear-gradient(90deg, var(--accent), #8bb5ff); }
+.band-bar-fill.band-6GHz { background: linear-gradient(90deg, var(--green), #2ecb9b); }
+
+/* ── Error card with retry ──────────────────── */
+.error-card {
+  justify-content: space-between; gap: 12px;
+}
+
+/* ── Focus visible on interactive elements ──── */
+.btn-primary:focus-visible,
+.btn-icon:focus-visible,
+.btn-action:focus-visible,
+.status-btn:focus-visible,
+.view-btn:focus-visible,
+.band-btn:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+
+/* ── Table mobile responsiveness ────────────── */
+@media (max-width: 900px) {
+  .device-table td:nth-child(4),
+  .device-table th:nth-child(4) { display: none; } /* hide MAC */
+  .device-table td:nth-child(8),
+  .device-table th:nth-child(8) { display: none; } /* hide Speed */
+}
+@media (max-width: 700px) {
+  .device-table td:nth-child(6),
+  .device-table th:nth-child(6),
+  .device-table td:nth-child(7),
+  .device-table th:nth-child(7) { display: none; } /* hide Signal + Band */
+}
+
+/* ── Node card in Health tab ────────────────── */
+.activity-panel .node-grid { margin-top: 8px; }
+.activity-panel .node-card { position: relative; }

@@ -96,6 +96,7 @@ function PortForwardingSection({ networkId }: { networkId: string }) {
   const [resForm, setResForm] = useState({ ip: '', mac: '', description: '' });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const handleCreateForward = async () => {
     setSaving(true);
@@ -117,13 +118,14 @@ function PortForwardingSection({ networkId }: { networkId: string }) {
 
   const handleDeleteForward = async (fwdUrl: string) => {
     const fwdId = fwdUrl.replace(/\/$/, '').split('/').pop() || '';
+    if (confirmDelete !== `fwd-${fwdId}`) { setConfirmDelete(`fwd-${fwdId}`); return; }
     setDeleting(fwdId);
     try {
       await api.deleteForward(networkId, fwdId);
       await refetchFwd();
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Failed to delete');
-    } finally { setDeleting(null); }
+    } finally { setDeleting(null); setConfirmDelete(null); }
   };
 
   const handleCreateReservation = async () => {
@@ -140,13 +142,14 @@ function PortForwardingSection({ networkId }: { networkId: string }) {
 
   const handleDeleteReservation = async (resUrl: string) => {
     const resId = resUrl.replace(/\/$/, '').split('/').pop() || '';
+    if (confirmDelete !== `res-${resId}`) { setConfirmDelete(`res-${resId}`); return; }
     setDeleting(resId);
     try {
       await api.deleteReservation(networkId, resId);
       await refetchRes();
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Failed to delete');
-    } finally { setDeleting(null); }
+    } finally { setDeleting(null); setConfirmDelete(null); }
   };
 
   if (fwdLoading || resLoading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
@@ -231,8 +234,12 @@ function PortForwardingSection({ networkId }: { networkId: string }) {
                   <td>{String(f.description ?? '—')}</td>
                   <td>{f.enabled !== false ? '✅' : '❌'}</td>
                   <td>
-                    <button className="btn-action btn-delete" title="Delete" disabled={deleting === fid}
-                      onClick={() => handleDeleteForward(String(f.url || ''))}>🗑️</button>
+                    <button
+                      className={`btn-action btn-delete ${confirmDelete === `fwd-${fid}` ? 'confirming' : ''}`}
+                      title={confirmDelete === `fwd-${fid}` ? 'Click again to confirm' : 'Delete'}
+                      disabled={deleting === fid}
+                      onClick={() => handleDeleteForward(String(f.url || ''))}
+                    >{confirmDelete === `fwd-${fid}` ? '⚠️' : '🗑️'}</button>
                   </td>
                 </tr>
               );
@@ -294,8 +301,11 @@ function PortForwardingSection({ networkId }: { networkId: string }) {
                 <td>{String(r.mac ?? '—')}</td>
                 <td>{String(r.description ?? r.hostname ?? r.nickname ?? '—')}</td>
                 <td>
-                  <button className="btn-action btn-delete" title="Delete"
-                    onClick={() => handleDeleteReservation(String(r.url || ''))}>🗑️</button>
+                  <button
+                    className={`btn-action btn-delete ${confirmDelete === `res-${String(r.url || '').replace(/\/$/, '').split('/').pop()}` ? 'confirming' : ''}`}
+                    title={confirmDelete?.startsWith('res-') ? 'Click again to confirm' : 'Delete'}
+                    onClick={() => handleDeleteReservation(String(r.url || ''))}
+                  >{confirmDelete === `res-${String(r.url || '').replace(/\/$/, '').split('/').pop()}` ? '⚠️' : '🗑️'}</button>
                 </td>
               </tr>
             ))}
