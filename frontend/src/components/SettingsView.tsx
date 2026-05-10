@@ -73,7 +73,6 @@ export function DnsSettings({ networkId }: { networkId: string }) {
   const dns = (data as Record<string, unknown>)?.dns as Record<string, unknown> | undefined;
   const mode = dns?.mode as string || 'default';
   const customIps = (dns?.custom as { ips?: string[] })?.ips ?? [];
-  const parentIps = (dns?.parent as { ips?: string[] })?.ips ?? [];
   const caching = dns?.caching as boolean | undefined;
 
   const startEditing = () => {
@@ -288,7 +287,7 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ ip: '', mac: '', description: '' });
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [_deleting, setDeleting] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const handleCreate = async () => {
@@ -577,7 +576,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const { data: threadData, loading: tLoading } = useFetch(
     () => api.getThread(networkId), [networkId]
   );
-  const { data: routingData, loading: rLoading } = useFetch(
+  const { data: _routingData, loading: rLoading } = useFetch(
     () => api.getRouting(networkId), [networkId]
   );
   const { data: securityData, loading: secLoading, refetch: refetchSecurity } = useFetch(
@@ -922,8 +921,8 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           <h3>🧵 Thread</h3>
           <div className="general-info-grid">
             <div className="general-detail"><span>Status</span><span className={thread.enabled ? 'text-green' : 'text-muted'}>{thread.enabled ? '● Enabled' : '○ Disabled'}</span></div>
-            {thread.name && <div className="general-detail"><span>Network</span><span className="mono">{String(thread.name)}</span></div>}
-            {thread.channel && <div className="general-detail"><span>Channel</span><span>{String(thread.channel)}</span></div>}
+            {!!thread.name && <div className="general-detail"><span>Network</span><span className="mono">{String(thread.name)}</span></div>}
+            {!!thread.channel && <div className="general-detail"><span>Channel</span><span>{String(thread.channel)}</span></div>}
           </div>
         </div>
       )}
