@@ -292,7 +292,11 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
             <div className="detail-grid">
               <DetailRow label="MAC Address" value={selectedDevice.mac} mono />
               <DetailRow label="IP Address" value={selectedDevice.ip} mono
-                action={onNavigate ? { label: 'Reserve →', onClick: () => { setSelectedDevice(null); onNavigate('settings-reservations'); } } : undefined}
+                action={onNavigate ? { label: 'Reserve →', onClick: () => {
+                  if (selectedDevice.ip) navigator.clipboard.writeText(selectedDevice.ip);
+                  setSelectedDevice(null);
+                  onNavigate('settings-reservations');
+                } } : undefined}
               />
               <DetailRow label="Manufacturer" value={(selectedDevice as Record<string, unknown>).manufacturer as string} />
               <DetailRow label="Connection" value={selectedDevice.wireless ? 'Wireless' : 'Wired'} />
