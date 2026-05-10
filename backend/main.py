@@ -20,6 +20,8 @@ DATA_DIR = Path(__file__).parent / "data"
 SPEED_HISTORY_FILE = DATA_DIR / "speed_history.json"
 SPEED_HISTORY_DAYS = int(os.environ.get("SPEED_HISTORY_DAYS", "365"))
 CACHE_TTL = int(os.environ.get("CACHE_TTL", "300"))
+SPEED_TEST_POLL_INTERVAL = int(os.environ.get("SPEED_TEST_POLL_INTERVAL", "10"))
+SPEED_TEST_TIMEOUT = int(os.environ.get("SPEED_TEST_TIMEOUT", "120"))
 
 # Module-level client reference
 _client: EeroClient | None = None
@@ -409,11 +411,34 @@ def _save_speed_result(network_id: str, result: dict) -> None:
 async def run_speed_test(network_id: str):
     client = await get_client()
     try:
-        resp = await client.run_speed_test(network_id)
-        data = resp.get("data", resp)
-        speed = data.get("speed", data)
-        _save_speed_result(network_id, speed if isinstance(speed, dict) else data)
-        return data
+        # Snapshot the current speed date so we can detect when it changes
+        pre_resp = await client.get_network(network_id, refresh_cache=True)
+        pre_data = pre_resp.get("data", pre_resp)
+        pre_speed = pre_data.get("speed", {})
+        pre_date = pre_speed.get("date") if isinstance(pre_speed, dict) else None
+
+        # Kick off the speed test (returns 202 accepted)
+        await client.run_speed_test(network_id)
+
+        # Poll until the speed date changes or we time out
+        deadline = time.monotonic() + SPEED_TEST_TIMEOUT
+        while time.monotonic() < deadline:
+            await asyncio.sleep(SPEED_TEST_POLL_INTERVAL)
+            poll_resp = await client.get_network(network_id, refresh_cache=True)
+            poll_data = poll_resp.get("data", poll_resp)
+            poll_speed = poll_data.get("speed", {})
+            poll_date = poll_speed.get("date") if isinstance(poll_speed, dict) else None
+
+            if poll_date and poll_date != pre_date:
+                _save_speed_result(network_id, poll_speed)
+                return poll_speed
+
+        raise HTTPException(
+            status_code=504,
+            detail="Speed test timed out waiting for results",
+        )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

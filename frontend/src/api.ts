@@ -42,7 +42,7 @@ export interface Network {
   url?: string;
   name: string;
   status?: string;
-  speed?: { down?: { value: number; units: string }; up?: { value: number; units: string } };
+  speed?: { down?: { value: number; units: string }; up?: { value: number; units: string }; date?: string };
   eeros?: { count: number };
   clients?: { count: number };
   gateway_eero?: string;

@@ -1364,6 +1364,10 @@ body {
   font-size: 0.6rem; color: var(--text-dim);
   text-transform: uppercase; letter-spacing: 0.03em;
 }
+.sidebar-speed-date {
+  display: block; font-size: 0.55rem; color: var(--text-dim);
+  margin-top: 6px; opacity: 0.7;
+}
 
 /* ── General Settings Page ─────────────────── */
 .general-settings { max-width: 900px; }
