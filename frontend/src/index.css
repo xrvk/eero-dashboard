@@ -120,6 +120,13 @@ body {
   color: var(--red); border-radius: var(--radius-sm);
   padding: 10px 14px; font-size: 0.85rem; margin-bottom: 16px;
 }
+.speed-success {
+  background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3);
+  color: var(--green); border-radius: var(--radius-sm);
+  padding: 10px 14px; font-size: 0.85rem; margin-top: 8px;
+  animation: fade-in 0.3s ease;
+}
+@keyframes fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .info-text { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px; }
 
 /* App Layout — Sidebar */
