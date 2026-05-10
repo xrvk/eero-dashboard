@@ -432,3 +432,101 @@ body {
   .activity-panels { grid-template-columns: 1fr; }
   .speed-result { gap: 20px; }
 }
+
+/* ── Device Toolbar ─────────────────────────── */
+
+.device-toolbar {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1; min-width: 220px; position: relative; display: flex; align-items: center;
+}
+.search-icon {
+  position: absolute; left: 12px; font-size: 0.85rem; pointer-events: none;
+}
+.search-box input {
+  width: 100%; padding: 9px 34px 9px 36px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 0.85rem; outline: none; transition: border-color 0.15s;
+}
+.search-box input:focus { border-color: var(--accent); }
+.search-box input::placeholder { color: var(--text-dim); }
+.search-clear {
+  position: absolute; right: 8px; background: none; border: none;
+  color: var(--text-muted); font-size: 1.1rem; cursor: pointer;
+  padding: 0 4px; line-height: 1;
+}
+.search-clear:hover { color: var(--text); }
+
+.toolbar-controls { display: flex; align-items: center; gap: 8px; }
+
+.group-select { display: flex; align-items: center; gap: 6px; }
+.group-select label {
+  font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.group-select select {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  padding: 6px 10px; font-size: 0.8rem; outline: none; cursor: pointer;
+}
+.group-select select:focus { border-color: var(--accent); }
+
+.view-toggle { display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.view-btn {
+  background: var(--bg-card); border: none; color: var(--text-muted);
+  padding: 6px 10px; font-size: 0.9rem; cursor: pointer;
+  transition: all 0.15s; border-right: 1px solid var(--border);
+}
+.view-btn:last-child { border-right: none; }
+.view-btn.active { background: var(--accent); color: #fff; }
+.view-btn:hover:not(.active) { color: var(--text); }
+
+.search-results-info {
+  font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;
+  padding-left: 4px;
+}
+
+/* ── Device Groups ──────────────────────────── */
+
+.device-group { margin-bottom: 24px; }
+.group-header {
+  margin-bottom: 10px;
+}
+.group-header h3 {
+  font-size: 0.85rem; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+/* ── Device Table (List View) ───────────────── */
+
+.device-table {
+  width: 100%; border-collapse: collapse; font-size: 0.85rem;
+}
+.device-table thead th {
+  text-align: left; padding: 8px 10px; color: var(--text-dim);
+  font-weight: 500; font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.05em; border-bottom: 1px solid var(--border);
+}
+.device-table tbody td {
+  padding: 8px 10px; border-bottom: 1px solid rgba(42,46,61,0.5);
+  vertical-align: middle;
+}
+.device-table tbody tr { transition: background 0.1s; }
+.device-table tbody tr:hover { background: var(--bg-card-hover); }
+.device-table tbody tr.row-offline { opacity: 0.45; }
+.td-icon { width: 32px; text-align: center; font-size: 1.1rem; }
+.td-name { font-weight: 500; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.td-mono { font-family: 'SF Mono', monospace; font-size: 0.78rem; color: var(--text-muted); }
+
+.empty-state { text-align: center; padding: 40px 20px; }
+
+@media (max-width: 800px) {
+  .device-toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar-controls { justify-content: flex-end; }
+  .device-table { font-size: 0.75rem; }
+  .device-table thead th, .device-table tbody td { padding: 6px 6px; }
+}
