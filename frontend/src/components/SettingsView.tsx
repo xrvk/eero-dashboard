@@ -170,33 +170,16 @@ export function DnsSettings({ networkId }: { networkId: string }) {
           </div>
         ) : (
           <div>
-            <div className="dns-grid">
-              <div className="dns-item">
-                <span className="dns-label">Mode</span>
-                <span className="dns-value">{mode}</span>
-              </div>
-            </div>
-
-            {customIps.length > 0 && (
+            {customIps.length > 0 ? (
               <div className="dns-servers">
-                <span className="dns-label">Custom DNS</span>
                 <div className="dns-server-list">
                   {customIps.map((ip, i) => (
                     <span key={i} className="dns-server-chip">{ip}</span>
                   ))}
                 </div>
               </div>
-            )}
-
-            {parentIps.length > 0 && (
-              <div className="dns-servers">
-                <span className="dns-label">ISP Upstream</span>
-                <div className="dns-server-list">
-                  {parentIps.map((ip, i) => (
-                    <span key={i} className="dns-server-chip muted">{ip}</span>
-                  ))}
-                </div>
-              </div>
+            ) : (
+              <span className="dns-value" style={{ color: 'var(--text-muted)' }}>Using eero default DNS</span>
             )}
           </div>
         )}
