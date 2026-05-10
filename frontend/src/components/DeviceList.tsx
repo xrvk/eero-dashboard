@@ -432,8 +432,8 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
                   <th className="sortable-th" onClick={() => handleSort('ip')}>IP{sortIndicator('ip')}</th>
                   <th className="sortable-th" onClick={() => handleSort('mac')}>MAC{sortIndicator('mac')}</th>
                   <th className="sortable-th" onClick={() => handleSort('type')}>Type{sortIndicator('type')}</th>
-                  <th className="sortable-th" onClick={() => handleSort('signal')}>Signal{sortIndicator('signal')}</th>
                   <th className="sortable-th" onClick={() => handleSort('band')}>Band{sortIndicator('band')}</th>
+                  <th className="sortable-th" onClick={() => handleSort('signal')}>Signal{sortIndicator('signal')}</th>
                   <th className="sortable-th" onClick={() => handleSort('speed')}>Speed{sortIndicator('speed')}</th>
                   <th></th>
                 </tr>
@@ -451,6 +451,13 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
                     <td className="td-mono">{d.mac || '—'}</td>
                     <td>{d.wireless ? '📶' : '🔌'} {d.connection_type || '—'}</td>
                     <td>
+                      {d.wireless && conn?.frequency ? (
+                        <span className={`band-pill band-${freqToBand(conn.frequency).replace(/[\s.]/g, '')}`}>
+                          {freqToBand(conn.frequency)}
+                        </span>
+                      ) : d.wireless ? '—' : ''}
+                    </td>
+                    <td>
                       {d.wireless && conn ? (
                         <>
                           <span className="signal-bars">
@@ -460,13 +467,6 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
                           </span>
                           <span className="td-mono" style={{ marginLeft: 4 }}>{conn.signal || ''}</span>
                         </>
-                      ) : d.wireless ? '—' : ''}
-                    </td>
-                    <td>
-                      {d.wireless && conn?.frequency ? (
-                        <span className={`band-pill band-${freqToBand(conn.frequency).replace(/[\s.]/g, '')}`}>
-                          {freqToBand(conn.frequency)}
-                        </span>
                       ) : d.wireless ? '—' : ''}
                     </td>
                     <td className="td-mono">
