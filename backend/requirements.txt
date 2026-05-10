@@ -1,4 +1,4 @@
-fastapi==0.115.12
-uvicorn[standard]==0.34.2
-eero-api==4.0.7
-python-dotenv==1.1.0
+fastapi>=0.115
+uvicorn[standard]>=0.34
+eero-api>=4.0
+python-dotenv>=1.0

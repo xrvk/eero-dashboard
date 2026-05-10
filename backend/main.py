@@ -1,5 +1,4 @@
 import asyncio
-import json
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -10,56 +9,35 @@ from pydantic import BaseModel
 
 from eero import EeroClient
 
-CREDENTIALS_FILE = Path(__file__).parent / ".eero_credentials"
-
-
-class FileCredentialStore:
-    """Simple file-based credential store for the eero session token."""
-
-    def __init__(self, path: Path = CREDENTIALS_FILE):
-        self.path = path
-
-    def load(self) -> str | None:
-        if self.path.exists():
-            data = json.loads(self.path.read_text())
-            return data.get("user_token")
-        return None
-
-    def save(self, user_token: str):
-        self.path.write_text(json.dumps({"user_token": user_token}))
-
-    def clear(self):
-        if self.path.exists():
-            self.path.unlink()
-
-
-cred_store = FileCredentialStore()
+COOKIE_FILE = str(Path(__file__).parent / ".eero_session")
 
 # Module-level client reference
 _client: EeroClient | None = None
-_pending_login_token: str | None = None
+
+
+def _make_client() -> EeroClient:
+    return EeroClient(cookie_file=COOKIE_FILE, use_keyring=False)
 
 
 async def get_client() -> EeroClient:
     """Return the authenticated EeroClient, or raise if not authenticated."""
     global _client
     if _client is None:
-        token = cred_store.load()
-        if token is None:
-            raise HTTPException(status_code=401, detail="Not authenticated. Please login first.")
-        _client = EeroClient(user_token=token)
+        _client = _make_client()
+        await _client.__aenter__()
+    if not _client.is_authenticated:
+        raise HTTPException(status_code=401, detail="Not authenticated. Please login first.")
     return _client
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _client
-    token = cred_store.load()
-    if token:
-        _client = EeroClient(user_token=token)
+    _client = _make_client()
+    await _client.__aenter__()
     yield
     if _client:
-        await _client.close()
+        await _client.__aexit__(None, None, None)
         _client = None
 
 
@@ -87,11 +65,13 @@ class VerifyRequest(BaseModel):
 
 @app.get("/api/auth/status")
 async def auth_status():
-    token = cred_store.load()
-    if token and _client:
+    global _client
+    if _client is None:
+        _client = _make_client()
+        await _client.__aenter__()
+    if _client.is_authenticated:
         try:
-            resp = await _client.get_account()
-            account = resp.get("data", {})
+            account = await _client.get_account()
             return {
                 "authenticated": True,
                 "name": account.get("name", ""),
@@ -104,12 +84,12 @@ async def auth_status():
 
 @app.post("/api/auth/login")
 async def login(req: LoginRequest):
-    global _pending_login_token
+    global _client
+    if _client is None:
+        _client = _make_client()
+        await _client.__aenter__()
     try:
-        temp_client = EeroClient()
-        resp = await temp_client.login(req.email)
-        _pending_login_token = resp.get("data", {}).get("user_token")
-        await temp_client.close()
+        await _client.login(req.email)
         return {"status": "verification_required", "message": "Check your email for a verification code."}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -117,17 +97,11 @@ async def login(req: LoginRequest):
 
 @app.post("/api/auth/verify")
 async def verify(req: VerifyRequest):
-    global _client, _pending_login_token
-    if not _pending_login_token:
+    global _client
+    if _client is None:
         raise HTTPException(status_code=400, detail="No pending login. Call /api/auth/login first.")
     try:
-        temp_client = EeroClient(user_token=_pending_login_token)
-        resp = await temp_client.verify(req.code)
-        user_token = resp.get("data", {}).get("user_token", _pending_login_token)
-        cred_store.save(user_token)
-        _client = EeroClient(user_token=user_token)
-        _pending_login_token = None
-        await temp_client.close()
+        await _client.verify(req.code)
         return {"status": "authenticated"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -137,17 +111,23 @@ async def verify(req: VerifyRequest):
 async def logout():
     global _client
     if _client:
-        await _client.close()
-        _client = None
-    cred_store.clear()
+        try:
+            await _client.logout()
+        except Exception:
+            pass
+    # Remove cookie file
+    cookie_path = Path(COOKIE_FILE)
+    if cookie_path.exists():
+        cookie_path.unlink()
+    # Recreate a fresh client
+    if _client:
+        await _client.__aexit__(None, None, None)
+    _client = _make_client()
+    await _client.__aenter__()
     return {"status": "logged_out"}
 
 
 # ── Network ───────────────────────────────────────────────────────────────────
-
-def _extract_network_id(url: str) -> str:
-    """Extract the numeric network ID from a URL like /2.2/networks/12345."""
-    return url.strip("/").split("/")[-1]
 
 
 @app.get("/api/networks")
@@ -155,7 +135,7 @@ async def list_networks():
     client = await get_client()
     try:
         resp = await client.get_networks()
-        networks = resp.get("data", {}).get("networks", [])
+        networks = resp.get("data", {}).get("networks", resp.get("networks", []))
         return {"networks": networks}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -166,7 +146,8 @@ async def get_network(network_id: str):
     client = await get_client()
     try:
         resp = await client.get_network(network_id)
-        return resp.get("data", {})
+        data = resp.get("data", resp)
+        return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -179,7 +160,9 @@ async def list_devices(network_id: str):
     client = await get_client()
     try:
         resp = await client.get_devices(network_id)
-        devices = resp.get("data", [])
+        devices = resp.get("data", resp.get("devices", []))
+        if isinstance(devices, dict):
+            devices = devices.get("devices", [])
         return {"devices": devices}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -193,7 +176,9 @@ async def list_eeros(network_id: str):
     client = await get_client()
     try:
         resp = await client.get_eeros(network_id)
-        eeros = resp.get("data", [])
+        eeros = resp.get("data", resp.get("eeros", []))
+        if isinstance(eeros, dict):
+            eeros = eeros.get("eeros", [])
         return {"eeros": eeros}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -207,7 +192,9 @@ async def list_profiles(network_id: str):
     client = await get_client()
     try:
         resp = await client.get_profiles(network_id)
-        profiles = resp.get("data", [])
+        profiles = resp.get("data", resp.get("profiles", []))
+        if isinstance(profiles, dict):
+            profiles = profiles.get("profiles", [])
         return {"profiles": profiles}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -220,8 +207,8 @@ async def list_profiles(network_id: str):
 async def get_dns(network_id: str):
     client = await get_client()
     try:
-        resp = await client.get_dns(network_id)
-        return resp.get("data", {})
+        resp = await client.get_dns_settings(network_id)
+        return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -234,7 +221,7 @@ async def get_activity(network_id: str):
     client = await get_client()
     try:
         resp = await client.get_activity(network_id)
-        return resp.get("data", {})
+        return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
