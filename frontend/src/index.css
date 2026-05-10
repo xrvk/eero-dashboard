@@ -705,5 +705,8 @@ body {
 .inline-form input[type="number"] { max-width: 100px; }
 
 /* ── Signal in device card ──────────────────── */
-.device-signal { flex-shrink: 0; margin-left: auto; margin-right: 4px; }
+.card-right {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto;
+}
+.device-signal { flex-shrink: 0; }
 .band-bar-fill.band-poor { background: var(--red); }

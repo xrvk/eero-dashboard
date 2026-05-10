@@ -400,42 +400,44 @@ function DeviceCard({ device: d, networkId, actionLoading, onAction }: {
           </span>
         )}
       </div>
-      {d.wireless && conn && d.connected && (
-        <div className="device-signal">
-          <span className="signal-bars">
-            {[1,2,3,4,5].map(b => (
-              <span key={b} className={`sig-bar ${b <= (conn.score_bars ?? 0) ? 'active' : ''}`} />
-            ))}
-          </span>
-        </div>
-      )}
-      {d.connected && (
-        <div className="card-menu-wrapper" ref={menuRef}>
-          <button
-            className="btn-menu"
-            onClick={() => setMenuOpen(!menuOpen)}
-            title="Actions"
-          >⋯</button>
-          {menuOpen && (
-            <div className="card-menu">
-              <button
-                className="card-menu-item"
-                disabled={actionLoading === d.mac}
-                onClick={() => { setMenuOpen(false); onAction(d.mac!, 'pause'); }}
-              >
-                ⏸️ Pause Internet
-              </button>
-              <button
-                className="card-menu-item danger"
-                disabled={actionLoading === d.mac}
-                onClick={() => { setMenuOpen(false); onAction(d.mac!, 'block'); }}
-              >
-                🚫 Block Device
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      <div className="card-right">
+        {d.wireless && conn && d.connected && (
+          <div className="device-signal">
+            <span className="signal-bars">
+              {[1,2,3,4,5].map(b => (
+                <span key={b} className={`sig-bar ${b <= (conn.score_bars ?? 0) ? 'active' : ''}`} />
+              ))}
+            </span>
+          </div>
+        )}
+        {d.connected && (
+          <div className="card-menu-wrapper" ref={menuRef}>
+            <button
+              className="btn-menu"
+              onClick={() => setMenuOpen(!menuOpen)}
+              title="Actions"
+            >⋯</button>
+            {menuOpen && (
+              <div className="card-menu">
+                <button
+                  className="card-menu-item"
+                  disabled={actionLoading === d.mac}
+                  onClick={() => { setMenuOpen(false); onAction(d.mac!, 'pause'); }}
+                >
+                  ⏸️ Pause Internet
+                </button>
+                <button
+                  className="card-menu-item danger"
+                  disabled={actionLoading === d.mac}
+                  onClick={() => { setMenuOpen(false); onAction(d.mac!, 'block'); }}
+                >
+                  🚫 Block Device
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
