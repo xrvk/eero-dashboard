@@ -103,7 +103,13 @@ app.add_middleware(
 async def health():
     global _client
     authenticated = _client is not None and _client.is_authenticated
-    return {"status": "ok", "version": "1.0.0", "authenticated": authenticated}
+    data_dir_ok = DATA_DIR.exists()
+    return {
+        "status": "ok" if data_dir_ok else "degraded",
+        "version": "1.0.0",
+        "authenticated": authenticated,
+        "data_dir": data_dir_ok,
+    }
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
