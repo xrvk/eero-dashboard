@@ -188,10 +188,21 @@ export default function App() {
         <div className="sidebar-footer">
           {networkDetail?.speed?.down && (
             <div className="sidebar-speed">
-              <span className="sidebar-section-label">Last Speed Test</span>
-              <span className="sidebar-speed-values">
-                ↓{(networkDetail.speed.down as { value: number }).value.toFixed(0)} ↑{(networkDetail.speed.up as { value: number })?.value.toFixed(0)} {(networkDetail.speed.down as { units: string }).units}
-              </span>
+              <span className="sidebar-speed-label">Last Speed Test</span>
+              <div className="sidebar-speed-gauges">
+                <div className="sidebar-speed-gauge">
+                  <span className="sidebar-speed-arrow down">↓</span>
+                  <span className="sidebar-speed-val">{(networkDetail.speed.down as { value: number }).value.toFixed(0)}</span>
+                  <span className="sidebar-speed-unit">{(networkDetail.speed.down as { units: string }).units}</span>
+                </div>
+                {networkDetail.speed.up && (
+                  <div className="sidebar-speed-gauge">
+                    <span className="sidebar-speed-arrow up">↑</span>
+                    <span className="sidebar-speed-val">{(networkDetail.speed.up as { value: number }).value.toFixed(0)}</span>
+                    <span className="sidebar-speed-unit">{(networkDetail.speed.up as { units: string }).units}</span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
           {auth.name && <span className="sidebar-user">{auth.name}</span>}

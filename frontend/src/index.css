@@ -777,6 +777,7 @@ body {
   .sidebar-item span:not(.sidebar-icon),
   .sidebar-section-label,
   .sidebar-user,
+  .sidebar-speed,
   .sidebar-net { display: none; }
   .sidebar-item { justify-content: center; padding: 10px; }
   .sidebar-icon { width: auto; }
@@ -1334,11 +1335,34 @@ body {
 
 /* ── Sidebar Speed ─────────────────────────── */
 .sidebar-speed {
-  display: flex; flex-direction: column; gap: 2px;
-  padding: 8px 0; margin-bottom: 8px;
+  background: linear-gradient(135deg, rgba(110,160,255,0.06) 0%, rgba(52,211,153,0.04) 100%);
+  border: 1px solid rgba(110,160,255,0.12);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
 }
-.sidebar-speed-values {
-  font-family: 'SF Mono', monospace; font-size: 0.8rem; color: var(--accent);
+.sidebar-speed-label {
+  display: block; font-size: 0.6rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 8px;
+}
+.sidebar-speed-gauges {
+  display: flex; gap: 12px;
+}
+.sidebar-speed-gauge {
+  display: flex; align-items: baseline; gap: 3px;
+}
+.sidebar-speed-arrow {
+  font-size: 0.7rem; font-weight: 700; line-height: 1;
+}
+.sidebar-speed-arrow.down { color: var(--accent); }
+.sidebar-speed-arrow.up { color: var(--green); }
+.sidebar-speed-val {
+  font-family: 'SF Mono', ui-monospace, monospace;
+  font-size: 1.05rem; font-weight: 600; color: var(--text);
+  letter-spacing: -0.02em; line-height: 1;
+}
+.sidebar-speed-unit {
+  font-size: 0.6rem; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: 0.03em;
 }
 
 /* ── General Settings Page ─────────────────── */
