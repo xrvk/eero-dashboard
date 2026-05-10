@@ -585,19 +585,32 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const { data: securityData, loading: secLoading, refetch: refetchSecurity } = useFetch(
     () => api.getSecurity(networkId), [networkId]
   );
+  const { data: dnsData, loading: dnsLoading, refetch: refetchDns } = useFetch(
+    () => api.getDns(networkId), [networkId]
+  );
+  const { data: sqmData, loading: sqmLoading, refetch: refetchSqm } = useFetch(
+    () => api.getSqm(networkId), [networkId]
+  );
   const [renaming, setRenaming] = useState(false);
   const [newName, setNewName] = useState('');
   const [saving, setSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
   const [diagRunning, setDiagRunning] = useState(false);
-  const [diagResult, setDiagResult] = useState<Record<string, unknown> | null>(null);
   const [diagError, setDiagError] = useState('');
   const [rebooting, setRebooting] = useState(false);
   const [confirmReboot, setConfirmReboot] = useState(false);
   const [secSaving, setSecSaving] = useState(false);
+  const [dnsEditing, setDnsEditing] = useState(false);
+  const [dnsMode, setDnsMode] = useState('');
+  const [customServers, setCustomServers] = useState('');
+  const [dnsSaving, setDnsSaving] = useState(false);
+  const [sqmSaving, setSqmSaving] = useState(false);
+  const [sqmEditMode, setSqmEditMode] = useState(false);
+  const [uploadMbps, setUploadMbps] = useState('');
+  const [downloadMbps, setDownloadMbps] = useState('');
 
-  const isLoading = sLoading || pLoading || uLoading || tLoading || rLoading || secLoading;
+  const isLoading = sLoading || pLoading || uLoading || tLoading || rLoading || secLoading || dnsLoading || sqmLoading;
   if (isLoading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
   if (sError) return <div className="card error-card">Error: {sError}</div>;
 
@@ -607,11 +620,23 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const networkName = String(settings.name || settings.ssid || '');
   const updates = updatesData as Record<string, unknown> || {};
   const thread = threadData as Record<string, unknown> || {};
-  const routing = routingData as Record<string, unknown> || {};
   const security = securityData || {} as Record<string, unknown>;
   const wanIp = String(settings.wan_ip || '');
   const gatewayIp = String(settings.gateway_ip || '');
   const timezone = (settings.timezone as Record<string, unknown>)?.value as string || '';
+
+  // DNS
+  const dns = (dnsData as Record<string, unknown>)?.dns as Record<string, unknown> | undefined;
+  const dnsCurrentMode = dns?.mode as string || 'default';
+  const customIps = (dns?.custom as { ips?: string[] })?.ips ?? [];
+  const dnsCaching = dns?.caching as boolean | undefined;
+
+  // SQM
+  const sqm = sqmData as Record<string, unknown> || {};
+  const sqmEnabled = !!sqm.enabled;
+  const sqmMode = (sqm.mode as string) || 'auto';
+  const currentUpload = sqm.upload_bandwidth_mbps as number | undefined;
+  const currentDownload = sqm.download_bandwidth_mbps as number | undefined;
 
   const securityToggles: { key: string; label: string; desc: string; apiKey?: string }[] = [
     { key: 'wpa3', label: 'WPA3', desc: 'Latest WiFi security protocol' },
@@ -651,25 +676,68 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
 
   const handleRunDiagnostics = async () => {
     setDiagRunning(true); setDiagError('');
-    try { setDiagResult(await api.runDiagnostics(networkId)); }
+    try { await api.runDiagnostics(networkId); }
     catch (e) { setDiagError(e instanceof Error ? e.message : 'Failed'); }
     finally { setDiagRunning(false); }
   };
 
   const handleRebootNetwork = async () => {
     setRebooting(true);
-    try {
-      await api.rebootNetwork(networkId);
-      setConfirmReboot(false);
-    } catch (e) { alert(e instanceof Error ? e.message : 'Reboot failed'); }
+    try { await api.rebootNetwork(networkId); setConfirmReboot(false); }
+    catch (e) { alert(e instanceof Error ? e.message : 'Reboot failed'); }
     finally { setRebooting(false); }
+  };
+
+  // DNS handlers
+  const startDnsEdit = () => {
+    setDnsMode(dnsCurrentMode);
+    setCustomServers(customIps.join(', '));
+    setDnsEditing(true);
+  };
+  const handleDnsSave = async () => {
+    setDnsSaving(true);
+    try {
+      const servers = dnsMode === 'custom' ? customServers.split(/[,\s]+/).map(s => s.trim()).filter(Boolean) : undefined;
+      await api.setDnsMode(networkId, dnsMode, servers);
+      await refetchDns();
+      setDnsEditing(false);
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setDnsSaving(false); }
+  };
+  const handleCachingToggle = async () => {
+    setDnsSaving(true);
+    try { await api.setDnsCaching(networkId, !dnsCaching); await refetchDns(); }
+    catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setDnsSaving(false); }
+  };
+
+  // SQM handlers
+  const handleSqmToggle = async () => {
+    setSqmSaving(true);
+    try { await api.setSqmEnabled(networkId, !sqmEnabled); await refetchSqm(); }
+    catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSqmSaving(false); }
+  };
+  const handleSqmAuto = async () => {
+    setSqmSaving(true);
+    try { await api.setSqmAuto(networkId); await refetchSqm(); }
+    catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSqmSaving(false); }
+  };
+  const handleSqmSave = async () => {
+    setSqmSaving(true);
+    try {
+      await api.configureSqm(networkId, true, uploadMbps ? Number(uploadMbps) : undefined, downloadMbps ? Number(downloadMbps) : undefined);
+      await refetchSqm();
+      setSqmEditMode(false);
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSqmSaving(false); }
   };
 
   return (
     <div className="general-settings">
       {/* Top cards row */}
       <div className="general-cards">
-        {/* Network Identity */}
         <div className="general-card">
           <div className="general-card-header">
             <span className="general-card-icon">📡</span>
@@ -681,9 +749,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
               <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setRenaming(false); }}
                 autoFocus />
-              <button className="btn-primary btn-sm" onClick={handleRename} disabled={saving}>
-                {saving ? '…' : '✓'}
-              </button>
+              <button className="btn-primary btn-sm" onClick={handleRename} disabled={saving}>{saving ? '…' : '✓'}</button>
               <button className="btn-cancel btn-sm" onClick={() => setRenaming(false)}>✕</button>
             </div>
           ) : (
@@ -696,30 +762,20 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           </div>
         </div>
 
-        {/* Password */}
         <div className="general-card">
           <div className="general-card-header">
             <span className="general-card-icon">🔑</span>
             <h3>Wi-Fi Password</h3>
           </div>
           <div className="general-password">
-            <span className="general-card-value mono">
-              {showPassword ? password : '••••••••••'}
-            </span>
+            <span className="general-card-value mono">{showPassword ? password : '••••••••••'}</span>
             <div className="general-password-actions">
-              <button className="btn-icon-sm" onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? '🙈' : '👁️'}
-              </button>
-              {password && (
-                <button className="btn-icon-sm" onClick={handleCopy}>
-                  {copied ? '✅' : '📋'}
-                </button>
-              )}
+              <button className="btn-icon-sm" onClick={() => setShowPassword(!showPassword)}>{showPassword ? '🙈' : '👁️'}</button>
+              {password && <button className="btn-icon-sm" onClick={handleCopy}>{copied ? '✅' : '📋'}</button>}
             </div>
           </div>
         </div>
 
-        {/* Firmware */}
         <div className="general-card">
           <div className="general-card-header">
             <span className="general-card-icon">⬆️</span>
@@ -735,12 +791,6 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
                     {updates.update_required ? '⚠️ Update available' : '✅ Up to date'}
                   </span>
                 </div>
-                {updates.has_update && (
-                  <div className="general-detail">
-                    <span>Update</span>
-                    <span className="mono">{String(updates.update_to_firmware || '')}</span>
-                  </div>
-                )}
               </div>
             </>
           ) : (
@@ -749,7 +799,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
         </div>
       </div>
 
-      {/* Security & Connectivity */}
+      {/* Security */}
       <div className="general-section">
         <h3>🔒 Security & Connectivity</h3>
         <div className="toggle-list">
@@ -771,14 +821,114 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
             );
           })}
         </div>
-        {thread.enabled != null && (
-          <div className="general-info-grid" style={{ marginTop: 16 }}>
-            <div className="general-detail"><span>Thread Status</span><span className={thread.enabled ? 'text-green' : 'text-muted'}>{thread.enabled ? '● Enabled' : '○ Disabled'}</span></div>
-            {thread.name && <div className="general-detail"><span>Thread Network</span><span className="mono">{String(thread.name)}</span></div>}
-            {thread.channel && <div className="general-detail"><span>Thread Channel</span><span>{String(thread.channel)}</span></div>}
+      </div>
+
+      {/* DNS */}
+      <div className="general-section">
+        <div className="section-header-inline">
+          <h3>🌐 DNS</h3>
+          {!dnsEditing && <button className="btn-text" onClick={startDnsEdit}>✏️ Edit</button>}
+        </div>
+        <div className="toggle-row" style={{ marginBottom: dnsEditing ? 16 : 0 }}>
+          <div className="toggle-info">
+            <span className="toggle-name">DNS Caching</span>
+            <span className="toggle-desc">Cache lookups locally for faster resolution</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" checked={!!dnsCaching} disabled={dnsSaving} onChange={handleCachingToggle} />
+            <span className="toggle-slider" />
+          </label>
+        </div>
+        {dnsEditing ? (
+          <div className="dns-edit-form">
+            <div className="dns-mode-select">
+              <label className={`dns-mode-option ${dnsMode === 'default' ? 'selected' : ''}`}>
+                <input type="radio" name="dns-mode" value="default" checked={dnsMode === 'default'} onChange={() => setDnsMode('default')} />
+                <div><span className="dns-mode-label">Default</span><span className="dns-mode-desc">Use eero's DNS</span></div>
+              </label>
+              <label className={`dns-mode-option ${dnsMode === 'custom' ? 'selected' : ''}`}>
+                <input type="radio" name="dns-mode" value="custom" checked={dnsMode === 'custom'} onChange={() => setDnsMode('custom')} />
+                <div><span className="dns-mode-label">Custom</span><span className="dns-mode-desc">Use your own DNS</span></div>
+              </label>
+            </div>
+            {dnsMode === 'custom' && (
+              <div style={{ marginTop: 12 }}>
+                <label className="dns-input-label">DNS Server IPs (comma separated)</label>
+                <input className="dns-input" type="text" placeholder="192.168.86.5, 1.1.1.1" value={customServers} onChange={(e) => setCustomServers(e.target.value)} />
+              </div>
+            )}
+            <div className="dns-edit-actions">
+              <button className="btn-primary" onClick={handleDnsSave} disabled={dnsSaving}>{dnsSaving ? 'Saving…' : 'Save'}</button>
+              <button className="btn-cancel" onClick={() => setDnsEditing(false)}>Cancel</button>
+            </div>
+          </div>
+        ) : customIps.length > 0 ? (
+          <div className="dns-servers" style={{ marginTop: 12 }}>
+            <div className="dns-server-list">
+              {customIps.map((ip, i) => <span key={i} className="dns-server-chip">{ip}</span>)}
+            </div>
+          </div>
+        ) : (
+          <span className="toggle-desc" style={{ display: 'block', marginTop: 8 }}>Using eero default DNS</span>
+        )}
+      </div>
+
+      {/* QoS / SQM */}
+      <div className="general-section">
+        <h3>🚀 QoS (Smart Queue Management)</h3>
+        <div className="toggle-row">
+          <div className="toggle-info">
+            <span className="toggle-name">SQM</span>
+            <span className="toggle-desc">Reduce bufferbloat for gaming, video calls, streaming</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" checked={sqmEnabled} disabled={sqmSaving} onChange={handleSqmToggle} />
+            <span className="toggle-slider" />
+          </label>
+        </div>
+        {sqmEnabled && (
+          <div style={{ marginTop: 12 }}>
+            {sqmEditMode ? (
+              <div className="sqm-edit-form">
+                <div className="form-field">
+                  <label>Upload (Mbps)</label>
+                  <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)} placeholder="e.g. 50" min="1" />
+                </div>
+                <div className="form-field">
+                  <label>Download (Mbps)</label>
+                  <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)} placeholder="e.g. 500" min="1" />
+                </div>
+                <div className="dns-edit-actions">
+                  <button className="btn-primary" onClick={handleSqmSave} disabled={sqmSaving}>{sqmSaving ? 'Saving…' : 'Save'}</button>
+                  <button className="btn-cancel" onClick={() => setSqmEditMode(false)}>Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <div className="general-card-details">
+                <div className="general-detail"><span>Mode</span><span>{sqmMode}</span></div>
+                {currentUpload != null && <div className="general-detail"><span>Upload</span><span>{currentUpload} Mbps</span></div>}
+                {currentDownload != null && <div className="general-detail"><span>Download</span><span>{currentDownload} Mbps</span></div>}
+                <div className="sqm-mode-buttons" style={{ marginTop: 8 }}>
+                  <button className="btn-primary btn-sm" onClick={handleSqmAuto} disabled={sqmSaving}>Auto Optimize</button>
+                  <button className="btn-text" onClick={() => { setUploadMbps(currentUpload ? String(currentUpload) : ''); setDownloadMbps(currentDownload ? String(currentDownload) : ''); setSqmEditMode(true); }}>✏️ Manual</button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Thread */}
+      {thread.enabled != null && (
+        <div className="general-section">
+          <h3>🧵 Thread</h3>
+          <div className="general-info-grid">
+            <div className="general-detail"><span>Status</span><span className={thread.enabled ? 'text-green' : 'text-muted'}>{thread.enabled ? '● Enabled' : '○ Disabled'}</span></div>
+            {thread.name && <div className="general-detail"><span>Network</span><span className="mono">{String(thread.name)}</span></div>}
+            {thread.channel && <div className="general-detail"><span>Channel</span><span>{String(thread.channel)}</span></div>}
+          </div>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="general-actions-row">
@@ -797,15 +947,11 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           {confirmReboot ? (
             <div className="confirm-inline" style={{ marginTop: 8 }}>
               <span>⚠️ Are you sure?</span>
-              <button className="btn-confirm btn-danger" onClick={handleRebootNetwork} disabled={rebooting}>
-                {rebooting ? 'Rebooting…' : 'Confirm'}
-              </button>
+              <button className="btn-confirm btn-danger" onClick={handleRebootNetwork} disabled={rebooting}>{rebooting ? 'Rebooting…' : 'Confirm'}</button>
               <button className="btn-cancel" onClick={() => setConfirmReboot(false)}>Cancel</button>
             </div>
           ) : (
-            <button className="btn-danger" onClick={() => setConfirmReboot(true)} style={{ marginTop: 8 }}>
-              Reboot Entire Network
-            </button>
+            <button className="btn-danger" onClick={() => setConfirmReboot(true)} style={{ marginTop: 8 }}>Reboot Entire Network</button>
           )}
         </div>
       </div>
