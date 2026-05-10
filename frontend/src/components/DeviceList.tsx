@@ -22,7 +22,7 @@ function rawBytes(bytes?: number) {
 type ViewMode = 'grid' | 'list';
 type GroupBy = 'connection' | 'node' | 'none';
 type StatusFilter = 'all' | 'online' | 'offline';
-type BandFilter = 'all' | 'wired' | '2.4' | '5' | '6';
+type BandFilter = 'all' | 'wired' | 'wireless';
 type SortCol = 'name' | 'ip' | 'mac' | 'type' | 'signal' | 'band' | 'speed' | 'down' | 'up';
 type SortDir = 'asc' | 'desc';
 
@@ -159,11 +159,7 @@ export default function DeviceList({ networkId }: DeviceListProps) {
     if (bandFilter !== 'all') {
       result = result.filter(d => {
         if (bandFilter === 'wired') return !d.wireless;
-        const freq = getConn(d)?.frequency;
-        if (!freq) return false;
-        if (bandFilter === '2.4') return freq < 3000;
-        if (bandFilter === '5') return freq >= 3000 && freq < 5900;
-        if (bandFilter === '6') return freq >= 5900;
+        if (bandFilter === 'wireless') return !!d.wireless;
         return true;
       });
     }
@@ -259,9 +255,7 @@ export default function DeviceList({ networkId }: DeviceListProps) {
           <div className="band-filter">
             <button className={`band-btn ${bandFilter === 'all' ? 'active' : ''}`} onClick={() => setBandFilter('all')}>All</button>
             <button className={`band-btn wired ${bandFilter === 'wired' ? 'active' : ''}`} onClick={() => setBandFilter('wired')}>🔌 Wired</button>
-            <button className={`band-btn ghz24 ${bandFilter === '2.4' ? 'active' : ''}`} onClick={() => setBandFilter('2.4')}>2.4 GHz</button>
-            <button className={`band-btn ghz5 ${bandFilter === '5' ? 'active' : ''}`} onClick={() => setBandFilter('5')}>5 GHz</button>
-            <button className={`band-btn ghz6 ${bandFilter === '6' ? 'active' : ''}`} onClick={() => setBandFilter('6')}>6 GHz</button>
+            <button className={`band-btn wireless ${bandFilter === 'wireless' ? 'active' : ''}`} onClick={() => setBandFilter('wireless')}>📶 Wireless</button>
           </div>
           <div className="group-select">
             <label>Group:</label>

@@ -18,16 +18,40 @@ function freqToBand(freq?: number) {
   return '6 GHz';
 }
 
+function extractId(url?: string) {
+  if (!url) return '';
+  return url.replace(/\/$/, '').split('/').pop() || '';
+}
+
 export default function ActivityView({ networkId }: ActivityViewProps) {
   const { data: devData, loading: devLoading, refetch } = useFetch(
     () => api.getDevices(networkId),
     [networkId]
   );
   const { data: network } = useFetch(() => api.getNetwork(networkId), [networkId]);
+  const { data: eeroData, refetch: refetchEeros } = useFetch(
+    () => api.getEeros(networkId),
+    [networkId]
+  );
 
   const [speedRunning, setSpeedRunning] = useState(false);
   const [speedResult, setSpeedResult] = useState<Record<string, unknown> | null>(null);
   const [speedError, setSpeedError] = useState('');
+  const [rebooting, setRebooting] = useState<string | null>(null);
+  const [confirmReboot, setConfirmReboot] = useState<string | null>(null);
+
+  const handleReboot = async (eeroId: string) => {
+    setRebooting(eeroId);
+    try {
+      await api.rebootEero(networkId, eeroId);
+      setConfirmReboot(null);
+      setTimeout(refetchEeros, 3000);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Reboot failed');
+    } finally {
+      setRebooting(null);
+    }
+  };
 
   const handleSpeedTest = async () => {
     setSpeedRunning(true);
@@ -162,19 +186,68 @@ export default function ActivityView({ networkId }: ActivityViewProps) {
         </div>
       </div>
 
-      {/* Node load */}
+      {/* eero Nodes */}
       <div className="activity-panel full-width" style={{ marginTop: 16 }}>
-        <h3>Load per eero Node</h3>
-        <div className="band-bars">
-          {[...nodeCounts.entries()].sort((a, b) => b[1].total - a[1].total).map(([node, info]) => (
-            <div key={node} className="band-row">
-              <span className="band-label">{node}</span>
-              <div className="band-bar-track">
-                <div className="band-bar-fill band-node" style={{ width: `${Math.max(5, (info.total / (connected.length || 1)) * 100)}%` }} />
+        <h3>eero Nodes</h3>
+        {confirmReboot && (
+          <div className="confirm-overlay" onClick={() => setConfirmReboot(null)}>
+            <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+              <p>🔄 Reboot this node? It will be offline for ~1 minute.</p>
+              <div className="confirm-actions">
+                <button className="btn-confirm btn-danger" onClick={() => handleReboot(confirmReboot)}>
+                  {rebooting ? 'Rebooting…' : 'Reboot'}
+                </button>
+                <button className="btn-cancel" onClick={() => setConfirmReboot(null)}>Cancel</button>
               </div>
-              <span className="band-count">{info.total} ({info.wireless} WiFi)</span>
             </div>
-          ))}
+          </div>
+        )}
+        <div className="node-grid">
+          {(eeroData?.eeros ?? []).map((node: api.EeroNode, i: number) => {
+            const eeroId = extractId(node.url);
+            const nodeClients = nodeCounts.get(
+              (node as unknown as ConnectedDevice).location || node.location || ''
+            );
+            return (
+              <div
+                key={node.serial || i}
+                className={`node-card ${node.status === 'green' ? 'healthy' : node.status === 'yellow' ? 'warning' : 'error'}`}
+              >
+                <div className="node-status-dot" />
+                <div className="node-icon">{node.gateway ? '🏠' : '📡'}</div>
+                <div className="node-info">
+                  <span className="node-location">{node.location || `Node ${i + 1}`}</span>
+                  <span className="node-model">{node.model || 'eero'}</span>
+                  {node.ip_address && <span className="node-ip">{node.ip_address}</span>}
+                </div>
+                <div className="node-stats">
+                  {node.connected_clients_count != null && (
+                    <div className="node-stat">
+                      <span className="stat-value">{node.connected_clients_count}</span>
+                      <span className="stat-label">clients</span>
+                    </div>
+                  )}
+                  {node.mesh_quality_bars != null && (
+                    <div className="node-stat">
+                      <div className="mesh-bars">
+                        {[1, 2, 3, 4, 5].map((bar) => (
+                          <div key={bar} className={`mesh-bar ${bar <= node.mesh_quality_bars! ? 'active' : ''}`} />
+                        ))}
+                      </div>
+                      <span className="stat-label">mesh</span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  className="btn-action"
+                  title="Reboot node"
+                  disabled={rebooting === eeroId}
+                  onClick={() => setConfirmReboot(eeroId)}
+                  style={{ flexShrink: 0 }}
+                >🔄</button>
+              </div>
+            );
+          })}
         </div>
       </div>
 

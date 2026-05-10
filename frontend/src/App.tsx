@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as api from './api';
+import { useFetch } from './hooks/useFetch';
 import LoginForm from './components/LoginForm';
 import DeviceList from './components/DeviceList';
-import EeroNodes from './components/EeroNodes';
 import ActivityView from './components/ActivityView';
 import ProfileManager from './components/ProfileManager';
 import SettingsView from './components/SettingsView';
@@ -19,7 +19,7 @@ export default function App() {
   const [networks, setNetworks] = useState<api.Network[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [networkDetail, setNetworkDetail] = useState<api.Network | null>(null);
-  const [tab, setTab] = useState<'devices' | 'nodes' | 'activity' | 'profiles' | 'settings'>('devices');
+  const [tab, setTab] = useState<'devices' | 'activity' | 'profiles' | 'settings'>('devices');
 
   const checkAuth = useCallback(async () => {
     try {
@@ -55,6 +55,13 @@ export default function App() {
     setNetworkDetail(null);
   };
 
+  // Fetch eero nodes for sidebar display
+  const { data: eeroData } = useFetch(
+    () => selectedNetwork ? api.getEeros(selectedNetwork) : Promise.resolve({ eeros: [] }),
+    [selectedNetwork]
+  );
+  const eeros = eeroData?.eeros ?? [];
+
   if (checking) {
     return (
       <div className="app-loading">
@@ -83,9 +90,6 @@ export default function App() {
           <button className={`sidebar-item ${tab === 'devices' ? 'active' : ''}`} onClick={() => setTab('devices')}>
             <span className="sidebar-icon">📱</span> Devices
           </button>
-          <button className={`sidebar-item ${tab === 'nodes' ? 'active' : ''}`} onClick={() => setTab('nodes')}>
-            <span className="sidebar-icon">📡</span> Nodes
-          </button>
           <button className={`sidebar-item ${tab === 'activity' ? 'active' : ''}`} onClick={() => setTab('activity')}>
             <span className="sidebar-icon">💚</span> Health
           </button>
@@ -96,6 +100,23 @@ export default function App() {
             <span className="sidebar-icon">⚙️</span> Settings
           </button>
         </nav>
+
+        {eeros.length > 0 && (
+          <div className="sidebar-nodes">
+            <span className="sidebar-section-label">Nodes</span>
+            {eeros.map((node: api.EeroNode, i: number) => (
+              <div key={node.serial || i} className="sidebar-node">
+                <span className={`sidebar-node-dot status-dot-${node.status}`} />
+                <div className="sidebar-node-info">
+                  <span className="sidebar-node-name">{node.location || node.model || `Node ${i + 1}`}</span>
+                  <span className="sidebar-node-meta">
+                    {node.model}{node.connected_clients_count != null ? ` · ${node.connected_clients_count}` : ''}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {networks.length > 1 && (
           <div className="sidebar-networks">
@@ -125,7 +146,6 @@ export default function App() {
         <header className="app-header">
           <h1>{
             tab === 'devices' ? 'Devices' :
-            tab === 'nodes' ? 'Nodes' :
             tab === 'activity' ? 'Network Health' :
             tab === 'profiles' ? 'Profiles' :
             'Settings'
@@ -148,7 +168,6 @@ export default function App() {
         {selectedNetwork && (
           <div className="tab-content">
             {tab === 'devices' && <DeviceList networkId={selectedNetwork} />}
-            {tab === 'nodes' && <EeroNodes networkId={selectedNetwork} />}
             {tab === 'activity' && <ActivityView networkId={selectedNetwork} />}
             {tab === 'profiles' && <ProfileManager networkId={selectedNetwork} />}
             {tab === 'settings' && <SettingsView networkId={selectedNetwork} />}
