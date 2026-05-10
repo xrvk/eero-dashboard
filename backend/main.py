@@ -59,47 +59,6 @@ async def _cached(key: str, fn: Callable[[], Coroutine[Any, Any, Any]]) -> Any:
     return result
 
 
-# Endpoints that should never be cached
-_NO_CACHE_PATHS = {"/api/health", "/api/auth/status"}
-
-
-@app.middleware("http")
-async def cache_middleware(request, call_next):
-    """Cache all GET /api/ responses; bust cache on mutations."""
-    path = request.url.path
-    method = request.method
-
-    # Bust cache on any mutation
-    if method in ("POST", "PUT", "PATCH", "DELETE") and path.startswith("/api/"):
-        _cache_bust()
-
-    # Only cache GETs under /api/
-    if method == "GET" and path.startswith("/api/") and path not in _NO_CACHE_PATHS:
-        hit = _cache_get(path)
-        if hit is not None:
-            from starlette.responses import JSONResponse
-            return JSONResponse(content=hit)
-
-        response = await call_next(request)
-
-        # Cache successful JSON responses
-        if response.status_code == 200:
-            body = b""
-            async for chunk in response.body_iterator:
-                body += chunk
-            try:
-                data = json.loads(body)
-                _cache_set(path, data)
-                from starlette.responses import JSONResponse
-                return JSONResponse(content=data, headers=dict(response.headers))
-            except (json.JSONDecodeError, ValueError):
-                from starlette.responses import Response
-                return Response(content=body, status_code=response.status_code, headers=dict(response.headers))
-        return response
-
-    return await call_next(request)
-
-
 def _make_client() -> EeroClient:
     return EeroClient(cookie_file=COOKIE_FILE, use_keyring=False)
 
