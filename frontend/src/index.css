@@ -590,3 +590,48 @@ body {
   text-align: center;
 }
 .status-btn:not(.active) .status-count { background: var(--border); }
+
+/* ── Activity Summary ───────────────────────── */
+
+.activity-summary {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+
+.band-bars { display: flex; flex-direction: column; gap: 8px; }
+.band-row { display: flex; align-items: center; gap: 10px; }
+.band-label { font-size: 0.8rem; min-width: 80px; color: var(--text-muted); }
+.band-bar-track {
+  flex: 1; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden;
+}
+.band-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+.band-bar-fill.band-24GHz { background: var(--yellow); }
+.band-bar-fill.band-5GHz { background: var(--accent); }
+.band-bar-fill.band-6GHz { background: var(--green); }
+.band-bar-fill.band-Wired { background: var(--text-muted); }
+.band-bar-fill.band-node { background: var(--accent); }
+.band-count { font-size: 0.8rem; font-weight: 600; min-width: 24px; text-align: right; }
+
+/* Signal bars */
+.signal-bars { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 14px; vertical-align: middle; }
+.sig-bar { width: 3px; border-radius: 1px; background: var(--border); }
+.sig-bar:nth-child(1) { height: 4px; }
+.sig-bar:nth-child(2) { height: 6px; }
+.sig-bar:nth-child(3) { height: 8px; }
+.sig-bar:nth-child(4) { height: 11px; }
+.sig-bar:nth-child(5) { height: 14px; }
+.sig-bar.active { background: var(--green); }
+
+/* Band pills */
+.band-pill {
+  font-size: 0.7rem; font-weight: 600; padding: 2px 8px;
+  border-radius: 99px; white-space: nowrap;
+}
+.band-pill.band-24GHz { background: rgba(251,191,36,0.15); color: var(--yellow); }
+.band-pill.band-5GHz { background: rgba(79,140,255,0.15); color: var(--accent); }
+.band-pill.band-6GHz { background: rgba(52,211,153,0.15); color: var(--green); }
+
+.activity-table-wrap { overflow-x: auto; }
+
+@media (max-width: 700px) {
+  .activity-summary { grid-template-columns: 1fr; }
+}

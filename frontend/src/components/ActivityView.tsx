@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
 
@@ -6,107 +6,199 @@ interface ActivityViewProps {
   networkId: string;
 }
 
-function formatBytes(bytes?: number) {
-  if (bytes == null) return '—';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+interface ConnectedDevice extends api.Device {
+  connectivity?: {
+    rx_bitrate?: string;
+    signal?: string;
+    score?: number;
+    score_bars?: number;
+    frequency?: number;
+    snr?: number;
+    rx_rate_info?: { rate_bps?: number; channel_width?: string; phy_type?: string; nss?: number };
+    tx_rate_info?: { rate_bps?: number };
+    packet_stats?: { rx_packets?: number; tx_packets?: number; total_packets?: number; tx_retries?: number };
+  };
+  source?: { display_name?: string; location?: string };
 }
 
+function formatRate(bps?: number) {
+  if (!bps) return '—';
+  if (bps >= 1_000_000_000) return `${(bps / 1_000_000_000).toFixed(1)} Gbps`;
+  if (bps >= 1_000_000) return `${(bps / 1_000_000).toFixed(0)} Mbps`;
+  return `${(bps / 1_000).toFixed(0)} Kbps`;
+}
+
+function freqToBand(freq?: number) {
+  if (!freq) return '—';
+  if (freq < 3000) return '2.4 GHz';
+  if (freq < 5900) return '5 GHz';
+  return '6 GHz';
+}
+
+type SortKey = 'name' | 'signal' | 'rx' | 'packets' | 'band';
+
 export default function ActivityView({ networkId }: ActivityViewProps) {
-  const [period, setPeriod] = useState<'day' | 'week'>('day');
-
-  const { data: clients, loading: clientsLoading } = useFetch(
-    () => api.getActivityClients(networkId),
+  const { data, loading, error, refetch } = useFetch(
+    () => api.getDevices(networkId),
     [networkId]
   );
+  const [sortKey, setSortKey] = useState<SortKey>('signal');
+  const [sortAsc, setSortAsc] = useState(false);
 
-  const { data: categories, loading: catsLoading } = useFetch(
-    () => api.getActivityCategories(networkId),
-    [networkId]
-  );
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortAsc(a => !a);
+    else { setSortKey(key); setSortAsc(key === 'name'); }
+  };
 
-  const { data: history, loading: histLoading } = useFetch(
-    () => api.getActivityHistory(networkId, period),
-    [networkId, period]
-  );
+  const indicator = (key: SortKey) => sortKey !== key ? ' ↕' : sortAsc ? ' ↑' : ' ↓';
 
-  const isLoading = clientsLoading || catsLoading || histLoading;
+  const devices = useMemo(() => {
+    const connected = ((data?.devices ?? []) as ConnectedDevice[]).filter(d => d.connected && d.connectivity);
+    const sorted = [...connected].sort((a, b) => {
+      let va: string | number = 0, vb: string | number = 0;
+      switch (sortKey) {
+        case 'name':
+          va = (a.display_name || a.hostname || '').toLowerCase();
+          vb = (b.display_name || b.hostname || '').toLowerCase();
+          break;
+        case 'signal':
+          va = a.connectivity?.score ?? 0;
+          vb = b.connectivity?.score ?? 0;
+          break;
+        case 'rx':
+          va = a.connectivity?.rx_rate_info?.rate_bps ?? 0;
+          vb = b.connectivity?.rx_rate_info?.rate_bps ?? 0;
+          break;
+        case 'packets':
+          va = a.connectivity?.packet_stats?.total_packets ?? 0;
+          vb = b.connectivity?.packet_stats?.total_packets ?? 0;
+          break;
+        case 'band':
+          va = a.connectivity?.frequency ?? 0;
+          vb = b.connectivity?.frequency ?? 0;
+          break;
+      }
+      if (va < vb) return -1;
+      if (va > vb) return 1;
+      return 0;
+    });
+    return sortAsc ? sorted : sorted.reverse();
+  }, [data, sortKey, sortAsc]);
 
-  // Parse client data — handle various API shapes
-  const clientList = Array.isArray(clients) ? clients :
-    (clients as Record<string, unknown>)?.clients ? (clients as { clients: unknown[] }).clients :
-    [];
+  // Band breakdown
+  const bandCounts = useMemo(() => {
+    const counts = { '2.4 GHz': 0, '5 GHz': 0, '6 GHz': 0, 'Wired': 0 };
+    for (const d of (data?.devices ?? []) as ConnectedDevice[]) {
+      if (!d.connected) continue;
+      if (!d.wireless) { counts['Wired']++; continue; }
+      const band = freqToBand(d.connectivity?.frequency);
+      if (band in counts) counts[band as keyof typeof counts]++;
+    }
+    return counts;
+  }, [data]);
 
-  const categoryList = Array.isArray(categories) ? categories :
-    (categories as Record<string, unknown>)?.categories ? (categories as { categories: unknown[] }).categories :
-    [];
+  // Node breakdown
+  const nodeCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const d of (data?.devices ?? []) as ConnectedDevice[]) {
+      if (!d.connected) continue;
+      const node = d.source?.display_name || d.source?.location || 'Unknown';
+      counts.set(node, (counts.get(node) || 0) + 1);
+    }
+    return counts;
+  }, [data]);
+
+  if (loading) return <div className="card loading-card"><div className="spinner" /> Loading activity…</div>;
+  if (error) return <div className="card error-card">Error: {error}</div>;
 
   return (
     <div className="activity-view">
       <div className="section-header">
         <h2>Network Activity</h2>
-        <div className="period-toggle">
-          <button className={`period-btn ${period === 'day' ? 'active' : ''}`} onClick={() => setPeriod('day')}>Day</button>
-          <button className={`period-btn ${period === 'week' ? 'active' : ''}`} onClick={() => setPeriod('week')}>Week</button>
+        <button className="btn-icon" onClick={refetch} title="Refresh">↻</button>
+      </div>
+
+      {/* Summary cards */}
+      <div className="activity-summary">
+        <div className="activity-panel">
+          <h3>Clients by Band</h3>
+          <div className="band-bars">
+            {Object.entries(bandCounts).filter(([,c]) => c > 0).map(([band, count]) => (
+              <div key={band} className="band-row">
+                <span className="band-label">{band}</span>
+                <div className="band-bar-track">
+                  <div
+                    className={`band-bar-fill band-${band.replace(/[\s.]/g, '')}`}
+                    style={{ width: `${Math.max(5, (count / (devices.length || 1)) * 100)}%` }}
+                  />
+                </div>
+                <span className="band-count">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="activity-panel">
+          <h3>Clients by Node</h3>
+          <div className="band-bars">
+            {[...nodeCounts.entries()].sort((a, b) => b[1] - a[1]).map(([node, count]) => (
+              <div key={node} className="band-row">
+                <span className="band-label">{node}</span>
+                <div className="band-bar-track">
+                  <div className="band-bar-fill band-node" style={{ width: `${Math.max(5, (count / (devices.length || 1)) * 100)}%` }} />
+                </div>
+                <span className="band-count">{count}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {isLoading && <div className="card loading-card"><div className="spinner" /> Loading activity…</div>}
-
-      {!isLoading && (
-        <div className="activity-panels">
-          {/* Top clients by usage */}
-          <div className="activity-panel">
-            <h3>Top Devices by Usage</h3>
-            <div className="activity-list">
-              {(clientList as Record<string, unknown>[]).slice(0, 15).map((c, i) => {
-                const down = (c.usage as Record<string, number>)?.down ?? (c.rx_bytes as number) ?? 0;
-                const up = (c.usage as Record<string, number>)?.up ?? (c.tx_bytes as number) ?? 0;
-                const total = down + up;
-                const name = (c.display_name as string) || (c.hostname as string) || (c.mac as string) || `Device ${i + 1}`;
+      {/* Connection quality table */}
+      <div className="activity-panel full-width" style={{ marginTop: 16 }}>
+        <h3>Connection Quality ({devices.length} wireless clients)</h3>
+        <div className="activity-table-wrap">
+          <table className="device-table">
+            <thead>
+              <tr>
+                <th className="sortable-th" onClick={() => handleSort('name')}>Device{indicator('name')}</th>
+                <th className="sortable-th" onClick={() => handleSort('signal')}>Signal{indicator('signal')}</th>
+                <th className="sortable-th" onClick={() => handleSort('band')}>Band{indicator('band')}</th>
+                <th className="sortable-th" onClick={() => handleSort('rx')}>Speed{indicator('rx')}</th>
+                <th className="sortable-th" onClick={() => handleSort('packets')}>Packets{indicator('packets')}</th>
+                <th>Node</th>
+              </tr>
+            </thead>
+            <tbody>
+              {devices.map((d, i) => {
+                const conn = d.connectivity!;
+                const bars = conn.score_bars ?? 0;
                 return (
-                  <div key={i} className="activity-item">
-                    <span className="activity-rank">#{i + 1}</span>
-                    <span className="activity-name">{name}</span>
-                    <span className="activity-bytes">{formatBytes(total)}</span>
-                  </div>
+                  <tr key={d.mac || i}>
+                    <td className="td-name">{d.display_name || d.hostname || d.mac || 'Unknown'}</td>
+                    <td>
+                      <span className="signal-bars">
+                        {[1,2,3,4,5].map(b => (
+                          <span key={b} className={`sig-bar ${b <= bars ? 'active' : ''}`} />
+                        ))}
+                      </span>
+                      <span className="td-mono" style={{ marginLeft: 6 }}>{conn.signal || '—'}</span>
+                    </td>
+                    <td><span className={`band-pill band-${freqToBand(conn.frequency).replace(/[\s.]/g, '')}`}>{freqToBand(conn.frequency)}</span></td>
+                    <td className="td-mono">{formatRate(conn.rx_rate_info?.rate_bps)}</td>
+                    <td className="td-mono">{(conn.packet_stats?.total_packets ?? 0).toLocaleString()}</td>
+                    <td className="td-name">{d.source?.display_name || d.source?.location || '—'}</td>
+                  </tr>
                 );
               })}
-              {clientList.length === 0 && <p className="empty-text">No client activity data available</p>}
-            </div>
-          </div>
-
-          {/* Categories */}
-          <div className="activity-panel">
-            <h3>By Category</h3>
-            <div className="activity-list">
-              {(categoryList as Record<string, unknown>[]).slice(0, 15).map((cat, i) => {
-                const name = (cat.name as string) || (cat.category as string) || `Category ${i + 1}`;
-                const bytes = (cat.bytes as number) ?? (cat.usage as number) ?? 0;
-                return (
-                  <div key={i} className="activity-item">
-                    <span className="activity-name">{name}</span>
-                    <span className="activity-bytes">{formatBytes(bytes)}</span>
-                  </div>
-                );
-              })}
-              {categoryList.length === 0 && <p className="empty-text">No category data available</p>}
-            </div>
-          </div>
-
-          {/* History summary */}
-          <div className="activity-panel full-width">
-            <h3>History ({period})</h3>
-            {history ? (
-              <pre className="json-preview">{JSON.stringify(history, null, 2)}</pre>
-            ) : (
-              <p className="empty-text">No history data available</p>
-            )}
-          </div>
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
+
+      <p className="empty-text" style={{ marginTop: 16 }}>
+        ℹ️ Bandwidth history and category breakdowns require eero Plus subscription.
+      </p>
     </div>
   );
 }
