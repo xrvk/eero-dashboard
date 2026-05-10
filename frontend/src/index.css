@@ -1110,3 +1110,23 @@ body {
 .detail-label { font-size: 0.8rem; color: var(--text-muted); }
 .detail-value { font-size: 0.85rem; font-weight: 500; text-align: right; }
 .detail-value.mono { font-family: 'SF Mono', monospace; font-size: 0.82rem; color: var(--text-muted); }
+
+/* ── Detail Name Inline Edit ────────────────── */
+.detail-name-editable {
+  cursor: pointer; position: relative;
+  font-size: 1.15rem; font-weight: 700;
+}
+.detail-name-editable:hover { color: var(--accent); }
+.detail-edit-hint {
+  font-size: 0.7rem; margin-left: 6px; opacity: 0;
+  transition: opacity 0.15s;
+}
+.detail-name-editable:hover .detail-edit-hint { opacity: 0.6; }
+.detail-name-edit {
+  display: flex; align-items: center; gap: 6px;
+}
+.detail-name-input {
+  padding: 4px 8px; background: var(--bg-input); border: 1px solid var(--accent);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 1rem; font-weight: 600; outline: none; min-width: 180px;
+}

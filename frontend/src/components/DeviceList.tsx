@@ -281,18 +281,12 @@ export default function DeviceList({ networkId }: DeviceListProps) {
       {selectedDevice && (
         <div className="confirm-overlay" onClick={() => setSelectedDevice(null)}>
           <div className="device-detail-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="detail-header">
-              <div className="detail-title">
-                <span className="detail-icon">{getDeviceIcon(selectedDevice)}</span>
-                <div>
-                  <h2>{selectedDevice.display_name || selectedDevice.hostname || 'Unknown'}</h2>
-                  {selectedDevice.nickname && selectedDevice.hostname && selectedDevice.nickname !== selectedDevice.hostname && (
-                    <span className="detail-hostname">{selectedDevice.hostname}</span>
-                  )}
-                </div>
-              </div>
-              <button className="btn-menu" onClick={() => setSelectedDevice(null)}>✕</button>
-            </div>
+            <DetailHeader
+              device={selectedDevice}
+              networkId={networkId}
+              onClose={() => setSelectedDevice(null)}
+              onRenamed={refetch}
+            />
 
             <div className="detail-grid">
               <DetailRow label="MAC Address" value={selectedDevice.mac} mono />
@@ -596,6 +590,69 @@ function getDeviceIcon(d: api.Device) {
   if (type.includes('printer')) return '🖨️';
   if (name.includes('switch') || name.includes('playstation') || name.includes('xbox') || name.includes('nintendo')) return '🎮';
   return '🌐';
+}
+
+function DetailHeader({ device, networkId, onClose, onRenamed }: {
+  device: api.Device;
+  networkId: string;
+  onClose: () => void;
+  onRenamed: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(device.display_name || device.hostname || '');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await api.renameDevice(networkId, device.mac!, name.trim());
+      onRenamed();
+      setEditing(false);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Rename failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="detail-header">
+      <div className="detail-title">
+        <span className="detail-icon">{getDeviceIcon(device)}</span>
+        <div>
+          {editing ? (
+            <div className="detail-name-edit">
+              <input
+                className="detail-name-input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false); }}
+                autoFocus
+                placeholder="Leave empty to reset"
+              />
+              <button className="btn-primary btn-sm" onClick={handleSave} disabled={saving}>
+                {saving ? '…' : '✓'}
+              </button>
+              <button className="btn-cancel btn-sm" onClick={() => setEditing(false)}>✕</button>
+            </div>
+          ) : (
+            <h2
+              className="detail-name-editable"
+              onDoubleClick={() => setEditing(true)}
+              title="Double-click to rename"
+            >
+              {device.display_name || device.hostname || 'Unknown'}
+              <span className="detail-edit-hint">✏️</span>
+            </h2>
+          )}
+          {device.hostname && (device.display_name || device.nickname) && device.hostname !== (device.display_name || device.nickname) && (
+            <span className="detail-hostname">{device.hostname}</span>
+          )}
+        </div>
+      </div>
+      <button className="btn-menu" onClick={onClose}>✕</button>
+    </div>
+  );
 }
 
 function DetailRow({ label, value, mono, className }: {
