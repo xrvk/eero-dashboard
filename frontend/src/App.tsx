@@ -69,30 +69,43 @@ export default function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <div className="header-left">
-          <svg className="header-logo" width="28" height="28" viewBox="0 0 48 48" fill="none">
+      <aside className="app-sidebar">
+        <div className="sidebar-logo">
+          <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
             <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2.5" fill="none" />
             <circle cx="24" cy="24" r="14" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.6" />
             <circle cx="24" cy="24" r="6" fill="currentColor" opacity="0.8" />
           </svg>
-          <h1>eero Dashboard</h1>
+          <span>eero</span>
         </div>
-        <div className="header-right">
-          {auth.name && <span className="user-name">{auth.name}</span>}
-          <button className="btn-logout" onClick={handleLogout}>Sign out</button>
-        </div>
-      </header>
 
-      <main className="app-main">
+        <nav className="sidebar-nav">
+          <button className={`sidebar-item ${tab === 'devices' ? 'active' : ''}`} onClick={() => setTab('devices')}>
+            <span className="sidebar-icon">📱</span> Devices
+          </button>
+          <button className={`sidebar-item ${tab === 'nodes' ? 'active' : ''}`} onClick={() => setTab('nodes')}>
+            <span className="sidebar-icon">📡</span> Nodes
+          </button>
+          <button className={`sidebar-item ${tab === 'activity' ? 'active' : ''}`} onClick={() => setTab('activity')}>
+            <span className="sidebar-icon">💚</span> Health
+          </button>
+          <button className={`sidebar-item ${tab === 'profiles' ? 'active' : ''}`} onClick={() => setTab('profiles')}>
+            <span className="sidebar-icon">👤</span> Profiles
+          </button>
+          <button className={`sidebar-item ${tab === 'settings' ? 'active' : ''}`} onClick={() => setTab('settings')}>
+            <span className="sidebar-icon">⚙️</span> Settings
+          </button>
+        </nav>
+
         {networks.length > 1 && (
-          <div className="network-selector">
+          <div className="sidebar-networks">
+            <span className="sidebar-section-label">Networks</span>
             {networks.map((n) => {
               const id = getNetworkId(n);
               return (
                 <button
                   key={id}
-                  className={`net-tab ${selectedNetwork === id ? 'active' : ''}`}
+                  className={`sidebar-item sidebar-net ${selectedNetwork === id ? 'active' : ''}`}
                   onClick={() => setSelectedNetwork(id)}
                 >
                   {n.name}
@@ -102,61 +115,35 @@ export default function App() {
           </div>
         )}
 
-        {networkDetail && (
-          <div className="overview-row">
-            <div className="overview-card">
-              <span className="overview-label">Network</span>
-              <span className="overview-value">{networkDetail.name}</span>
-            </div>
-            <div className="overview-card">
-              <span className="overview-label">Status</span>
-              <span className={`overview-value status-${networkDetail.status}`}>
-                {networkDetail.status === 'connected' || networkDetail.status === 'green' ? '● Online' : networkDetail.status || '—'}
-              </span>
-            </div>
-            {networkDetail.speed?.down && (
-              <div className="overview-card">
-                <span className="overview-label">Speed</span>
-                <span className="overview-value">
-                  ↓ {networkDetail.speed.down.value} {networkDetail.speed.down.units}
-                  {networkDetail.speed.up && (
-                    <> &nbsp;↑ {networkDetail.speed.up.value} {networkDetail.speed.up.units}</>
-                  )}
-                </span>
-              </div>
-            )}
-            {networkDetail.clients && (
-              <div className="overview-card">
-                <span className="overview-label">Clients</span>
-                <span className="overview-value">{networkDetail.clients.count}</span>
-              </div>
-            )}
-            {networkDetail.eeros && (
-              <div className="overview-card">
-                <span className="overview-label">Nodes</span>
-                <span className="overview-value">{networkDetail.eeros.count}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="tab-bar">
-          <button className={`tab ${tab === 'devices' ? 'active' : ''}`} onClick={() => setTab('devices')}>
-            Devices
-          </button>
-          <button className={`tab ${tab === 'nodes' ? 'active' : ''}`} onClick={() => setTab('nodes')}>
-            Nodes
-          </button>
-          <button className={`tab ${tab === 'activity' ? 'active' : ''}`} onClick={() => setTab('activity')}>
-            Health
-          </button>
-          <button className={`tab ${tab === 'profiles' ? 'active' : ''}`} onClick={() => setTab('profiles')}>
-            Profiles
-          </button>
-          <button className={`tab ${tab === 'settings' ? 'active' : ''}`} onClick={() => setTab('settings')}>
-            Settings
-          </button>
+        <div className="sidebar-footer">
+          {auth.name && <span className="sidebar-user">{auth.name}</span>}
+          <button className="btn-logout" onClick={handleLogout}>Sign out</button>
         </div>
+      </aside>
+
+      <main className="app-main">
+        <header className="app-header">
+          <h1>{
+            tab === 'devices' ? 'Devices' :
+            tab === 'nodes' ? 'Nodes' :
+            tab === 'activity' ? 'Network Health' :
+            tab === 'profiles' ? 'Profiles' :
+            'Settings'
+          }</h1>
+          {networkDetail && (
+            <div className="header-stats">
+              <span className={`header-status status-${networkDetail.status}`}>
+                {networkDetail.status === 'connected' || networkDetail.status === 'green' ? '● Online' : networkDetail.status || ''}
+              </span>
+              {networkDetail.clients && <span className="header-stat">{networkDetail.clients.count} clients</span>}
+              {networkDetail.speed?.down && (
+                <span className="header-stat">
+                  ↓{networkDetail.speed.down.value} ↑{networkDetail.speed.up?.value} {networkDetail.speed.down.units}
+                </span>
+              )}
+            </div>
+          )}
+        </header>
 
         {selectedNetwork && (
           <div className="tab-content">
