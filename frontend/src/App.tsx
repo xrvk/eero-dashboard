@@ -3,10 +3,14 @@ import * as api from './api';
 import LoginForm from './components/LoginForm';
 import DeviceList from './components/DeviceList';
 import EeroNodes from './components/EeroNodes';
+import ActivityView from './components/ActivityView';
+import ProfileManager from './components/ProfileManager';
+import SettingsView from './components/SettingsView';
 
-function extractId(url?: string) {
-  if (!url) return '';
-  return url.replace(/\/$/, '').split('/').pop() || '';
+function getNetworkId(n: api.Network): string {
+  if (n.id != null) return String(n.id);
+  if (n.url) return n.url.replace(/\/$/, '').split('/').pop() || '';
+  return '';
 }
 
 export default function App() {
@@ -15,7 +19,7 @@ export default function App() {
   const [networks, setNetworks] = useState<api.Network[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [networkDetail, setNetworkDetail] = useState<api.Network | null>(null);
-  const [tab, setTab] = useState<'devices' | 'nodes'>('devices');
+  const [tab, setTab] = useState<'devices' | 'nodes' | 'activity' | 'profiles' | 'settings'>('devices');
 
   const checkAuth = useCallback(async () => {
     try {
@@ -25,7 +29,7 @@ export default function App() {
         const res = await api.getNetworks();
         setNetworks(res.networks);
         if (res.networks.length > 0 && !selectedNetwork) {
-          const id = extractId(res.networks[0].url);
+          const id = getNetworkId(res.networks[0]);
           setSelectedNetwork(id);
         }
       }
@@ -84,7 +88,7 @@ export default function App() {
         {networks.length > 1 && (
           <div className="network-selector">
             {networks.map((n) => {
-              const id = extractId(n.url);
+              const id = getNetworkId(n);
               return (
                 <button
                   key={id}
@@ -107,7 +111,7 @@ export default function App() {
             <div className="overview-card">
               <span className="overview-label">Status</span>
               <span className={`overview-value status-${networkDetail.status}`}>
-                {networkDetail.status === 'green' ? '● Online' : networkDetail.status || '—'}
+                {networkDetail.status === 'connected' || networkDetail.status === 'green' ? '● Online' : networkDetail.status || '—'}
               </span>
             </div>
             {networkDetail.speed?.down && (
@@ -143,12 +147,24 @@ export default function App() {
           <button className={`tab ${tab === 'nodes' ? 'active' : ''}`} onClick={() => setTab('nodes')}>
             Nodes
           </button>
+          <button className={`tab ${tab === 'activity' ? 'active' : ''}`} onClick={() => setTab('activity')}>
+            Activity
+          </button>
+          <button className={`tab ${tab === 'profiles' ? 'active' : ''}`} onClick={() => setTab('profiles')}>
+            Profiles
+          </button>
+          <button className={`tab ${tab === 'settings' ? 'active' : ''}`} onClick={() => setTab('settings')}>
+            Settings
+          </button>
         </div>
 
         {selectedNetwork && (
           <div className="tab-content">
             {tab === 'devices' && <DeviceList networkId={selectedNetwork} />}
             {tab === 'nodes' && <EeroNodes networkId={selectedNetwork} />}
+            {tab === 'activity' && <ActivityView networkId={selectedNetwork} />}
+            {tab === 'profiles' && <ProfileManager networkId={selectedNetwork} />}
+            {tab === 'settings' && <SettingsView networkId={selectedNetwork} />}
           </div>
         )}
       </main>

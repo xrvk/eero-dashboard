@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
 
@@ -23,6 +24,22 @@ export default function DeviceList({ networkId }: DeviceListProps) {
     () => api.getDevices(networkId),
     [networkId]
   );
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ mac: string; type: 'pause' | 'block' } | null>(null);
+
+  const handleAction = async (deviceId: string, type: 'pause' | 'block', value: boolean) => {
+    setActionLoading(deviceId);
+    try {
+      if (type === 'pause') await api.pauseDevice(networkId, deviceId, value);
+      else await api.blockDevice(networkId, deviceId, value);
+      await refetch();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Action failed');
+    } finally {
+      setActionLoading(null);
+      setConfirmAction(null);
+    }
+  };
 
   if (loading) return <div className="card loading-card"><div className="spinner" /> Loading devices…</div>;
   if (error) return <div className="card error-card">Error: {error}</div>;
@@ -33,6 +50,20 @@ export default function DeviceList({ networkId }: DeviceListProps) {
 
   return (
     <div className="device-list">
+      {confirmAction && (
+        <div className="confirm-overlay" onClick={() => setConfirmAction(null)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <p>{confirmAction.type === 'pause' ? '⏸️ Pause' : '🚫 Block'} this device?</p>
+            <div className="confirm-actions">
+              <button className="btn-confirm" onClick={() => handleAction(confirmAction.mac, confirmAction.type, true)}>
+                {actionLoading ? 'Working…' : 'Confirm'}
+              </button>
+              <button className="btn-cancel" onClick={() => setConfirmAction(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="section-header">
         <h2>
           Connected Devices
@@ -61,6 +92,20 @@ export default function DeviceList({ networkId }: DeviceListProps) {
                   <span className="usage-up">↑ {formatBytes(d.usage.up)}</span>
                 </>
               )}
+            </div>
+            <div className="device-actions">
+              <button
+                className="btn-action"
+                title="Pause internet"
+                disabled={actionLoading === d.mac}
+                onClick={() => setConfirmAction({ mac: d.mac!, type: 'pause' })}
+              >⏸️</button>
+              <button
+                className="btn-action"
+                title="Block device"
+                disabled={actionLoading === d.mac}
+                onClick={() => setConfirmAction({ mac: d.mac!, type: 'block' })}
+              >🚫</button>
             </div>
           </div>
         ))}

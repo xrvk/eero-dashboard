@@ -226,6 +226,250 @@ async def get_activity(network_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/networks/{network_id}/activity/history")
+async def get_activity_history(network_id: str, period: str = "day"):
+    client = await get_client()
+    try:
+        resp = await client.get_activity_history(network_id, period=period)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/networks/{network_id}/activity/clients")
+async def get_activity_clients(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_activity_clients(network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/networks/{network_id}/activity/categories")
+async def get_activity_categories(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_activity_categories(network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Speed Test ────────────────────────────────────────────────────────────────
+
+
+@app.post("/api/networks/{network_id}/speed-test")
+async def run_speed_test(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.run_speed_test(network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Diagnostics ───────────────────────────────────────────────────────────────
+
+
+@app.get("/api/networks/{network_id}/diagnostics")
+async def get_diagnostics(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_diagnostics(network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/networks/{network_id}/diagnostics")
+async def run_diagnostics(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.run_diagnostics(network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Device Actions ────────────────────────────────────────────────────────────
+
+
+class DevicePauseRequest(BaseModel):
+    paused: bool
+
+
+class DeviceBlockRequest(BaseModel):
+    blocked: bool
+
+
+@app.post("/api/networks/{network_id}/devices/{device_id}/pause")
+async def pause_device(network_id: str, device_id: str, req: DevicePauseRequest):
+    client = await get_client()
+    try:
+        resp = await client.pause_device(device_id, req.paused, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/networks/{network_id}/devices/{device_id}/block")
+async def block_device(network_id: str, device_id: str, req: DeviceBlockRequest):
+    client = await get_client()
+    try:
+        resp = await client.block_device(device_id, req.blocked, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Profile Actions ───────────────────────────────────────────────────────────
+
+
+class ProfilePauseRequest(BaseModel):
+    paused: bool
+
+
+class BedtimeRequest(BaseModel):
+    start_time: str
+    end_time: str
+    days: list[str] | None = None
+
+
+class BlockedAppsRequest(BaseModel):
+    applications: list[str]
+
+
+@app.post("/api/networks/{network_id}/profiles/{profile_id}/pause")
+async def pause_profile(network_id: str, profile_id: str, req: ProfilePauseRequest):
+    client = await get_client()
+    try:
+        resp = await client.pause_profile(profile_id, req.paused, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/networks/{network_id}/profiles/{profile_id}/bedtime")
+async def set_bedtime(network_id: str, profile_id: str, req: BedtimeRequest):
+    client = await get_client()
+    try:
+        resp = await client.enable_bedtime(
+            profile_id, req.start_time, req.end_time, days=req.days, network_id=network_id
+        )
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/networks/{network_id}/profiles/{profile_id}/blocked-apps")
+async def get_blocked_apps(network_id: str, profile_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_blocked_applications(profile_id, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/networks/{network_id}/profiles/{profile_id}/blocked-apps")
+async def set_blocked_apps(network_id: str, profile_id: str, req: BlockedAppsRequest):
+    client = await get_client()
+    try:
+        resp = await client.set_blocked_applications(profile_id, req.applications, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/networks/{network_id}/profiles/{profile_id}/schedule")
+async def get_profile_schedule(network_id: str, profile_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_profile_schedule(profile_id, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Security Settings ────────────────────────────────────────────────────────
+
+
+@app.get("/api/networks/{network_id}/security")
+async def get_security(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_security_settings(network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class SecurityUpdateRequest(BaseModel):
+    wpa3: bool | None = None
+    band_steering: bool | None = None
+    upnp: bool | None = None
+    ipv6: bool | None = None
+    thread: bool | None = None
+
+
+@app.patch("/api/networks/{network_id}/security")
+async def update_security(network_id: str, req: SecurityUpdateRequest):
+    client = await get_client()
+    try:
+        kwargs: dict = {}
+        if req.wpa3 is not None:
+            kwargs["wpa3"] = req.wpa3
+        if req.band_steering is not None:
+            kwargs["band_steering"] = req.band_steering
+        if req.upnp is not None:
+            kwargs["upnp"] = req.upnp
+        if req.ipv6 is not None:
+            kwargs["ipv6"] = req.ipv6
+        if req.thread is not None:
+            kwargs["thread"] = req.thread
+        resp = await client.configure_security(network_id=network_id, **kwargs)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Port Forwarding & Reservations ───────────────────────────────────────────
+
+
+@app.get("/api/networks/{network_id}/forwards")
+async def get_forwards(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_forwards(network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/networks/{network_id}/reservations")
+async def get_reservations(network_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_reservations(network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Reboot Node ──────────────────────────────────────────────────────────────
+
+
+@app.post("/api/networks/{network_id}/eeros/{eero_id}/reboot")
+async def reboot_eero(network_id: str, eero_id: str):
+    client = await get_client()
+    try:
+        resp = await client.reboot_eero(eero_id, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     import uvicorn
 

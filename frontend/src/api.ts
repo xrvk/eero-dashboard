@@ -38,7 +38,8 @@ export const logout = () =>
 
 // Networks
 export interface Network {
-  url: string;
+  id?: number;
+  url?: string;
   name: string;
   status?: string;
   speed?: { down?: { value: number; units: string }; up?: { value: number; units: string } };
@@ -106,3 +107,88 @@ export const getProfiles = (networkId: string) =>
 // Activity
 export const getActivity = (networkId: string) =>
   request<Record<string, unknown>>(`/networks/${networkId}/activity`);
+
+export const getActivityHistory = (networkId: string, period = 'day') =>
+  request<Record<string, unknown>>(`/networks/${networkId}/activity/history?period=${period}`);
+
+export const getActivityClients = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/activity/clients`);
+
+export const getActivityCategories = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/activity/categories`);
+
+// Speed Test
+export const runSpeedTest = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/speed-test`, { method: 'POST' });
+
+// Diagnostics
+export const getDiagnostics = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/diagnostics`);
+
+export const runDiagnostics = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/diagnostics`, { method: 'POST' });
+
+// Device Actions
+export const pauseDevice = (networkId: string, deviceId: string, paused: boolean) =>
+  request(`/networks/${networkId}/devices/${deviceId}/pause`, {
+    method: 'POST',
+    body: JSON.stringify({ paused }),
+  });
+
+export const blockDevice = (networkId: string, deviceId: string, blocked: boolean) =>
+  request(`/networks/${networkId}/devices/${deviceId}/block`, {
+    method: 'POST',
+    body: JSON.stringify({ blocked }),
+  });
+
+// Profile Actions
+export const pauseProfile = (networkId: string, profileId: string, paused: boolean) =>
+  request(`/networks/${networkId}/profiles/${profileId}/pause`, {
+    method: 'POST',
+    body: JSON.stringify({ paused }),
+  });
+
+export const setBedtime = (networkId: string, profileId: string, startTime: string, endTime: string, days?: string[]) =>
+  request(`/networks/${networkId}/profiles/${profileId}/bedtime`, {
+    method: 'POST',
+    body: JSON.stringify({ start_time: startTime, end_time: endTime, days }),
+  });
+
+export const getBlockedApps = (networkId: string, profileId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/profiles/${profileId}/blocked-apps`);
+
+export const setBlockedApps = (networkId: string, profileId: string, applications: string[]) =>
+  request(`/networks/${networkId}/profiles/${profileId}/blocked-apps`, {
+    method: 'POST',
+    body: JSON.stringify({ applications }),
+  });
+
+export const getProfileSchedule = (networkId: string, profileId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/profiles/${profileId}/schedule`);
+
+// Security
+export interface SecuritySettings {
+  [key: string]: unknown;
+}
+
+export const getSecurity = (networkId: string) =>
+  request<SecuritySettings>(`/networks/${networkId}/security`);
+
+export const updateSecurity = (networkId: string, settings: {
+  wpa3?: boolean; band_steering?: boolean; upnp?: boolean; ipv6?: boolean; thread?: boolean;
+}) =>
+  request(`/networks/${networkId}/security`, {
+    method: 'PATCH',
+    body: JSON.stringify(settings),
+  });
+
+// Port Forwarding & Reservations
+export const getForwards = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/forwards`);
+
+export const getReservations = (networkId: string) =>
+  request<Record<string, unknown>>(`/networks/${networkId}/reservations`);
+
+// Reboot
+export const rebootEero = (networkId: string, eeroId: string) =>
+  request(`/networks/${networkId}/eeros/${eeroId}/reboot`, { method: 'POST' });
