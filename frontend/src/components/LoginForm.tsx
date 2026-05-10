@@ -80,6 +80,7 @@ export default function LoginForm({ onAuthenticated }: LoginFormProps) {
             <input
               id="code"
               type="text"
+              inputMode="numeric"
               placeholder="123456"
               value={code}
               onChange={(e) => setCode(e.target.value)}

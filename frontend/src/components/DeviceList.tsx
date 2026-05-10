@@ -8,14 +8,6 @@ function extractId(url?: string) {
   return url.replace(/\/$/, '').split('/').pop() || '';
 }
 
-function formatBytes(bytes?: number) {
-  if (bytes == null) return '—';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-}
-
 function rawBytes(bytes?: number) {
   return bytes ?? 0;
 }
@@ -466,7 +458,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
   );
 }
 
-function DeviceCard({ device: d, networkId, actionLoading, onAction, onRename, onReserve, onClick }: {
+function DeviceCard({ device: d, networkId: _networkId, actionLoading, onAction, onRename, onReserve, onClick }: {
   device: api.Device;
   networkId: string;
   actionLoading: string | null;

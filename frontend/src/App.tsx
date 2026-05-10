@@ -21,7 +21,6 @@ export default function App() {
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [networkDetail, setNetworkDetail] = useState<api.Network | null>(null);
   const [tab, setTab] = useState<'devices' | 'activity' | 'profiles' | 'settings-general' | 'settings-forwards' | 'settings-reservations' | 'settings-guest' | 'settings-blacklist'>('devices');
-  const settingsOpen = true; // always expanded
 
   // Theme
   type Theme = 'dark' | 'light' | 'auto';
@@ -37,7 +36,6 @@ export default function App() {
     }
   }, [theme]);
 
-  const cycleTheme = () => setTheme(t => t === 'dark' ? 'light' : t === 'light' ? 'auto' : 'dark');
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
 
   const checkAuth = useCallback(async () => {
