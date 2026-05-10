@@ -953,3 +953,55 @@ body {
 .settings-content { animation: fadeIn 0.15s ease-out; }
 .settings-subsection { margin-bottom: 32px; }
 .settings-subsection h3 { margin-bottom: 0; }
+
+/* ── Revised Device Toolbar ─────────────────── */
+.toolbar-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+}
+.toolbar-row + .toolbar-row { margin-top: 10px; }
+.toolbar-actions { display: flex; align-items: center; gap: 6px; }
+
+.toolbar-toggle {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-muted);
+  padding: 5px 12px; font-size: 0.78rem; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.toolbar-toggle:hover { color: var(--text); border-color: var(--text-muted); }
+.toolbar-toggle.active {
+  background: rgba(110,160,255,0.1); border-color: var(--accent);
+  color: var(--accent); font-weight: 600;
+}
+
+/* ── Unified Filter Bar ─────────────────────── */
+.filter-bar { display: flex; align-items: center; }
+.filter-group { display: flex; align-items: center; gap: 4px; }
+.filter-btn {
+  background: none; border: 1px solid transparent;
+  border-radius: var(--radius-sm); color: var(--text-dim);
+  padding: 4px 10px; font-size: 0.78rem; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; gap: 4px;
+}
+.filter-btn:hover { color: var(--text); background: var(--bg-card-hover); }
+.filter-btn.active {
+  background: var(--bg-card); border-color: var(--border);
+  color: var(--text); font-weight: 600;
+}
+.filter-btn.active.green { color: var(--green); border-color: rgba(52,211,153,0.3); }
+.filter-count {
+  font-size: 0.68rem; font-weight: 700;
+  background: var(--border); color: var(--text-muted);
+  padding: 0 5px; border-radius: 99px; min-width: 16px; text-align: center;
+}
+.filter-btn.active .filter-count { background: rgba(110,160,255,0.15); color: var(--accent); }
+.filter-btn.active.green .filter-count { background: rgba(52,211,153,0.15); color: var(--green); }
+.filter-sep {
+  width: 1px; height: 16px; background: var(--border); margin: 0 4px; flex-shrink: 0;
+}
+
+@media (max-width: 800px) {
+  .toolbar-row { flex-wrap: wrap; }
+  .filter-group { flex-wrap: wrap; }
+}

@@ -20,7 +20,7 @@ function rawBytes(bytes?: number) {
 }
 
 type ViewMode = 'grid' | 'list';
-type GroupBy = 'node' | 'none';
+type GroupBy = 'none' | 'node';
 type StatusFilter = 'all' | 'online' | 'offline';
 type BandFilter = 'all' | 'wired' | 'wireless';
 type SortCol = 'name' | 'ip' | 'mac' | 'type' | 'signal' | 'band' | 'speed' | 'down' | 'up';
@@ -238,61 +238,66 @@ export default function DeviceList({ networkId }: DeviceListProps) {
 
       {/* Toolbar */}
       <div className="device-toolbar">
-        <div className="search-box">
-          <span className="search-icon">🔍</span>
-          <input
-            type="text"
-            placeholder="Search by name, IP, MAC, or manufacturer…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {search && (
-            <button className="search-clear" onClick={() => setSearch('')}>×</button>
-          )}
-        </div>
-        <div className="toolbar-controls">
-          <div className="status-toggle">
-            <button className={`status-btn ${statusFilter === 'all' ? 'active' : ''}`} onClick={() => setStatusFilter('all')}>
-              All <span className="status-count">{allDevices.length}</span>
-            </button>
-            <button className={`status-btn online ${statusFilter === 'online' ? 'active' : ''}`} onClick={() => setStatusFilter('online')}>
-              Online <span className="status-count">{allDevices.filter(d => d.connected).length}</span>
-            </button>
-            <button className={`status-btn offline ${statusFilter === 'offline' ? 'active' : ''}`} onClick={() => setStatusFilter('offline')}>
-              Offline <span className="status-count">{allDevices.filter(d => !d.connected).length}</span>
-            </button>
+        <div className="toolbar-row">
+          <div className="search-box">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Search by name, IP, MAC, or manufacturer…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button className="search-clear" onClick={() => setSearch('')}>×</button>
+            )}
           </div>
-          <div className="band-filter">
-            <button className={`band-btn ${bandFilter === 'all' ? 'active' : ''}`} onClick={() => setBandFilter('all')}>All</button>
-            <button className={`band-btn wired ${bandFilter === 'wired' ? 'active' : ''}`} onClick={() => setBandFilter('wired')}>Wired</button>
-            <button className={`band-btn wireless ${bandFilter === 'wireless' ? 'active' : ''}`} onClick={() => setBandFilter('wireless')}>Wireless</button>
-          </div>
-          <div className="group-select">
-            <label>Group:</label>
-            <select value={groupBy} onChange={(e) => setGroupBy(e.target.value as GroupBy)}>
-              <option value="none">None</option>
-              <option value="node">eero Node</option>
-            </select>
-          </div>
-          <div className="view-toggle">
+          <div className="toolbar-actions">
             <button
-              className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-              onClick={() => setViewMode('grid')}
-              title="Grid view"
-            >⊞</button>
-            <button
-              className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-              onClick={() => setViewMode('list')}
-              title="List view"
-            >☰</button>
+              className={`toolbar-toggle ${groupBy === 'node' ? 'active' : ''}`}
+              onClick={() => setGroupBy(g => g === 'node' ? 'none' : 'node')}
+              title="Group by eero node"
+            >
+              📡 By Node
+            </button>
+            <div className="view-toggle">
+              <button className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')} title="Grid view">⊞</button>
+              <button className={`view-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')} title="List view">☰</button>
+            </div>
+            <button className="btn-icon" onClick={refetch} title="Refresh">↻</button>
           </div>
-          <button className="btn-icon" onClick={refetch} title="Refresh">↻</button>
         </div>
-      </div>
-
-      <div className="search-results-info">
-        Showing {filtered.length} of {allDevices.length} device{allDevices.length !== 1 ? 's' : ''}
-        {search && <> matching "{search}"</>}
+        <div className="toolbar-row">
+          <div className="filter-bar">
+            <div className="filter-group">
+              <button className={`filter-btn ${statusFilter === 'all' && bandFilter === 'all' ? 'active' : ''}`}
+                onClick={() => { setStatusFilter('all'); setBandFilter('all'); }}>
+                All <span className="filter-count">{allDevices.length}</span>
+              </button>
+              <span className="filter-sep" />
+              <button className={`filter-btn green ${statusFilter === 'online' && bandFilter === 'all' ? 'active' : ''}`}
+                onClick={() => { setStatusFilter('online'); setBandFilter('all'); }}>
+                Online <span className="filter-count">{allDevices.filter(d => d.connected).length}</span>
+              </button>
+              <button className={`filter-btn ${statusFilter === 'offline' ? 'active' : ''}`}
+                onClick={() => { setStatusFilter('offline'); setBandFilter('all'); }}>
+                Offline <span className="filter-count">{allDevices.filter(d => !d.connected).length}</span>
+              </button>
+              <span className="filter-sep" />
+              <button className={`filter-btn ${bandFilter === 'wired' ? 'active' : ''}`}
+                onClick={() => { setBandFilter('wired'); setStatusFilter('online'); }}>
+                Wired
+              </button>
+              <button className={`filter-btn ${bandFilter === 'wireless' ? 'active' : ''}`}
+                onClick={() => { setBandFilter('wireless'); setStatusFilter('online'); }}>
+                Wireless
+              </button>
+            </div>
+          </div>
+          <span className="results-counter">
+            {filtered.length} of {allDevices.length}
+            {search && <> · "{search}"</>}
+          </span>
+        </div>
       </div>
 
       {/* Grouped device sections */}
