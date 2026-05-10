@@ -22,6 +22,7 @@ function rawBytes(bytes?: number) {
 type ViewMode = 'grid' | 'list';
 type GroupBy = 'connection' | 'node' | 'none';
 type StatusFilter = 'all' | 'online' | 'offline';
+type BandFilter = 'all' | 'wired' | '2.4' | '5' | '6';
 type SortCol = 'name' | 'ip' | 'mac' | 'type' | 'signal' | 'band' | 'speed' | 'down' | 'up';
 type SortDir = 'asc' | 'desc';
 
@@ -115,6 +116,7 @@ export default function DeviceList({ networkId }: DeviceListProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [groupBy, setGroupBy] = useState<GroupBy>('none');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('online');
+  const [bandFilter, setBandFilter] = useState<BandFilter>('all');
   const [sortCol, setSortCol] = useState<SortCol>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
@@ -153,6 +155,18 @@ export default function DeviceList({ networkId }: DeviceListProps) {
     // Status filter
     if (statusFilter === 'online') result = result.filter(d => d.connected);
     else if (statusFilter === 'offline') result = result.filter(d => !d.connected);
+    // Band filter
+    if (bandFilter !== 'all') {
+      result = result.filter(d => {
+        if (bandFilter === 'wired') return !d.wireless;
+        const freq = getConn(d)?.frequency;
+        if (!freq) return false;
+        if (bandFilter === '2.4') return freq < 3000;
+        if (bandFilter === '5') return freq >= 3000 && freq < 5900;
+        if (bandFilter === '6') return freq >= 5900;
+        return true;
+      });
+    }
     // Search filter
     if (!search.trim()) return result;
     const q = search.toLowerCase().trim();
@@ -163,7 +177,7 @@ export default function DeviceList({ networkId }: DeviceListProps) {
       const manufacturer = (d.manufacturer || '').toLowerCase();
       return name.includes(q) || ip.includes(q) || mac.includes(q) || manufacturer.includes(q);
     });
-  }, [allDevices, search, statusFilter]);
+  }, [allDevices, search, statusFilter, bandFilter]);
 
   const groups = useMemo(() => {
     const result: { label: string; devices: api.Device[] }[] = [];
@@ -241,6 +255,13 @@ export default function DeviceList({ networkId }: DeviceListProps) {
             <button className={`status-btn offline ${statusFilter === 'offline' ? 'active' : ''}`} onClick={() => setStatusFilter('offline')}>
               Offline <span className="status-count">{allDevices.filter(d => !d.connected).length}</span>
             </button>
+          </div>
+          <div className="band-filter">
+            <button className={`band-btn ${bandFilter === 'all' ? 'active' : ''}`} onClick={() => setBandFilter('all')}>All</button>
+            <button className={`band-btn wired ${bandFilter === 'wired' ? 'active' : ''}`} onClick={() => setBandFilter('wired')}>🔌 Wired</button>
+            <button className={`band-btn ghz24 ${bandFilter === '2.4' ? 'active' : ''}`} onClick={() => setBandFilter('2.4')}>2.4 GHz</button>
+            <button className={`band-btn ghz5 ${bandFilter === '5' ? 'active' : ''}`} onClick={() => setBandFilter('5')}>5 GHz</button>
+            <button className={`band-btn ghz6 ${bandFilter === '6' ? 'active' : ''}`} onClick={() => setBandFilter('6')}>6 GHz</button>
           </div>
           <div className="group-select">
             <label>Group:</label>

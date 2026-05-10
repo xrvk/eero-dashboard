@@ -744,3 +744,23 @@ body {
   .app-main { margin-left: 60px; }
   .tab-content { padding: 16px; }
 }
+
+/* ── Band Filter Toggle ─────────────────────── */
+.band-filter {
+  display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.band-btn {
+  background: var(--bg-card); border: none; color: var(--text-muted);
+  padding: 5px 10px; font-size: 0.73rem; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
+  border-right: 1px solid var(--border); white-space: nowrap;
+}
+.band-btn:last-child { border-right: none; }
+.band-btn:hover:not(.active) { color: var(--text); background: var(--bg-card-hover); }
+.band-btn.active { color: #fff; }
+.band-btn.active:not(.wired):not(.ghz24):not(.ghz5):not(.ghz6) { background: var(--accent); }
+.band-btn.active.wired { background: var(--text-muted); }
+.band-btn.active.ghz24 { background: var(--yellow); color: #000; }
+.band-btn.active.ghz5 { background: var(--accent); }
+.band-btn.active.ghz6 { background: var(--green); color: #000; }
