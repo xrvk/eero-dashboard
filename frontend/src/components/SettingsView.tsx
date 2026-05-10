@@ -582,6 +582,9 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const { data: routingData, loading: rLoading } = useFetch(
     () => api.getRouting(networkId), [networkId]
   );
+  const { data: securityData, loading: secLoading, refetch: refetchSecurity } = useFetch(
+    () => api.getSecurity(networkId), [networkId]
+  );
   const [renaming, setRenaming] = useState(false);
   const [newName, setNewName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -592,8 +595,9 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const [diagError, setDiagError] = useState('');
   const [rebooting, setRebooting] = useState(false);
   const [confirmReboot, setConfirmReboot] = useState(false);
+  const [secSaving, setSecSaving] = useState(false);
 
-  const isLoading = sLoading || pLoading || uLoading || tLoading || rLoading;
+  const isLoading = sLoading || pLoading || uLoading || tLoading || rLoading || secLoading;
   if (isLoading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
   if (sError) return <div className="card error-card">Error: {sError}</div>;
 
@@ -604,9 +608,27 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const updates = updatesData as Record<string, unknown> || {};
   const thread = threadData as Record<string, unknown> || {};
   const routing = routingData as Record<string, unknown> || {};
+  const security = securityData || {} as Record<string, unknown>;
   const wanIp = String(settings.wan_ip || '');
   const gatewayIp = String(settings.gateway_ip || '');
   const timezone = (settings.timezone as Record<string, unknown>)?.value as string || '';
+
+  const securityToggles: { key: string; label: string; desc: string; apiKey?: string }[] = [
+    { key: 'wpa3', label: 'WPA3', desc: 'Latest WiFi security protocol' },
+    { key: 'band_steering', label: 'Band Steering', desc: 'Auto-assign devices to optimal band' },
+    { key: 'upnp', label: 'UPnP', desc: 'Allow devices to open ports automatically' },
+    { key: 'ipv6_upstream', label: 'IPv6', desc: 'Enable IPv6 networking', apiKey: 'ipv6' },
+    { key: 'thread', label: 'Thread', desc: 'IoT mesh networking protocol' },
+  ];
+
+  const handleSecurityToggle = async (key: string, value: boolean, apiKey?: string) => {
+    setSecSaving(true);
+    try {
+      await api.updateSecurity(networkId, { [apiKey || key]: value });
+      await refetchSecurity();
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSecSaving(false); }
+  };
 
   const handleRename = async () => {
     if (!newName.trim()) return;
@@ -727,17 +749,36 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
         </div>
       </div>
 
-      {/* Thread summary (just the status line, not raw JSON) */}
-      {thread.enabled != null && (
-        <div className="general-section">
-          <h3>🧵 Thread</h3>
-          <div className="general-info-grid">
-            <div className="general-detail"><span>Status</span><span className={thread.enabled ? 'text-green' : 'text-muted'}>{thread.enabled ? '● Enabled' : '○ Disabled'}</span></div>
-            {thread.name && <div className="general-detail"><span>Network</span><span className="mono">{String(thread.name)}</span></div>}
-            {thread.channel && <div className="general-detail"><span>Channel</span><span>{String(thread.channel)}</span></div>}
-          </div>
+      {/* Security & Connectivity */}
+      <div className="general-section">
+        <h3>🔒 Security & Connectivity</h3>
+        <div className="toggle-list">
+          {securityToggles.map((t) => {
+            const val = (security as Record<string, unknown>)[t.key];
+            const isOn = typeof val === 'boolean' ? val : !!val;
+            return (
+              <div key={t.key} className="toggle-row">
+                <div className="toggle-info">
+                  <span className="toggle-name">{t.label}</span>
+                  <span className="toggle-desc">{t.desc}</span>
+                </div>
+                <label className="toggle-switch">
+                  <input type="checkbox" checked={isOn} disabled={secSaving}
+                    onChange={() => handleSecurityToggle(t.key, !isOn, t.apiKey)} />
+                  <span className="toggle-slider" />
+                </label>
+              </div>
+            );
+          })}
         </div>
-      )}
+        {thread.enabled != null && (
+          <div className="general-info-grid" style={{ marginTop: 16 }}>
+            <div className="general-detail"><span>Thread Status</span><span className={thread.enabled ? 'text-green' : 'text-muted'}>{thread.enabled ? '● Enabled' : '○ Disabled'}</span></div>
+            {thread.name && <div className="general-detail"><span>Thread Network</span><span className="mono">{String(thread.name)}</span></div>}
+            {thread.channel && <div className="general-detail"><span>Thread Channel</span><span>{String(thread.channel)}</span></div>}
+          </div>
+        )}
+      </div>
 
       {/* Actions */}
       <div className="general-actions-row">
