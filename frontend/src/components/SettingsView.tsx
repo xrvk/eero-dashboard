@@ -239,7 +239,7 @@ export function PortForwardsSettings({ networkId }: { networkId: string }) {
         </div>
         <table className="device-table">
           <thead>
-            <tr><th>Ext. Port</th><th>Int. Port</th><th>Protocol</th><th>Device IP</th><th>Desc</th><th>On</th><th></th></tr>
+            <tr><th>Ext. Port</th><th>Int. Port</th><th>Protocol</th><th>Device IP</th><th>Desc</th><th></th></tr>
           </thead>
           <tbody>
             {showForm && (
@@ -249,7 +249,6 @@ export function PortForwardsSettings({ networkId }: { networkId: string }) {
                 <td><select value={form.protocol} onChange={e => setForm({ ...form, protocol: e.target.value })}><option value="tcp">TCP</option><option value="udp">UDP</option><option value="tcp_udp">Both</option></select></td>
                 <td><input placeholder="192.168.86.x" value={form.ip} onChange={e => setForm({ ...form, ip: e.target.value })} /></td>
                 <td><input placeholder="label" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></td>
-                <td></td>
                 <td><button className="btn-primary btn-sm" onClick={handleCreate} disabled={saving || !form.ip || !form.gateway_port}>{saving ? '…' : 'Add'}</button></td>
               </tr>
             )}
@@ -262,7 +261,6 @@ export function PortForwardsSettings({ networkId }: { networkId: string }) {
                   <td>{String(f.protocol ?? '—')}</td>
                   <td className="td-mono">{String(f.ip ?? '—')}</td>
                   <td>{String(f.description ?? '—')}</td>
-                  <td>{f.enabled !== false ? '✅' : '❌'}</td>
                   <td>
                     <button className={`btn-action btn-delete ${confirmDelete === fid ? 'confirming' : ''}`}
                       disabled={deleting === fid} onClick={() => handleDelete(String(f.url || ''))}
@@ -272,7 +270,7 @@ export function PortForwardsSettings({ networkId }: { networkId: string }) {
               );
             })}
             {(list as unknown[]).length === 0 && !showForm && (
-              <tr><td colSpan={7} className="empty-text" style={{ textAlign: 'center', padding: 20 }}>No port forwards</td></tr>
+              <tr><td colSpan={6} className="empty-text" style={{ textAlign: 'center', padding: 20 }}>No port forwards</td></tr>
             )}
           </tbody>
         </table>
