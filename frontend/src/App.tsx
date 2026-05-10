@@ -38,6 +38,7 @@ export default function App() {
   }, [theme]);
 
   const cycleTheme = () => setTheme(t => t === 'dark' ? 'light' : t === 'light' ? 'auto' : 'dark');
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
 
   const checkAuth = useCallback(async () => {
     try {
@@ -193,11 +194,7 @@ export default function App() {
         )}
 
         <div className="sidebar-footer">
-          <button className="btn-theme" onClick={cycleTheme} title={`Theme: ${theme}`}>
-            {theme === 'dark' ? '🌙' : theme === 'light' ? '☀️' : '🌗'} {theme.charAt(0).toUpperCase() + theme.slice(1)}
-          </button>
           {auth.name && <span className="sidebar-user">{auth.name}</span>}
-          <button className="btn-logout" onClick={handleLogout}>Sign out</button>
         </div>
       </aside>
 
@@ -231,6 +228,27 @@ export default function App() {
               )}
             </div>
           )}
+          <div className="header-actions">
+            <div className="theme-dropdown">
+              <button className="btn-header-icon" onClick={() => setThemeMenuOpen(!themeMenuOpen)} title="Theme">
+                {theme === 'dark' ? '🌙' : theme === 'light' ? '☀️' : '🌗'}
+              </button>
+              {themeMenuOpen && (
+                <div className="theme-menu" onClick={() => setThemeMenuOpen(false)}>
+                  <button className={`theme-option ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')}>
+                    ☀️ Light
+                  </button>
+                  <button className={`theme-option ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')}>
+                    🌙 Dark
+                  </button>
+                  <button className={`theme-option ${theme === 'auto' ? 'active' : ''}`} onClick={() => setTheme('auto')}>
+                    🌗 Auto
+                  </button>
+                </div>
+              )}
+            </div>
+            <button className="btn-logout" onClick={handleLogout}>Sign out</button>
+          </div>
         </header>
 
         {selectedNetwork && (
