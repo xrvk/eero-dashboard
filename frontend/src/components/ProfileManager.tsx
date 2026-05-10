@@ -21,6 +21,7 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
     [networkId]
   );
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [expandedProfile, setExpandedProfile] = useState<string | null>(null);
   const [editingProfile, setEditingProfile] = useState<string | null>(null);
 
   const allDevices = devicesData?.devices ?? [];
@@ -38,6 +39,11 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
     }
   };
 
+  const toggleExpand = (pid: string) => {
+    setExpandedProfile(prev => prev === pid ? null : pid);
+    if (editingProfile && editingProfile !== pid) setEditingProfile(null);
+  };
+
   if (loading) return <div className="card loading-card"><div className="spinner" /> Loading profiles…</div>;
   if (error) return <div className="card error-card">Error: {error}</div>;
 
@@ -48,21 +54,25 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
         <button className="btn-icon" onClick={refetch} title="Refresh">↻</button>
       </div>
 
-      <div className="profile-grid">
+      <div className="profile-list">
         {profiles.map((p) => {
           const pid = extractId(p.url);
           const profileDevices = Array.isArray(p.devices) ? p.devices : [];
+          const isExpanded = expandedProfile === pid;
           const isEditing = editingProfile === pid;
 
           return (
-            <div key={pid || p.name} className={`profile-card ${p.paused ? 'paused' : ''}`}>
-              <div className="profile-header">
-                <div className="profile-icon">👤</div>
+            <div key={pid || p.name} className={`profile-row ${p.paused ? 'paused' : ''} ${isExpanded ? 'expanded' : ''}`}>
+              <div className="profile-header" onClick={() => toggleExpand(pid)}>
+                <span className="profile-expand">{isExpanded ? '▾' : '▸'}</span>
                 <div className="profile-info">
                   <span className="profile-name">{p.name || 'Unnamed'}</span>
-                  <span className="profile-devices">{profileDevices.length} device{profileDevices.length !== 1 ? 's' : ''}</span>
+                  <span className="profile-meta">
+                    {profileDevices.length} device{profileDevices.length !== 1 ? 's' : ''}
+                    {p.paused && <span className="profile-paused-badge">Paused</span>}
+                  </span>
                 </div>
-                <div className="profile-status">
+                <div className="profile-actions" onClick={(e) => e.stopPropagation()}>
                   <label className="toggle-switch">
                     <input
                       type="checkbox"
@@ -72,39 +82,56 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
                     />
                     <span className="toggle-slider" />
                   </label>
-                  <span className="toggle-label">{p.paused ? 'Paused' : 'Active'}</span>
                 </div>
               </div>
 
-              {/* Device list for this profile */}
-              <div className="profile-device-list">
-                {profileDevices.map((pd: api.Device) => (
-                  <span key={pd.mac || extractId(pd.url)} className="profile-device-chip">
-                    {pd.display_name || pd.hostname || pd.mac || 'Unknown'}
-                  </span>
-                ))}
-              </div>
+              {isExpanded && (
+                <div className="profile-body">
+                  <div className="profile-device-table-header">
+                    <span className="results-counter">{profileDevices.length} assigned device{profileDevices.length !== 1 ? 's' : ''}</span>
+                    <button
+                      className="btn-text"
+                      onClick={() => setEditingProfile(isEditing ? null : pid)}
+                    >
+                      {isEditing ? '✕ Cancel' : '✏️ Edit'}
+                    </button>
+                  </div>
 
-              <button
-                className="btn-text"
-                onClick={() => setEditingProfile(isEditing ? null : pid)}
-              >
-                {isEditing ? '✕ Close' : '✏️ Manage devices'}
-              </button>
-
-              {isEditing && (
-                <DevicePicker
-                  networkId={networkId}
-                  profileId={pid}
-                  currentDeviceUrls={profileDevices.map((pd: api.Device) => pd.url || '')}
-                  allDevices={allDevices}
-                  onSaved={() => { setEditingProfile(null); refetch(); }}
-                />
+                  {isEditing ? (
+                    <DevicePicker
+                      networkId={networkId}
+                      profileId={pid}
+                      currentDeviceUrls={profileDevices.map((pd: api.Device) => pd.url || '')}
+                      allDevices={allDevices}
+                      onSaved={() => { setEditingProfile(null); refetch(); }}
+                    />
+                  ) : (
+                    <div className="profile-device-rows">
+                      {profileDevices.length === 0 ? (
+                        <p className="empty-text" style={{ padding: '12px 0' }}>No devices assigned</p>
+                      ) : (
+                        profileDevices.map((pd: api.Device) => (
+                          <div key={pd.mac || extractId(pd.url)} className="profile-device-row">
+                            <span className={`profile-device-status ${pd.connected ? 'online' : 'offline'}`}>●</span>
+                            <span className="profile-device-name">{pd.display_name || pd.hostname || pd.mac || 'Unknown'}</span>
+                            {pd.ip && <span className="profile-device-ip">{pd.ip}</span>}
+                            <span className="profile-device-type">{pd.device_type || ''}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           );
         })}
-        {profiles.length === 0 && <p className="empty-text">No profiles configured</p>}
+        {profiles.length === 0 && (
+          <div className="empty-state">
+            <p className="empty-icon">👤</p>
+            <p className="empty-text">No profiles configured</p>
+          </div>
+        )}
       </div>
     </div>
   );
