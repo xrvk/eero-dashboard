@@ -24,7 +24,7 @@ function extractId(url?: string) {
 }
 
 export default function ActivityView({ networkId }: ActivityViewProps) {
-  const { data: devData, loading: devLoading, refetch } = useFetch(
+  const { data: devData, loading: devLoading } = useFetch(
     () => api.getDevices(networkId),
     [networkId]
   );
@@ -84,18 +84,6 @@ export default function ActivityView({ networkId }: ActivityViewProps) {
       if (!d.wireless) { counts['Wired']++; continue; }
       const band = freqToBand(d.connectivity?.frequency);
       if (band in counts) counts[band as keyof typeof counts]++;
-    }
-    return counts;
-  }, [connected]);
-
-  const nodeCounts = useMemo(() => {
-    const counts = new Map<string, { total: number; wireless: number }>();
-    for (const d of connected) {
-      const node = d.source?.display_name || d.source?.location || 'Unknown';
-      const prev = counts.get(node) || { total: 0, wireless: 0 };
-      prev.total++;
-      if (d.wireless) prev.wireless++;
-      counts.set(node, prev);
     }
     return counts;
   }, [connected]);
@@ -212,9 +200,6 @@ export default function ActivityView({ networkId }: ActivityViewProps) {
         <div className="node-grid">
           {(eeroData?.eeros ?? []).map((node: api.EeroNode, i: number) => {
             const eeroId = extractId(node.url);
-            const nodeClients = nodeCounts.get(
-              (node as unknown as ConnectedDevice).location || node.location || ''
-            );
             return (
               <div
                 key={node.serial || i}

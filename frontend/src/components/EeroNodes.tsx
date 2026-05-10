@@ -117,7 +117,7 @@ export default function EeroNodes({ networkId }: EeroNodesProps) {
   );
 }
 
-function NodeControls({ networkId, eeroId, node }: { networkId: string; eeroId: string; node: api.EeroNode }) {
+function NodeControls({ networkId, eeroId, node: _node }: { networkId: string; eeroId: string; node: api.EeroNode }) {
   const { data: ledData, refetch: refetchLed } = useFetch(
     () => api.getLedStatus(networkId, eeroId),
     [networkId, eeroId]
