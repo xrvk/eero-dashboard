@@ -55,6 +55,9 @@ export const getNetworks = () =>
 export const getNetwork = (id: string) =>
   request<Network>(`/networks/${id}`);
 
+export const prefetch = (networkId: string) =>
+  request<{ status: string; cached: number }>(`/prefetch/${networkId}`, { method: 'POST' }).catch(() => {});
+
 // Devices
 export interface Device {
   url?: string;

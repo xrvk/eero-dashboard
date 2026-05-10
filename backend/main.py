@@ -2,9 +2,11 @@ import asyncio
 import json
 import os
 import re
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any, Callable, Coroutine
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,9 +19,85 @@ COOKIE_FILE = str(Path(__file__).parent / ".eero_session")
 DATA_DIR = Path(__file__).parent / "data"
 SPEED_HISTORY_FILE = DATA_DIR / "speed_history.json"
 SPEED_HISTORY_DAYS = int(os.environ.get("SPEED_HISTORY_DAYS", "365"))
+CACHE_TTL = int(os.environ.get("CACHE_TTL", "300"))
 
 # Module-level client reference
 _client: EeroClient | None = None
+
+# ── In-memory cache ───────────────────────────────────────────────────────────
+
+_cache: dict[str, tuple[float, Any]] = {}
+
+
+def _cache_get(key: str) -> Any | None:
+    entry = _cache.get(key)
+    if entry and (time.monotonic() - entry[0]) < CACHE_TTL:
+        return entry[1]
+    return None
+
+
+def _cache_set(key: str, value: Any) -> None:
+    _cache[key] = (time.monotonic(), value)
+
+
+def _cache_bust(prefix: str = "") -> None:
+    """Clear cache entries matching prefix, or all if empty."""
+    if not prefix:
+        _cache.clear()
+    else:
+        for k in [k for k in _cache if k.startswith(prefix)]:
+            del _cache[k]
+
+
+async def _cached(key: str, fn: Callable[[], Coroutine[Any, Any, Any]]) -> Any:
+    """Return cached result or call fn, cache it, and return."""
+    hit = _cache_get(key)
+    if hit is not None:
+        return hit
+    result = await fn()
+    _cache_set(key, result)
+    return result
+
+
+# Endpoints that should never be cached
+_NO_CACHE_PATHS = {"/api/health", "/api/auth/status"}
+
+
+@app.middleware("http")
+async def cache_middleware(request, call_next):
+    """Cache all GET /api/ responses; bust cache on mutations."""
+    path = request.url.path
+    method = request.method
+
+    # Bust cache on any mutation
+    if method in ("POST", "PUT", "PATCH", "DELETE") and path.startswith("/api/"):
+        _cache_bust()
+
+    # Only cache GETs under /api/
+    if method == "GET" and path.startswith("/api/") and path not in _NO_CACHE_PATHS:
+        hit = _cache_get(path)
+        if hit is not None:
+            from starlette.responses import JSONResponse
+            return JSONResponse(content=hit)
+
+        response = await call_next(request)
+
+        # Cache successful JSON responses
+        if response.status_code == 200:
+            body = b""
+            async for chunk in response.body_iterator:
+                body += chunk
+            try:
+                data = json.loads(body)
+                _cache_set(path, data)
+                from starlette.responses import JSONResponse
+                return JSONResponse(content=data, headers=dict(response.headers))
+            except (json.JSONDecodeError, ValueError):
+                from starlette.responses import Response
+                return Response(content=body, status_code=response.status_code, headers=dict(response.headers))
+        return response
+
+    return await call_next(request)
 
 
 def _make_client() -> EeroClient:
@@ -144,6 +222,32 @@ async def logout():
     _client = _make_client()
     await _client.__aenter__()
     return {"status": "logged_out"}
+
+
+# ── Prefetch ─────────────────────────────────────────────────────────────────
+
+
+@app.post("/api/prefetch/{network_id}")
+async def prefetch(network_id: str):
+    """Warm the cache by fetching all main data in parallel."""
+    client = await get_client()
+    try:
+        results = await asyncio.gather(
+            client.get_network(network_id),
+            client.get_devices(network_id),
+            client.get_eeros(network_id),
+            client.get_profiles(network_id),
+            client.get_dns_settings(network_id),
+            client.get_security_settings(network_id),
+            client.get_updates(network_id=network_id),
+            client.get_thread(network_id=network_id),
+            client.get_blacklist(network_id=network_id),
+            return_exceptions=True,
+        )
+        ok = sum(1 for r in results if not isinstance(r, Exception))
+        return {"status": "ok", "cached": ok, "total": len(results)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ── Network ───────────────────────────────────────────────────────────────────

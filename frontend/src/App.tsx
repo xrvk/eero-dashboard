@@ -64,6 +64,7 @@ export default function App() {
   useEffect(() => {
     if (!selectedNetwork) return;
     api.getNetwork(selectedNetwork).then(setNetworkDetail).catch(() => {});
+    api.prefetch(selectedNetwork);
   }, [selectedNetwork]);
 
   const handleLogout = async () => {
