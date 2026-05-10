@@ -741,19 +741,37 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const { data: passwordData, loading: pLoading } = useFetch(
     () => api.getPassword(networkId), [networkId]
   );
+  const { data: updatesData, loading: uLoading } = useFetch(
+    () => api.getUpdates(networkId), [networkId]
+  );
+  const { data: threadData, loading: tLoading } = useFetch(
+    () => api.getThread(networkId), [networkId]
+  );
+  const { data: routingData, loading: rLoading } = useFetch(
+    () => api.getRouting(networkId), [networkId]
+  );
   const [renaming, setRenaming] = useState(false);
   const [newName, setNewName] = useState('');
   const [saving, setSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [diagRunning, setDiagRunning] = useState(false);
+  const [diagResult, setDiagResult] = useState<Record<string, unknown> | null>(null);
+  const [diagError, setDiagError] = useState('');
+  const [rebooting, setRebooting] = useState(false);
+  const [confirmReboot, setConfirmReboot] = useState(false);
 
-  if (sLoading || pLoading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
+  const isLoading = sLoading || pLoading || uLoading || tLoading || rLoading;
+  if (isLoading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
   if (sError) return <div className="card error-card">Error: {sError}</div>;
 
   const settings = settingsData as Record<string, unknown> || {};
   const pw = passwordData as Record<string, unknown> || {};
   const password = String(pw.password || pw.key || '');
   const networkName = String(settings.name || settings.ssid || '');
+  const updates = updatesData as Record<string, unknown> || {};
+  const thread = threadData as Record<string, unknown> || {};
+  const routing = routingData as Record<string, unknown> || {};
 
   const handleRename = async () => {
     if (!newName.trim()) return;
@@ -772,6 +790,22 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch { /* ignore */ }
+  };
+
+  const handleRunDiagnostics = async () => {
+    setDiagRunning(true); setDiagError('');
+    try { setDiagResult(await api.runDiagnostics(networkId)); }
+    catch (e) { setDiagError(e instanceof Error ? e.message : 'Failed'); }
+    finally { setDiagRunning(false); }
+  };
+
+  const handleRebootNetwork = async () => {
+    setRebooting(true);
+    try {
+      await api.rebootNetwork(networkId);
+      setConfirmReboot(false);
+    } catch (e) { alert(e instanceof Error ? e.message : 'Reboot failed'); }
+    finally { setRebooting(false); }
   };
 
   return (
@@ -813,6 +847,101 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Firmware */}
+      <div className="settings-subsection" style={{ marginTop: 20 }}>
+        <h3>Firmware</h3>
+        <div className="dns-grid">
+          {updates.current_version && (
+            <div className="dns-item">
+              <span className="dns-label">Current Version</span>
+              <span className="dns-value mono">{String(updates.current_version)}</span>
+            </div>
+          )}
+          {updates.target_firmware && (
+            <div className="dns-item">
+              <span className="dns-label">Target Firmware</span>
+              <span className="dns-value mono">{String(updates.target_firmware)}</span>
+            </div>
+          )}
+          {updates.update_required != null && (
+            <div className="dns-item">
+              <span className="dns-label">Update Status</span>
+              <span className={`dns-value ${updates.update_required ? 'text-yellow' : 'text-green'}`}>
+                {updates.update_required ? '⚠️ Update Available' : '✅ Up to Date'}
+              </span>
+            </div>
+          )}
+          {updates.is_update_in_progress != null && updates.is_update_in_progress && (
+            <div className="dns-item">
+              <span className="dns-label">Progress</span>
+              <span className="dns-value text-yellow">🔄 Update in progress…</span>
+            </div>
+          )}
+        </div>
+        {Object.keys(updates).length === 0 && (
+          <p className="empty-text">No update information available</p>
+        )}
+        {Object.keys(updates).filter(k => !['current_version','target_firmware','update_required','is_update_in_progress'].includes(k)).length > 0 && (
+          <details style={{ marginTop: 8 }}>
+            <summary className="btn-text">Show all details</summary>
+            <pre className="json-preview" style={{ marginTop: 8 }}>{JSON.stringify(updates, null, 2)}</pre>
+          </details>
+        )}
+      </div>
+
+      {/* Thread & Routing */}
+      {(Object.keys(thread).length > 0 || Object.keys(routing).length > 0) && (
+        <div className="settings-subsection" style={{ marginTop: 20 }}>
+          <h3>Thread &amp; Routing</h3>
+          {Object.keys(thread).length > 0 && (
+            <details>
+              <summary className="btn-text">Thread Border Router</summary>
+              <pre className="json-preview" style={{ marginTop: 8 }}>{JSON.stringify(thread, null, 2)}</pre>
+            </details>
+          )}
+          {Object.keys(routing).length > 0 && (
+            <details style={{ marginTop: 8 }}>
+              <summary className="btn-text">Routing</summary>
+              <pre className="json-preview" style={{ marginTop: 8 }}>{JSON.stringify(routing, null, 2)}</pre>
+            </details>
+          )}
+        </div>
+      )}
+
+      {/* Diagnostics */}
+      <div className="settings-subsection" style={{ marginTop: 20 }}>
+        <h3>Diagnostics</h3>
+        <p className="toggle-desc" style={{ marginBottom: 12 }}>
+          Check connectivity, DNS resolution, and internet access.
+        </p>
+        <button className="btn-primary" onClick={handleRunDiagnostics} disabled={diagRunning}>
+          {diagRunning ? <><div className="spinner" /> Running…</> : '🔍 Run Diagnostics'}
+        </button>
+        {diagResult && <pre className="json-preview" style={{ marginTop: 12 }}>{JSON.stringify(diagResult, null, 2)}</pre>}
+        {diagError && <div className="error-banner" style={{ marginTop: 12 }}>{diagError}</div>}
+      </div>
+
+      {/* Network Reboot */}
+      <div className="settings-subsection" style={{ marginTop: 20 }}>
+        <h3>Network Reboot</h3>
+        <p className="toggle-desc" style={{ marginBottom: 12 }}>
+          Reboot all eero nodes in the network. The network will be offline for ~2 minutes.
+        </p>
+        {confirmReboot ? (
+          <div className="confirm-inline">
+            <span>⚠️ Are you sure? This will take all nodes offline.</span>
+            <button className="btn-confirm btn-danger" onClick={handleRebootNetwork} disabled={rebooting}>
+              {rebooting ? 'Rebooting…' : 'Confirm Reboot'}
+            </button>
+            <button className="btn-cancel" onClick={() => setConfirmReboot(false)}>Cancel</button>
+          </div>
+        ) : (
+          <button className="btn-danger" onClick={() => setConfirmReboot(true)}>
+            🔄 Reboot Entire Network
+          </button>
+        )}
       </div>
 
       {/* All settings raw */}

@@ -5,7 +5,7 @@ import LoginForm from './components/LoginForm';
 import DeviceList from './components/DeviceList';
 import ActivityView from './components/ActivityView';
 import ProfileManager from './components/ProfileManager';
-import { SecuritySettings, DnsSettings, PortForwardsSettings, DhcpReservationsSettings, DiagnosticsSettings, SqmSettings, UpdatesSettings, ThreadSettings, BlacklistSettings, GeneralSettings } from './components/SettingsView';
+import { SecuritySettings, DnsSettings, PortForwardsSettings, DhcpReservationsSettings, SqmSettings, BlacklistSettings, GeneralSettings } from './components/SettingsView';
 import GuestNetwork from './components/GuestNetwork';
 
 function getNetworkId(n: api.Network): string {
@@ -20,7 +20,7 @@ export default function App() {
   const [networks, setNetworks] = useState<api.Network[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [networkDetail, setNetworkDetail] = useState<api.Network | null>(null);
-  const [tab, setTab] = useState<'devices' | 'activity' | 'profiles' | 'guest' | 'settings-general' | 'settings-security' | 'settings-dns' | 'settings-sqm' | 'settings-forwards' | 'settings-reservations' | 'settings-blacklist' | 'settings-updates' | 'settings-thread' | 'settings-diagnostics'>('devices');
+  const [tab, setTab] = useState<'devices' | 'activity' | 'profiles' | 'settings-general' | 'settings-forwards' | 'settings-reservations' | 'settings-dns' | 'settings-guest' | 'settings-security' | 'settings-sqm' | 'settings-blacklist'>('devices');
   const settingsOpen = true; // always expanded
 
   // Theme
@@ -115,9 +115,6 @@ export default function App() {
           <button className={`sidebar-item ${tab === 'profiles' ? 'active' : ''}`} onClick={() => setTab('profiles')}>
             <span className="sidebar-icon">👤</span> Profiles
           </button>
-          <button className={`sidebar-item ${tab === 'guest' ? 'active' : ''}`} onClick={() => setTab('guest')}>
-            <span className="sidebar-icon">👥</span> Guest
-          </button>
           <button
             className={`sidebar-item sidebar-section-parent ${tab.startsWith('settings-') ? 'active' : ''}`}
             onClick={() => setTab('settings-general')}
@@ -128,32 +125,26 @@ export default function App() {
             <button className={`sidebar-item sidebar-sub ${tab === 'settings-general' ? 'active' : ''}`} onClick={() => setTab('settings-general')}>
               General
             </button>
-            <button className={`sidebar-item sidebar-sub ${tab === 'settings-security' ? 'active' : ''}`} onClick={() => setTab('settings-security')}>
-              Security
-            </button>
-            <button className={`sidebar-item sidebar-sub ${tab === 'settings-dns' ? 'active' : ''}`} onClick={() => setTab('settings-dns')}>
-              DNS
-            </button>
-            <button className={`sidebar-item sidebar-sub ${tab === 'settings-sqm' ? 'active' : ''}`} onClick={() => setTab('settings-sqm')}>
-              QoS
-            </button>
             <button className={`sidebar-item sidebar-sub ${tab === 'settings-forwards' ? 'active' : ''}`} onClick={() => setTab('settings-forwards')}>
               Port Forwards
             </button>
             <button className={`sidebar-item sidebar-sub ${tab === 'settings-reservations' ? 'active' : ''}`} onClick={() => setTab('settings-reservations')}>
               DHCP Reservations
             </button>
+            <button className={`sidebar-item sidebar-sub ${tab === 'settings-dns' ? 'active' : ''}`} onClick={() => setTab('settings-dns')}>
+              DNS
+            </button>
+            <button className={`sidebar-item sidebar-sub ${tab === 'settings-guest' ? 'active' : ''}`} onClick={() => setTab('settings-guest')}>
+              Guest Network
+            </button>
+            <button className={`sidebar-item sidebar-sub ${tab === 'settings-security' ? 'active' : ''}`} onClick={() => setTab('settings-security')}>
+              Security
+            </button>
+            <button className={`sidebar-item sidebar-sub ${tab === 'settings-sqm' ? 'active' : ''}`} onClick={() => setTab('settings-sqm')}>
+              QoS
+            </button>
             <button className={`sidebar-item sidebar-sub ${tab === 'settings-blacklist' ? 'active' : ''}`} onClick={() => setTab('settings-blacklist')}>
               Blacklist
-            </button>
-            <button className={`sidebar-item sidebar-sub ${tab === 'settings-updates' ? 'active' : ''}`} onClick={() => setTab('settings-updates')}>
-              Updates
-            </button>
-            <button className={`sidebar-item sidebar-sub ${tab === 'settings-thread' ? 'active' : ''}`} onClick={() => setTab('settings-thread')}>
-              Thread
-            </button>
-            <button className={`sidebar-item sidebar-sub ${tab === 'settings-diagnostics' ? 'active' : ''}`} onClick={() => setTab('settings-diagnostics')}>
-              Diagnostics
             </button>
           </div>
         </nav>
@@ -212,17 +203,14 @@ export default function App() {
             tab === 'devices' ? 'Devices' :
             tab === 'activity' ? 'Network Health' :
             tab === 'profiles' ? 'Profiles' :
-            tab === 'guest' ? 'Guest Network' :
             tab === 'settings-general' ? 'General' :
-            tab === 'settings-security' ? 'Security' :
-            tab === 'settings-dns' ? 'DNS' :
-            tab === 'settings-sqm' ? 'QoS' :
             tab === 'settings-forwards' ? 'Port Forwards' :
             tab === 'settings-reservations' ? 'DHCP Reservations' :
-            tab === 'settings-blacklist' ? 'Blacklist' :
-            tab === 'settings-updates' ? 'Updates' :
-            tab === 'settings-thread' ? 'Thread' :
-            'Diagnostics'
+            tab === 'settings-dns' ? 'DNS' :
+            tab === 'settings-guest' ? 'Guest Network' :
+            tab === 'settings-security' ? 'Security' :
+            tab === 'settings-sqm' ? 'QoS' :
+            'Blacklist'
           }</h1>
           <div className="header-actions">
             <div className="theme-dropdown">
@@ -252,17 +240,14 @@ export default function App() {
             {tab === 'devices' && <DeviceList networkId={selectedNetwork} onNavigate={(t) => setTab(t as typeof tab)} />}
             {tab === 'activity' && <ActivityView networkId={selectedNetwork} />}
             {tab === 'profiles' && <ProfileManager networkId={selectedNetwork} />}
-            {tab === 'guest' && <GuestNetwork networkId={selectedNetwork} />}
             {tab === 'settings-general' && <GeneralSettings networkId={selectedNetwork} />}
-            {tab === 'settings-security' && <SecuritySettings networkId={selectedNetwork} />}
-            {tab === 'settings-dns' && <DnsSettings networkId={selectedNetwork} />}
-            {tab === 'settings-sqm' && <SqmSettings networkId={selectedNetwork} />}
             {tab === 'settings-forwards' && <PortForwardsSettings networkId={selectedNetwork} />}
             {tab === 'settings-reservations' && <DhcpReservationsSettings networkId={selectedNetwork} />}
+            {tab === 'settings-dns' && <DnsSettings networkId={selectedNetwork} />}
+            {tab === 'settings-guest' && <GuestNetwork networkId={selectedNetwork} />}
+            {tab === 'settings-security' && <SecuritySettings networkId={selectedNetwork} />}
+            {tab === 'settings-sqm' && <SqmSettings networkId={selectedNetwork} />}
             {tab === 'settings-blacklist' && <BlacklistSettings networkId={selectedNetwork} />}
-            {tab === 'settings-updates' && <UpdatesSettings networkId={selectedNetwork} />}
-            {tab === 'settings-thread' && <ThreadSettings networkId={selectedNetwork} />}
-            {tab === 'settings-diagnostics' && <DiagnosticsSettings networkId={selectedNetwork} />}
           </div>
         )}
       </main>
