@@ -20,7 +20,7 @@ export default function App() {
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [networkDetail, setNetworkDetail] = useState<api.Network | null>(null);
   const [tab, setTab] = useState<'devices' | 'activity' | 'profiles' | 'settings-security' | 'settings-dns' | 'settings-forwards' | 'settings-reservations' | 'settings-diagnostics'>('devices');
-  const settingsOpen = tab.startsWith('settings-');
+  const settingsOpen = true; // always expanded
 
   const checkAuth = useCallback(async () => {
     try {
@@ -98,31 +98,28 @@ export default function App() {
             <span className="sidebar-icon">👤</span> Profiles
           </button>
           <button
-            className={`sidebar-item ${settingsOpen ? 'active' : ''}`}
-            onClick={() => setTab(settingsOpen ? 'devices' : 'settings-security')}
+            className={`sidebar-item sidebar-section-parent ${tab.startsWith('settings-') ? 'active' : ''}`}
+            onClick={() => setTab('settings-security')}
           >
             <span className="sidebar-icon">⚙️</span> Settings
-            <span className="sidebar-expand-icon">{settingsOpen ? '▾' : '▸'}</span>
           </button>
-          {settingsOpen && (
-            <div className="sidebar-sub-items">
-              <button className={`sidebar-item sidebar-sub ${tab === 'settings-security' ? 'active' : ''}`} onClick={() => setTab('settings-security')}>
-                Security
-              </button>
-              <button className={`sidebar-item sidebar-sub ${tab === 'settings-dns' ? 'active' : ''}`} onClick={() => setTab('settings-dns')}>
-                DNS
-              </button>
-              <button className={`sidebar-item sidebar-sub ${tab === 'settings-forwards' ? 'active' : ''}`} onClick={() => setTab('settings-forwards')}>
-                Port Forwards
-              </button>
-              <button className={`sidebar-item sidebar-sub ${tab === 'settings-reservations' ? 'active' : ''}`} onClick={() => setTab('settings-reservations')}>
-                DHCP Reservations
-              </button>
-              <button className={`sidebar-item sidebar-sub ${tab === 'settings-diagnostics' ? 'active' : ''}`} onClick={() => setTab('settings-diagnostics')}>
-                Diagnostics
-              </button>
-            </div>
-          )}
+          <div className="sidebar-sub-items">
+            <button className={`sidebar-item sidebar-sub ${tab === 'settings-security' ? 'active' : ''}`} onClick={() => setTab('settings-security')}>
+              Security
+            </button>
+            <button className={`sidebar-item sidebar-sub ${tab === 'settings-dns' ? 'active' : ''}`} onClick={() => setTab('settings-dns')}>
+              DNS
+            </button>
+            <button className={`sidebar-item sidebar-sub ${tab === 'settings-forwards' ? 'active' : ''}`} onClick={() => setTab('settings-forwards')}>
+              Port Forwards
+            </button>
+            <button className={`sidebar-item sidebar-sub ${tab === 'settings-reservations' ? 'active' : ''}`} onClick={() => setTab('settings-reservations')}>
+              DHCP Reservations
+            </button>
+            <button className={`sidebar-item sidebar-sub ${tab === 'settings-diagnostics' ? 'active' : ''}`} onClick={() => setTab('settings-diagnostics')}>
+              Diagnostics
+            </button>
+          </div>
         </nav>
 
         {eeros.length > 0 && (

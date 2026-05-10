@@ -141,6 +141,12 @@ export const blockDevice = (networkId: string, deviceId: string, blocked: boolea
     body: JSON.stringify({ blocked }),
   });
 
+export const renameDevice = (networkId: string, deviceId: string, nickname: string) =>
+  request(`/networks/${networkId}/devices/${deviceId}/rename`, {
+    method: 'POST',
+    body: JSON.stringify({ nickname }),
+  });
+
 // Profile Actions
 export const pauseProfile = (networkId: string, profileId: string, paused: boolean) =>
   request(`/networks/${networkId}/profiles/${profileId}/pause`, {

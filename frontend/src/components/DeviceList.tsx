@@ -112,6 +112,8 @@ export default function DeviceList({ networkId }: DeviceListProps) {
   );
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ mac: string; type: 'pause' | 'block' } | null>(null);
+  const [renameTarget, setRenameTarget] = useState<{ mac: string; name: string } | null>(null);
+  const [renameName, setRenameName] = useState('');
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [groupBy, setGroupBy] = useState<GroupBy>('none');
@@ -145,6 +147,20 @@ export default function DeviceList({ networkId }: DeviceListProps) {
     } finally {
       setActionLoading(null);
       setConfirmAction(null);
+    }
+  };
+
+  const handleRename = async () => {
+    if (!renameTarget || !renameName.trim()) return;
+    setActionLoading(renameTarget.mac);
+    try {
+      await api.renameDevice(networkId, renameTarget.mac, renameName.trim());
+      await refetch();
+      setRenameTarget(null);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Rename failed');
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -236,6 +252,29 @@ export default function DeviceList({ networkId }: DeviceListProps) {
         </div>
       )}
 
+      {renameTarget && (
+        <div className="confirm-overlay" onClick={() => setRenameTarget(null)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <p style={{ marginBottom: 12 }}>✏️ Rename device</p>
+            <input
+              className="rename-input"
+              type="text"
+              value={renameName}
+              onChange={(e) => setRenameName(e.target.value)}
+              placeholder="Device name"
+              autoFocus
+              onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); }}
+            />
+            <div className="confirm-actions" style={{ marginTop: 16 }}>
+              <button className="btn-confirm" onClick={handleRename} disabled={!renameName.trim() || actionLoading === renameTarget.mac}>
+                {actionLoading ? 'Saving…' : 'Save'}
+              </button>
+              <button className="btn-cancel" onClick={() => setRenameTarget(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="device-toolbar">
         <div className="toolbar-row">
@@ -318,6 +357,7 @@ export default function DeviceList({ networkId }: DeviceListProps) {
                   networkId={networkId}
                   actionLoading={actionLoading}
                   onAction={(mac, type) => setConfirmAction({ mac, type })}
+                  onRename={(mac, name) => { setRenameTarget({ mac, name }); setRenameName(name); }}
                 />
               ))}
             </div>
@@ -408,11 +448,12 @@ export default function DeviceList({ networkId }: DeviceListProps) {
   );
 }
 
-function DeviceCard({ device: d, networkId, actionLoading, onAction }: {
+function DeviceCard({ device: d, networkId, actionLoading, onAction, onRename }: {
   device: api.Device;
   networkId: string;
   actionLoading: string | null;
   onAction: (mac: string, type: 'pause' | 'block') => void;
+  onRename: (mac: string, currentName: string) => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -451,6 +492,12 @@ function DeviceCard({ device: d, networkId, actionLoading, onAction }: {
             >⋯</button>
             {menuOpen && (
               <div className="card-menu">
+                <button
+                  className="card-menu-item"
+                  onClick={() => { setMenuOpen(false); onRename(d.mac!, d.display_name || d.hostname || ''); }}
+                >
+                  ✏️ Rename
+                </button>
                 <button
                   className="card-menu-item"
                   disabled={actionLoading === d.mac}

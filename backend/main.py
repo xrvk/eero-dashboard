@@ -332,6 +332,10 @@ class DeviceBlockRequest(BaseModel):
     blocked: bool
 
 
+class DeviceRenameRequest(BaseModel):
+    nickname: str
+
+
 @app.post("/api/networks/{network_id}/devices/{device_id}/pause")
 async def pause_device(network_id: str, device_id: str, req: DevicePauseRequest):
     client = await get_client()
@@ -347,6 +351,16 @@ async def block_device(network_id: str, device_id: str, req: DeviceBlockRequest)
     client = await get_client()
     try:
         resp = await client.block_device(device_id, req.blocked, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/networks/{network_id}/devices/{device_id}/rename")
+async def rename_device(network_id: str, device_id: str, req: DeviceRenameRequest):
+    client = await get_client()
+    try:
+        resp = await client.set_device_nickname(device_id, req.nickname, network_id=network_id)
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -1073,3 +1073,15 @@ body {
 }
 .dns-input:focus { border-color: var(--accent); }
 .dns-edit-actions { display: flex; gap: 8px; margin-top: 16px; }
+
+/* ── Rename Input ───────────────────────────── */
+.rename-input {
+  width: 100%; padding: 10px 14px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 0.95rem; outline: none; text-align: center;
+}
+.rename-input:focus { border-color: var(--accent); }
+
+/* ── Settings parent item ───────────────────── */
+.sidebar-section-parent { font-weight: 600 !important; }
