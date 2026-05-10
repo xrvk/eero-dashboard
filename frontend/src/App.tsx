@@ -176,7 +176,7 @@ export default function App() {
 
         <div className="sidebar-footer">
           {networkDetail?.speed?.down && (
-            <div className="sidebar-speed">
+            <div className="sidebar-speed" title={networkDetail.speed.date ? new Date(networkDetail.speed.date).toLocaleString() : undefined}>
               <span className="sidebar-speed-label">Last Speed Test</span>
               <div className="sidebar-speed-gauges">
                 <div className="sidebar-speed-gauge">
@@ -192,6 +192,9 @@ export default function App() {
                   </div>
                 )}
               </div>
+              {networkDetail.speed.date && (
+                <span className="sidebar-speed-date">{new Date(networkDetail.speed.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+              )}
             </div>
           )}
           {auth.name && <span className="sidebar-user">{auth.name}</span>}
