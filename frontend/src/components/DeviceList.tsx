@@ -20,7 +20,7 @@ function rawBytes(bytes?: number) {
 }
 
 type ViewMode = 'grid' | 'list';
-type GroupBy = 'connection' | 'node' | 'none';
+type GroupBy = 'node' | 'none';
 type StatusFilter = 'all' | 'online' | 'offline';
 type BandFilter = 'all' | 'wired' | 'wireless';
 type SortCol = 'name' | 'ip' | 'mac' | 'type' | 'signal' | 'band' | 'speed' | 'down' | 'up';
@@ -183,14 +183,7 @@ export default function DeviceList({ networkId }: DeviceListProps) {
     };
 
     if (groupBy === 'none') {
-      makeGroup(`All (${filtered.length})`, filtered);
-    } else if (groupBy === 'connection') {
-      const wired = filtered.filter(d => d.connection_type === 'wired');
-      const wireless = filtered.filter(d => d.connection_type === 'wireless');
-      const other = filtered.filter(d => d.connection_type !== 'wired' && d.connection_type !== 'wireless');
-      makeGroup(`🔌 Wired (${wired.length})`, wired);
-      makeGroup(`📶 Wireless (${wireless.length})`, wireless);
-      makeGroup(`Other (${other.length})`, other);
+      makeGroup('', filtered);
     } else if (groupBy === 'node') {
       const byNode = new Map<string, api.Device[]>();
       for (const d of filtered) {
@@ -259,14 +252,13 @@ export default function DeviceList({ networkId }: DeviceListProps) {
           </div>
           <div className="band-filter">
             <button className={`band-btn ${bandFilter === 'all' ? 'active' : ''}`} onClick={() => setBandFilter('all')}>All</button>
-            <button className={`band-btn wired ${bandFilter === 'wired' ? 'active' : ''}`} onClick={() => setBandFilter('wired')}>🔌 Wired</button>
-            <button className={`band-btn wireless ${bandFilter === 'wireless' ? 'active' : ''}`} onClick={() => setBandFilter('wireless')}>📶 Wireless</button>
+            <button className={`band-btn wired ${bandFilter === 'wired' ? 'active' : ''}`} onClick={() => setBandFilter('wired')}>Wired</button>
+            <button className={`band-btn wireless ${bandFilter === 'wireless' ? 'active' : ''}`} onClick={() => setBandFilter('wireless')}>Wireless</button>
           </div>
           <div className="group-select">
             <label>Group:</label>
             <select value={groupBy} onChange={(e) => setGroupBy(e.target.value as GroupBy)}>
               <option value="none">None</option>
-              <option value="connection">Connection Type</option>
               <option value="node">eero Node</option>
             </select>
           </div>
@@ -286,18 +278,19 @@ export default function DeviceList({ networkId }: DeviceListProps) {
         </div>
       </div>
 
-      {search && (
-        <div className="search-results-info">
-          {filtered.length} result{filtered.length !== 1 ? 's' : ''} for "{search}"
-        </div>
-      )}
+      <div className="search-results-info">
+        Showing {filtered.length} of {allDevices.length} device{allDevices.length !== 1 ? 's' : ''}
+        {search && <> matching "{search}"</>}
+      </div>
 
       {/* Grouped device sections */}
       {groups.map((group) => (
         <div key={group.label} className="device-group">
-          <div className="group-header">
-            <h3>{group.label}</h3>
-          </div>
+          {group.label && (
+            <div className="group-header">
+              <h3>{group.label}</h3>
+            </div>
+          )}
 
           {viewMode === 'grid' ? (
             <div className="device-grid">

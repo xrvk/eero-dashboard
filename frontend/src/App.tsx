@@ -153,9 +153,8 @@ export default function App() {
           {networkDetail && (
             <div className="header-stats">
               <span className={`header-pill status-${networkDetail.status}`}>
-                {networkDetail.status === 'connected' || networkDetail.status === 'green' ? '● Online' : networkDetail.status || ''}
+                {networkDetail.status === 'connected' || networkDetail.status === 'green' ? '● Online' : '● ' + (networkDetail.status || 'Unknown')}
               </span>
-              {networkDetail.clients && <span className="header-pill">{networkDetail.clients.count} clients</span>}
               {networkDetail.speed?.down && (
                 <span className="header-pill">
                   ↓{networkDetail.speed.down.value} ↑{networkDetail.speed.up?.value} {networkDetail.speed.down.units}

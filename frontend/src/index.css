@@ -887,3 +887,6 @@ body {
 /* ── Node card in Health tab ────────────────── */
 .activity-panel .node-grid { margin-top: 8px; }
 .activity-panel .node-card { position: relative; }
+
+/* ── Results counter ────────────────────────── */
+.results-counter { font-size: 0.8rem; color: var(--text-muted); }

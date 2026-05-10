@@ -44,7 +44,7 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
   return (
     <div className="profile-manager">
       <div className="section-header">
-        <h2>Profiles <span className="badge">{profiles.length}</span></h2>
+        <span className="results-counter">{profiles.length} profile{profiles.length !== 1 ? 's' : ''}</span>
         <button className="btn-icon" onClick={refetch} title="Refresh">↻</button>
       </div>
 

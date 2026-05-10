@@ -112,11 +112,6 @@ export default function ActivityView({ networkId }: ActivityViewProps) {
 
   return (
     <div className="activity-view">
-      <div className="section-header">
-        <h2>Network Health</h2>
-        <button className="btn-icon" onClick={refetch} title="Refresh">↻</button>
-      </div>
-
       {/* Speed test card */}
       <div className="activity-panel full-width">
         <h3>Internet Speed</h3>
