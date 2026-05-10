@@ -183,7 +183,19 @@ export default function DeviceList({ networkId }: DeviceListProps) {
     };
 
     if (groupBy === 'none') {
-      makeGroup('', filtered);
+      if (bandFilter === 'wireless') {
+        // Auto-subgroup wireless by band
+        const ghz24 = filtered.filter(d => { const f = getConn(d)?.frequency; return f != null && f < 3000; });
+        const ghz5 = filtered.filter(d => { const f = getConn(d)?.frequency; return f != null && f >= 3000 && f < 5900; });
+        const ghz6 = filtered.filter(d => { const f = getConn(d)?.frequency; return f != null && f >= 5900; });
+        const unknown = filtered.filter(d => getConn(d)?.frequency == null);
+        makeGroup(`2.4 GHz (${ghz24.length})`, ghz24);
+        makeGroup(`5 GHz (${ghz5.length})`, ghz5);
+        makeGroup(`6 GHz (${ghz6.length})`, ghz6);
+        if (unknown.length) makeGroup(`Unknown band (${unknown.length})`, unknown);
+      } else {
+        makeGroup('', filtered);
+      }
     } else if (groupBy === 'node') {
       const byNode = new Map<string, api.Device[]>();
       for (const d of filtered) {
