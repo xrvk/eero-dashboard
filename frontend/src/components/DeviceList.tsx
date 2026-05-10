@@ -401,15 +401,6 @@ function DeviceCard({ device: d, networkId, actionLoading, onAction }: {
         )}
       </div>
       <div className="card-right">
-        {d.wireless && conn && d.connected && (
-          <div className="device-signal">
-            <span className="signal-bars">
-              {[1,2,3,4,5].map(b => (
-                <span key={b} className={`sig-bar ${b <= (conn.score_bars ?? 0) ? 'active' : ''}`} />
-              ))}
-            </span>
-          </div>
-        )}
         {d.connected && (
           <div className="card-menu-wrapper" ref={menuRef}>
             <button
