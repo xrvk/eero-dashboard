@@ -22,8 +22,34 @@ function rawBytes(bytes?: number) {
 type ViewMode = 'grid' | 'list';
 type GroupBy = 'connection' | 'node' | 'none';
 type StatusFilter = 'all' | 'online' | 'offline';
-type SortCol = 'name' | 'ip' | 'mac' | 'type' | 'down' | 'up';
+type SortCol = 'name' | 'ip' | 'mac' | 'type' | 'signal' | 'band' | 'speed' | 'down' | 'up';
 type SortDir = 'asc' | 'desc';
+
+interface DeviceConnectivity {
+  signal?: string;
+  score?: number;
+  score_bars?: number;
+  frequency?: number;
+  rx_rate_info?: { rate_bps?: number; channel_width?: string; phy_type?: string };
+}
+
+function getConn(d: api.Device): DeviceConnectivity | undefined {
+  return (d as Record<string, unknown>).connectivity as DeviceConnectivity | undefined;
+}
+
+function freqToBand(freq?: number): string {
+  if (!freq) return '—';
+  if (freq < 3000) return '2.4 GHz';
+  if (freq < 5900) return '5 GHz';
+  return '6 GHz';
+}
+
+function formatRate(bps?: number): string {
+  if (!bps) return '—';
+  if (bps >= 1_000_000_000) return `${(bps / 1_000_000_000).toFixed(1)} Gbps`;
+  if (bps >= 1_000_000) return `${(bps / 1_000_000).toFixed(0)} Mbps`;
+  return `${(bps / 1_000).toFixed(0)} Kbps`;
+}
 
 function sortDevices(devices: api.Device[], col: SortCol, dir: SortDir): api.Device[] {
   const sorted = [...devices].sort((a, b) => {
@@ -35,7 +61,6 @@ function sortDevices(devices: api.Device[], col: SortCol, dir: SortDir): api.Dev
         vb = (b.display_name || b.hostname || '').toLowerCase();
         break;
       case 'ip':
-        // Sort IPs numerically by octets
         va = (a.ip || '').split('.').map(n => n.padStart(3, '0')).join('.');
         vb = (b.ip || '').split('.').map(n => n.padStart(3, '0')).join('.');
         break;
@@ -46,6 +71,18 @@ function sortDevices(devices: api.Device[], col: SortCol, dir: SortDir): api.Dev
       case 'type':
         va = a.connection_type || '';
         vb = b.connection_type || '';
+        break;
+      case 'signal':
+        va = getConn(a)?.score ?? -1;
+        vb = getConn(b)?.score ?? -1;
+        break;
+      case 'band':
+        va = getConn(a)?.frequency ?? 0;
+        vb = getConn(b)?.frequency ?? 0;
+        break;
+      case 'speed':
+        va = getConn(a)?.rx_rate_info?.rate_bps ?? 0;
+        vb = getConn(b)?.rx_rate_info?.rate_bps ?? 0;
         break;
       case 'down':
         va = rawBytes(a.usage?.down);
@@ -260,24 +297,48 @@ export default function DeviceList({ networkId }: DeviceListProps) {
                 <tr>
                   <th></th>
                   <th className="sortable-th" onClick={() => handleSort('name')}>Name{sortIndicator('name')}</th>
-                  <th className="sortable-th" onClick={() => handleSort('ip')}>IP Address{sortIndicator('ip')}</th>
-                  <th className="sortable-th" onClick={() => handleSort('mac')}>MAC Address{sortIndicator('mac')}</th>
+                  <th className="sortable-th" onClick={() => handleSort('ip')}>IP{sortIndicator('ip')}</th>
+                  <th className="sortable-th" onClick={() => handleSort('mac')}>MAC{sortIndicator('mac')}</th>
                   <th className="sortable-th" onClick={() => handleSort('type')}>Type{sortIndicator('type')}</th>
-                  <th className="sortable-th" onClick={() => handleSort('down')}>Usage ↓{sortIndicator('down')}</th>
-                  <th className="sortable-th" onClick={() => handleSort('up')}>Usage ↑{sortIndicator('up')}</th>
+                  <th className="sortable-th" onClick={() => handleSort('signal')}>Signal{sortIndicator('signal')}</th>
+                  <th className="sortable-th" onClick={() => handleSort('band')}>Band{sortIndicator('band')}</th>
+                  <th className="sortable-th" onClick={() => handleSort('speed')}>Speed{sortIndicator('speed')}</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                {group.devices.map((d) => (
+                {group.devices.map((d) => {
+                  const conn = getConn(d);
+                  const bars = conn?.score_bars ?? 0;
+                  return (
                   <tr key={d.mac || extractId(d.url)} className={d.connected ? '' : 'row-offline'}>
                     <td className="td-icon">{getDeviceIcon(d)}</td>
                     <td className="td-name">{d.display_name || d.hostname || 'Unknown'}</td>
                     <td className="td-mono">{d.ip || '—'}</td>
                     <td className="td-mono">{d.mac || '—'}</td>
                     <td>{d.wireless ? '📶' : '🔌'} {d.connection_type || '—'}</td>
-                    <td className="td-mono">{formatBytes(d.usage?.down)}</td>
-                    <td className="td-mono">{formatBytes(d.usage?.up)}</td>
+                    <td>
+                      {d.wireless && conn ? (
+                        <>
+                          <span className="signal-bars">
+                            {[1,2,3,4,5].map(b => (
+                              <span key={b} className={`sig-bar ${b <= bars ? 'active' : ''}`} />
+                            ))}
+                          </span>
+                          <span className="td-mono" style={{ marginLeft: 4 }}>{conn.signal || ''}</span>
+                        </>
+                      ) : d.wireless ? '—' : ''}
+                    </td>
+                    <td>
+                      {d.wireless && conn?.frequency ? (
+                        <span className={`band-pill band-${freqToBand(conn.frequency).replace(/[\s.]/g, '')}`}>
+                          {freqToBand(conn.frequency)}
+                        </span>
+                      ) : d.wireless ? '—' : ''}
+                    </td>
+                    <td className="td-mono">
+                      {conn?.rx_rate_info?.rate_bps ? formatRate(conn.rx_rate_info.rate_bps) : d.wireless ? '—' : ''}
+                    </td>
                     <td>
                       {d.connected && (
                         <div className="device-actions">
@@ -289,7 +350,8 @@ export default function DeviceList({ networkId }: DeviceListProps) {
                       )}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -313,6 +375,7 @@ function DeviceCard({ device: d, networkId, actionLoading, onAction }: {
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const conn = getConn(d);
 
   // Close menu on outside click
   useEffect(() => {
@@ -333,17 +396,19 @@ function DeviceCard({ device: d, networkId, actionLoading, onAction }: {
         {d.connection_type && (
           <span className="device-connection">
             {d.wireless ? '📶' : '🔌'} {d.connection_type}
+            {d.wireless && conn?.frequency ? ` · ${freqToBand(conn.frequency)}` : ''}
           </span>
         )}
       </div>
-      <div className="device-usage">
-        {d.usage && (
-          <>
-            <span className="usage-down">↓ {formatBytes(d.usage.down)}</span>
-            <span className="usage-up">↑ {formatBytes(d.usage.up)}</span>
-          </>
-        )}
-      </div>
+      {d.wireless && conn && d.connected && (
+        <div className="device-signal">
+          <span className="signal-bars">
+            {[1,2,3,4,5].map(b => (
+              <span key={b} className={`sig-bar ${b <= (conn.score_bars ?? 0) ? 'active' : ''}`} />
+            ))}
+          </span>
+        </div>
+      )}
       {d.connected && (
         <div className="card-menu-wrapper" ref={menuRef}>
           <button

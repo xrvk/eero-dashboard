@@ -703,3 +703,7 @@ body {
 .inline-form input:focus, .inline-form select:focus { border-color: var(--accent); }
 .inline-form input::placeholder { color: var(--text-dim); }
 .inline-form input[type="number"] { max-width: 100px; }
+
+/* ── Signal in device card ──────────────────── */
+.device-signal { flex-shrink: 0; margin-left: auto; margin-right: 4px; }
+.band-bar-fill.band-poor { background: var(--red); }

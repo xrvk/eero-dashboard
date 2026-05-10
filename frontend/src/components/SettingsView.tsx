@@ -10,7 +10,6 @@ export default function SettingsView({ networkId }: SettingsViewProps) {
   return (
     <div className="settings-view">
       <SecuritySection networkId={networkId} />
-      <SpeedTestSection networkId={networkId} />
       <PortForwardingSection networkId={networkId} />
       <DiagnosticsSection networkId={networkId} />
     </div>
@@ -76,61 +75,6 @@ function SecuritySection({ networkId }: { networkId: string }) {
           );
         })}
       </div>
-    </div>
-  );
-}
-
-// ── Speed Test ──────────────────────────────────────
-
-function SpeedTestSection({ networkId }: { networkId: string }) {
-  const [running, setRunning] = useState(false);
-  const [result, setResult] = useState<Record<string, unknown> | null>(null);
-  const [error, setError] = useState('');
-
-  const handleRun = async () => {
-    setRunning(true);
-    setError('');
-    setResult(null);
-    try {
-      const resp = await api.runSpeedTest(networkId);
-      setResult(resp);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Speed test failed');
-    } finally {
-      setRunning(false);
-    }
-  };
-
-  // Try to get last speed from network detail
-  const { data: network } = useFetch(() => api.getNetwork(networkId), [networkId]);
-  const lastSpeed = (network as api.Network)?.speed;
-
-  return (
-    <div className="settings-section">
-      <h2>Speed Test</h2>
-      {lastSpeed && lastSpeed.down && (
-        <div className="speed-result">
-          <div className="speed-stat">
-            <span className="speed-dir">↓</span>
-            <span className="speed-value">{(lastSpeed.down as { value: number }).value}</span>
-            <span className="speed-unit">{(lastSpeed.down as { units: string }).units}</span>
-          </div>
-          {lastSpeed.up && (
-            <div className="speed-stat">
-              <span className="speed-dir">↑</span>
-              <span className="speed-value">{(lastSpeed.up as { value: number }).value}</span>
-              <span className="speed-unit">{(lastSpeed.up as { units: string }).units}</span>
-            </div>
-          )}
-        </div>
-      )}
-      <button className="btn-primary" onClick={handleRun} disabled={running}>
-        {running ? <><div className="spinner" /> Running (~30s)…</> : '🚀 Run Speed Test'}
-      </button>
-      {result && (
-        <pre className="json-preview">{JSON.stringify(result, null, 2)}</pre>
-      )}
-      {error && <div className="error-banner">{error}</div>}
     </div>
   );
 }

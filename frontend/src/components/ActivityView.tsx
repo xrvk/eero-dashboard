@@ -7,25 +7,8 @@ interface ActivityViewProps {
 }
 
 interface ConnectedDevice extends api.Device {
-  connectivity?: {
-    rx_bitrate?: string;
-    signal?: string;
-    score?: number;
-    score_bars?: number;
-    frequency?: number;
-    snr?: number;
-    rx_rate_info?: { rate_bps?: number; channel_width?: string; phy_type?: string; nss?: number };
-    tx_rate_info?: { rate_bps?: number };
-    packet_stats?: { rx_packets?: number; tx_packets?: number; total_packets?: number; tx_retries?: number };
-  };
+  connectivity?: { frequency?: number; score_bars?: number };
   source?: { display_name?: string; location?: string };
-}
-
-function formatRate(bps?: number) {
-  if (!bps) return '—';
-  if (bps >= 1_000_000_000) return `${(bps / 1_000_000_000).toFixed(1)} Gbps`;
-  if (bps >= 1_000_000) return `${(bps / 1_000_000).toFixed(0)} Mbps`;
-  return `${(bps / 1_000).toFixed(0)} Kbps`;
 }
 
 function freqToBand(freq?: number) {
@@ -35,101 +18,120 @@ function freqToBand(freq?: number) {
   return '6 GHz';
 }
 
-type SortKey = 'name' | 'signal' | 'rx' | 'packets' | 'band';
-
 export default function ActivityView({ networkId }: ActivityViewProps) {
-  const { data, loading, error, refetch } = useFetch(
+  const { data: devData, loading: devLoading, refetch } = useFetch(
     () => api.getDevices(networkId),
     [networkId]
   );
-  const [sortKey, setSortKey] = useState<SortKey>('signal');
-  const [sortAsc, setSortAsc] = useState(false);
+  const { data: network } = useFetch(() => api.getNetwork(networkId), [networkId]);
 
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) setSortAsc(a => !a);
-    else { setSortKey(key); setSortAsc(key === 'name'); }
+  const [speedRunning, setSpeedRunning] = useState(false);
+  const [speedResult, setSpeedResult] = useState<Record<string, unknown> | null>(null);
+  const [speedError, setSpeedError] = useState('');
+
+  const handleSpeedTest = async () => {
+    setSpeedRunning(true);
+    setSpeedError('');
+    setSpeedResult(null);
+    try {
+      const resp = await api.runSpeedTest(networkId);
+      setSpeedResult(resp);
+    } catch (e) {
+      setSpeedError(e instanceof Error ? e.message : 'Speed test failed');
+    } finally {
+      setSpeedRunning(false);
+    }
   };
 
-  const indicator = (key: SortKey) => sortKey !== key ? ' ↕' : sortAsc ? ' ↑' : ' ↓';
+  const devices = (devData?.devices ?? []) as ConnectedDevice[];
+  const connected = devices.filter(d => d.connected);
 
-  const devices = useMemo(() => {
-    const connected = ((data?.devices ?? []) as ConnectedDevice[]).filter(d => d.connected && d.connectivity);
-    const sorted = [...connected].sort((a, b) => {
-      let va: string | number = 0, vb: string | number = 0;
-      switch (sortKey) {
-        case 'name':
-          va = (a.display_name || a.hostname || '').toLowerCase();
-          vb = (b.display_name || b.hostname || '').toLowerCase();
-          break;
-        case 'signal':
-          va = a.connectivity?.score ?? 0;
-          vb = b.connectivity?.score ?? 0;
-          break;
-        case 'rx':
-          va = a.connectivity?.rx_rate_info?.rate_bps ?? 0;
-          vb = b.connectivity?.rx_rate_info?.rate_bps ?? 0;
-          break;
-        case 'packets':
-          va = a.connectivity?.packet_stats?.total_packets ?? 0;
-          vb = b.connectivity?.packet_stats?.total_packets ?? 0;
-          break;
-        case 'band':
-          va = a.connectivity?.frequency ?? 0;
-          vb = b.connectivity?.frequency ?? 0;
-          break;
-      }
-      if (va < vb) return -1;
-      if (va > vb) return 1;
-      return 0;
-    });
-    return sortAsc ? sorted : sorted.reverse();
-  }, [data, sortKey, sortAsc]);
-
-  // Band breakdown
   const bandCounts = useMemo(() => {
     const counts = { '2.4 GHz': 0, '5 GHz': 0, '6 GHz': 0, 'Wired': 0 };
-    for (const d of (data?.devices ?? []) as ConnectedDevice[]) {
-      if (!d.connected) continue;
+    for (const d of connected) {
       if (!d.wireless) { counts['Wired']++; continue; }
       const band = freqToBand(d.connectivity?.frequency);
       if (band in counts) counts[band as keyof typeof counts]++;
     }
     return counts;
-  }, [data]);
+  }, [connected]);
 
-  // Node breakdown
   const nodeCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const d of (data?.devices ?? []) as ConnectedDevice[]) {
-      if (!d.connected) continue;
+    const counts = new Map<string, { total: number; wireless: number }>();
+    for (const d of connected) {
       const node = d.source?.display_name || d.source?.location || 'Unknown';
-      counts.set(node, (counts.get(node) || 0) + 1);
+      const prev = counts.get(node) || { total: 0, wireless: 0 };
+      prev.total++;
+      if (d.wireless) prev.wireless++;
+      counts.set(node, prev);
     }
     return counts;
-  }, [data]);
+  }, [connected]);
 
-  if (loading) return <div className="card loading-card"><div className="spinner" /> Loading activity…</div>;
-  if (error) return <div className="card error-card">Error: {error}</div>;
+  // Signal quality distribution
+  const signalDist = useMemo(() => {
+    const buckets = { excellent: 0, good: 0, fair: 0, poor: 0 };
+    for (const d of connected) {
+      if (!d.wireless || !d.connectivity?.score_bars) continue;
+      const bars = d.connectivity.score_bars;
+      if (bars >= 5) buckets.excellent++;
+      else if (bars >= 4) buckets.good++;
+      else if (bars >= 3) buckets.fair++;
+      else buckets.poor++;
+    }
+    return buckets;
+  }, [connected]);
+
+  const lastSpeed = (network as api.Network)?.speed;
+
+  if (devLoading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
 
   return (
     <div className="activity-view">
       <div className="section-header">
-        <h2>Network Activity</h2>
+        <h2>Network Health</h2>
         <button className="btn-icon" onClick={refetch} title="Refresh">↻</button>
       </div>
 
-      {/* Summary cards */}
-      <div className="activity-summary">
+      {/* Speed test card */}
+      <div className="activity-panel full-width">
+        <h3>Internet Speed</h3>
+        {lastSpeed && lastSpeed.down && (
+          <div className="speed-result">
+            <div className="speed-stat">
+              <span className="speed-dir">↓</span>
+              <span className="speed-value">{(lastSpeed.down as { value: number }).value.toFixed(0)}</span>
+              <span className="speed-unit">{(lastSpeed.down as { units: string }).units}</span>
+            </div>
+            {lastSpeed.up && (
+              <div className="speed-stat">
+                <span className="speed-dir">↑</span>
+                <span className="speed-value">{(lastSpeed.up as { value: number }).value.toFixed(0)}</span>
+                <span className="speed-unit">{(lastSpeed.up as { units: string }).units}</span>
+              </div>
+            )}
+          </div>
+        )}
+        <button className="btn-primary" onClick={handleSpeedTest} disabled={speedRunning}>
+          {speedRunning ? <><div className="spinner" /> Running (~30s)…</> : '🚀 Run Speed Test'}
+        </button>
+        {speedResult && <pre className="json-preview">{JSON.stringify(speedResult, null, 2)}</pre>}
+        {speedError && <div className="error-banner">{speedError}</div>}
+      </div>
+
+      {/* Summary row */}
+      <div className="activity-summary" style={{ marginTop: 16 }}>
+        {/* Band distribution */}
         <div className="activity-panel">
           <h3>Clients by Band</h3>
           <div className="band-bars">
-            {Object.entries(bandCounts).filter(([,c]) => c > 0).map(([band, count]) => (
+            {Object.entries(bandCounts).filter(([, c]) => c > 0).map(([band, count]) => (
               <div key={band} className="band-row">
                 <span className="band-label">{band}</span>
                 <div className="band-bar-track">
                   <div
                     className={`band-bar-fill band-${band.replace(/[\s.]/g, '')}`}
-                    style={{ width: `${Math.max(5, (count / (devices.length || 1)) * 100)}%` }}
+                    style={{ width: `${Math.max(5, (count / (connected.length || 1)) * 100)}%` }}
                   />
                 </div>
                 <span className="band-count">{count}</span>
@@ -138,66 +140,46 @@ export default function ActivityView({ networkId }: ActivityViewProps) {
           </div>
         </div>
 
+        {/* Signal quality */}
         <div className="activity-panel">
-          <h3>Clients by Node</h3>
+          <h3>Signal Quality</h3>
           <div className="band-bars">
-            {[...nodeCounts.entries()].sort((a, b) => b[1] - a[1]).map(([node, count]) => (
-              <div key={node} className="band-row">
-                <span className="band-label">{node}</span>
+            {[
+              { label: '●●●●● Excellent', count: signalDist.excellent, cls: 'band-6GHz' },
+              { label: '●●●●○ Good', count: signalDist.good, cls: 'band-5GHz' },
+              { label: '●●●○○ Fair', count: signalDist.fair, cls: 'band-24GHz' },
+              { label: '●●○○○ Poor', count: signalDist.poor, cls: 'band-poor' },
+            ].filter(r => r.count > 0).map((row) => (
+              <div key={row.label} className="band-row">
+                <span className="band-label">{row.label}</span>
                 <div className="band-bar-track">
-                  <div className="band-bar-fill band-node" style={{ width: `${Math.max(5, (count / (devices.length || 1)) * 100)}%` }} />
+                  <div className={`band-bar-fill ${row.cls}`} style={{ width: `${Math.max(5, (row.count / (connected.length || 1)) * 100)}%` }} />
                 </div>
-                <span className="band-count">{count}</span>
+                <span className="band-count">{row.count}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Connection quality table */}
+      {/* Node load */}
       <div className="activity-panel full-width" style={{ marginTop: 16 }}>
-        <h3>Connection Quality ({devices.length} wireless clients)</h3>
-        <div className="activity-table-wrap">
-          <table className="device-table">
-            <thead>
-              <tr>
-                <th className="sortable-th" onClick={() => handleSort('name')}>Device{indicator('name')}</th>
-                <th className="sortable-th" onClick={() => handleSort('signal')}>Signal{indicator('signal')}</th>
-                <th className="sortable-th" onClick={() => handleSort('band')}>Band{indicator('band')}</th>
-                <th className="sortable-th" onClick={() => handleSort('rx')}>Speed{indicator('rx')}</th>
-                <th className="sortable-th" onClick={() => handleSort('packets')}>Packets{indicator('packets')}</th>
-                <th>Node</th>
-              </tr>
-            </thead>
-            <tbody>
-              {devices.map((d, i) => {
-                const conn = d.connectivity!;
-                const bars = conn.score_bars ?? 0;
-                return (
-                  <tr key={d.mac || i}>
-                    <td className="td-name">{d.display_name || d.hostname || d.mac || 'Unknown'}</td>
-                    <td>
-                      <span className="signal-bars">
-                        {[1,2,3,4,5].map(b => (
-                          <span key={b} className={`sig-bar ${b <= bars ? 'active' : ''}`} />
-                        ))}
-                      </span>
-                      <span className="td-mono" style={{ marginLeft: 6 }}>{conn.signal || '—'}</span>
-                    </td>
-                    <td><span className={`band-pill band-${freqToBand(conn.frequency).replace(/[\s.]/g, '')}`}>{freqToBand(conn.frequency)}</span></td>
-                    <td className="td-mono">{formatRate(conn.rx_rate_info?.rate_bps)}</td>
-                    <td className="td-mono">{(conn.packet_stats?.total_packets ?? 0).toLocaleString()}</td>
-                    <td className="td-name">{d.source?.display_name || d.source?.location || '—'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <h3>Load per eero Node</h3>
+        <div className="band-bars">
+          {[...nodeCounts.entries()].sort((a, b) => b[1].total - a[1].total).map(([node, info]) => (
+            <div key={node} className="band-row">
+              <span className="band-label">{node}</span>
+              <div className="band-bar-track">
+                <div className="band-bar-fill band-node" style={{ width: `${Math.max(5, (info.total / (connected.length || 1)) * 100)}%` }} />
+              </div>
+              <span className="band-count">{info.total} ({info.wireless} WiFi)</span>
+            </div>
+          ))}
         </div>
       </div>
 
       <p className="empty-text" style={{ marginTop: 16 }}>
-        ℹ️ Bandwidth history and category breakdowns require eero Plus subscription.
+        ℹ️ Bandwidth history and per-device usage require eero Plus.
       </p>
     </div>
   );

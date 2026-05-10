@@ -148,7 +148,7 @@ export default function App() {
             Nodes
           </button>
           <button className={`tab ${tab === 'activity' ? 'active' : ''}`} onClick={() => setTab('activity')}>
-            Activity
+            Health
           </button>
           <button className={`tab ${tab === 'profiles' ? 'active' : ''}`} onClick={() => setTab('profiles')}>
             Profiles
