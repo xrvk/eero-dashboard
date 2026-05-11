@@ -43,7 +43,7 @@ services:
     ports:
       - "8420:8420"
     volumes:
-      - eero-data:/app/data
+      - eero-data:/app/backend/data
     environment:
       - SPEED_HISTORY_DAYS=365
     restart: unless-stopped
@@ -186,7 +186,8 @@ Dockerfile             # Multi-stage build (Node + Python)
 
 - The backend currently does **not** maintain a response cache for API reads.
 - `/api/prefetch/{network_id}` only warms upstream eero API paths in parallel for faster subsequent reads.
-- Speed test history is persisted to `backend/data/speed_history.json` and pruned using `SPEED_HISTORY_DAYS`.
+- Speed test history is persisted to `data/speed_history.json` (inside the data volume) and pruned using `SPEED_HISTORY_DAYS`.
+- The eero session cookie is persisted to `data/.eero_session` so logins survive container rebuilds.
 - There is no automatic invalidation layer beyond upstream freshness and speed-history retention pruning.
 
 ## Validation and release checklist

@@ -5,7 +5,8 @@ from fastapi import FastAPI, HTTPException
 
 from eero import EeroClient
 
-COOKIE_FILE = str(Path(__file__).resolve().parent.parent / ".eero_session")
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+COOKIE_FILE = str(DATA_DIR / ".eero_session")
 
 _client: EeroClient | None = None
 
