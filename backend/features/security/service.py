@@ -17,4 +17,5 @@ async def update_security(client: EeroClient, network_id: str, **kwargs):
     with translate_errors(code="update_security_failed", message="Failed to update security settings"):
         resp = await client.configure_security(network_id=network_id, **kwargs)
         cache.invalidate_network(network_id)
+        cache.clear_upstream("network", network_id=network_id)
         return resp.get("data", resp)
