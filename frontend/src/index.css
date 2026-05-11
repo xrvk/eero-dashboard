@@ -1024,6 +1024,116 @@ body {
 .profile-device-ip { color: var(--text-muted); font-family: 'SF Mono', monospace; font-size: 0.78rem; }
 .profile-device-type { color: var(--text-dim); font-size: 0.75rem; min-width: 60px; text-align: right; }
 
+/* ── Profile Card View ─────────────────────── */
+.profile-header-actions { display: flex; align-items: center; gap: 8px; }
+.view-toggle {
+  display: flex; gap: 2px; background: var(--bg); padding: 2px;
+  border-radius: var(--radius-sm);
+}
+.view-toggle-btn {
+  background: none; border: none; padding: 4px 8px;
+  border-radius: 4px; cursor: pointer; font-size: 0.9rem;
+  color: var(--text-dim); transition: all 0.15s;
+}
+.view-toggle-btn:hover { color: var(--text); }
+.view-toggle-btn.active {
+  background: var(--bg-card); color: var(--accent);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+.profile-card.selected {
+  border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent);
+}
+.profile-card:hover { cursor: pointer; background: var(--bg-card-hover); }
+
+/* ── Profile Detail Panel ──────────────────── */
+.profile-detail-panel {
+  background: var(--bg-card); border: 1px solid var(--accent);
+  border-radius: var(--radius); margin-top: 16px;
+  animation: fadeIn 0.15s ease-out;
+}
+.profile-detail-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+}
+.profile-detail-title {
+  display: flex; align-items: center; gap: 10px;
+}
+.profile-detail-title h3 { font-size: 1rem; font-weight: 600; }
+.profile-detail-tabs {
+  display: flex; gap: 0; border-bottom: 1px solid var(--border);
+}
+.profile-detail-tab {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--text-muted); padding: 10px 20px; font-size: 0.85rem;
+  font-weight: 500; cursor: pointer; transition: all 0.15s;
+}
+.profile-detail-tab:hover { color: var(--text); }
+.profile-detail-tab.active {
+  color: var(--accent); border-bottom-color: var(--accent);
+}
+.profile-detail-body { padding: 16px 20px; }
+
+/* ── Schedule / Bedtime ────────────────────── */
+.schedule-section { display: flex; flex-direction: column; gap: 20px; }
+.schedule-loading { display: flex; align-items: center; gap: 8px; padding: 12px 0; color: var(--text-muted); }
+.schedule-current {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.2); border-radius: var(--radius-sm);
+}
+.schedule-active-badge {
+  font-size: 0.8rem; font-weight: 600; color: var(--green);
+}
+.btn-danger { color: var(--red); }
+.btn-danger:hover { opacity: 0.8; }
+.bedtime-group h4 {
+  font-size: 0.85rem; font-weight: 600; color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.bedtime-inputs {
+  display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;
+}
+.bedtime-inputs label {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 0.75rem; color: var(--text-dim);
+}
+.bedtime-inputs input[type="time"] {
+  padding: 6px 10px; background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-size: 0.85rem;
+  outline: none;
+}
+.bedtime-inputs input[type="time"]:focus { border-color: var(--accent); }
+.bedtime-arrow { color: var(--text-dim); font-size: 1rem; padding-bottom: 4px; }
+.btn-sm {
+  padding: 6px 14px; font-size: 0.8rem; font-weight: 600;
+  background: var(--accent); color: #fff; border: none;
+  border-radius: var(--radius-sm); cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-sm:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-sm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Blocked Apps ──────────────────────────── */
+.blocked-apps-section { display: flex; flex-direction: column; gap: 12px; }
+.blocked-apps-list {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 4px;
+}
+.blocked-app-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: background 0.1s; font-size: 0.85rem;
+}
+.blocked-app-item:hover { background: var(--bg-card-hover); }
+.blocked-app-item.blocked { background: rgba(248,113,113,0.08); }
+.blocked-app-item input { accent-color: var(--red); }
+.blocked-app-name { flex: 1; }
+.blocked-apps-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 10px; border-top: 1px solid var(--border);
+}
+.empty-subtext { font-size: 0.8rem; color: var(--text-dim); }
+
 /* ── Settings Subtabs ───────────────────────── */
 .settings-subtabs {
   display: flex; gap: 2px; margin-bottom: 24px;

@@ -24,11 +24,6 @@ async def list_eeros(network_id: str, client: EeroClient = Depends(get_client)):
     return await service.list_eeros(client, network_id)
 
 
-@router.get("/networks/{network_id}/profiles")
-async def list_profiles(network_id: str, client: EeroClient = Depends(get_client)):
-    return await service.list_profiles(client, network_id)
-
-
 @router.get("/networks/{network_id}/settings")
 async def get_settings(network_id: str, client: EeroClient = Depends(get_client)):
     return await service.get_settings(client, network_id)

@@ -18,6 +18,7 @@ from features.auth.router import router as auth_router
 from features.devices.router import router as devices_router
 from features.network_ops.router import router as network_ops_router
 from features.networks.router import router as networks_router
+from features.profiles.router import router as profiles_router
 
 DATA_DIR = Path(__file__).parent / "data"
 SEED_DIR = Path(__file__).parent / "seed"
@@ -41,6 +42,7 @@ app.include_router(auth_router)
 app.include_router(devices_router)
 app.include_router(network_ops_router)
 app.include_router(networks_router)
+app.include_router(profiles_router)
 
 
 @app.exception_handler(HTTPException)
