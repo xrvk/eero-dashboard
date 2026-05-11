@@ -53,9 +53,13 @@ interface NodeDrawerProps {
 export default function NodeDrawer({ networkId, node, onClose }: NodeDrawerProps) {
   const eeroId = extractId(node.url);
 
+  const cacheKey = eeroId ? `/networks/${networkId}/eeros/${eeroId}` : undefined;
+
   const { data: detail, loading } = useFetch(
     () => eeroId ? api.getEero(networkId, eeroId) : Promise.resolve(null),
-    [networkId, eeroId]
+    [networkId, eeroId],
+    {},
+    cacheKey,
   );
 
   // Merge list data with detail data (detail has more fields)

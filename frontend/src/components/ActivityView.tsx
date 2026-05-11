@@ -208,6 +208,7 @@ export default function ActivityView({ networkId, onNodeClick, onSignalClick }: 
                 key={node.serial || i}
                 className={`node-card ${node.status === 'green' ? 'healthy' : node.status === 'yellow' ? 'warning' : 'error'}`}
                 onClick={() => onNodeClick?.(eeroId, node)}
+                onMouseEnter={() => eeroId && api.prefetchEero(networkId, eeroId)}
                 style={{ cursor: onNodeClick ? 'pointer' : undefined }}
               >
                 <div className="node-status-dot" />

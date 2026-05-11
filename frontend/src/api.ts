@@ -123,6 +123,11 @@ export const getEeros = (networkId: string) =>
 export const getEero = (networkId: string, eeroId: string) =>
   request<EeroNode>(`/networks/${networkId}/eeros/${eeroId}`);
 
+export const prefetchEero = (networkId: string, eeroId: string) => {
+  const path = `/networks/${networkId}/eeros/${eeroId}`;
+  prefetchRequest(path, () => request<EeroNode>(path));
+};
+
 // Profiles
 export interface Profile {
   url?: string;
