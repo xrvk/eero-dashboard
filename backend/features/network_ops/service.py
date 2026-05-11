@@ -70,18 +70,18 @@ async def prefetch(client: EeroClient, network_id: str):
         return resp.get("data", resp)
 
     keys_and_fns = [
-        (f"net:{network_id}:network", _net),
+        (keys.network(network_id), _net),
         (keys.device_list(network_id), _devices),
-        (f"net:{network_id}:eeros", _eeros),
+        (keys.eeros(network_id), _eeros),
         (keys.profile_list(network_id), _profiles),
-        (f"net:{network_id}:security", _security),
-        (f"net:{network_id}:dns", _dns),
-        (f"net:{network_id}:updates", _updates),
-        (f"net:{network_id}:thread", _thread),
-        (f"net:{network_id}:blacklist", _blacklist),
-        (f"net:{network_id}:sqm", _sqm),
-        (f"net:{network_id}:forwards", _forwards),
-        (f"net:{network_id}:reservations", _reservations),
+        (keys.security(network_id), _security),
+        (keys.dns(network_id), _dns),
+        (keys.updates(network_id), _updates),
+        (keys.thread(network_id), _thread),
+        (keys.blacklist(network_id), _blacklist),
+        (keys.sqm(network_id), _sqm),
+        (keys.forwards(network_id), _forwards),
+        (keys.reservations(network_id), _reservations),
     ]
 
     async def _run(key, fn):
@@ -99,7 +99,7 @@ async def prefetch(client: EeroClient, network_id: str):
 
 async def get_dns(client: EeroClient, network_id: str):
     return await cache.cached(
-        f"net:{network_id}:dns",
+        keys.dns(network_id),
         lambda: _fetch_dns(client, network_id),
     )
 
@@ -133,7 +133,7 @@ async def set_dns_caching(client: EeroClient, network_id: str, enabled: bool):
 
 async def get_activity(client: EeroClient, network_id: str):
     return await cache.cached(
-        f"net:{network_id}:activity",
+        keys.activity(network_id),
         lambda: _fetch_activity(client, network_id),
     )
 
@@ -147,7 +147,7 @@ async def _fetch_activity(client: EeroClient, network_id: str):
 
 async def get_activity_history(client: EeroClient, network_id: str, period: str = "day"):
     return await cache.cached(
-        f"net:{network_id}:activity:history:{period}",
+        keys.activity_sub(network_id, f"history:{period}"),
         lambda: _fetch_activity_history(client, network_id, period),
     )
 
@@ -161,7 +161,7 @@ async def _fetch_activity_history(client: EeroClient, network_id: str, period: s
 
 async def get_activity_clients(client: EeroClient, network_id: str):
     return await cache.cached(
-        f"net:{network_id}:activity:clients",
+        keys.activity_sub(network_id, "clients"),
         lambda: _fetch_activity_clients(client, network_id),
     )
 
@@ -175,7 +175,7 @@ async def _fetch_activity_clients(client: EeroClient, network_id: str):
 
 async def get_activity_categories(client: EeroClient, network_id: str):
     return await cache.cached(
-        f"net:{network_id}:activity:categories",
+        keys.activity_sub(network_id, "categories"),
         lambda: _fetch_activity_categories(client, network_id),
     )
 
@@ -189,7 +189,7 @@ async def _fetch_activity_categories(client: EeroClient, network_id: str):
 
 async def get_diagnostics(client: EeroClient, network_id: str):
     return await cache.cached(
-        f"net:{network_id}:diagnostics",
+        keys.diagnostics(network_id),
         lambda: _fetch_diagnostics(client, network_id),
     )
 
@@ -204,7 +204,7 @@ async def _fetch_diagnostics(client: EeroClient, network_id: str):
 async def run_diagnostics(client: EeroClient, network_id: str):
     try:
         result = _data(await client.run_diagnostics(network_id))
-        cache.invalidate(f"net:{network_id}:diagnostics")
+        cache.invalidate(keys.diagnostics(network_id))
         return result
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))

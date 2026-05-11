@@ -52,6 +52,7 @@ async def set_blocked_apps(client: EeroClient, network_id: str, profile_id: str,
     with translate_errors(code="set_blocked_apps_failed", message="Failed to update blocked apps"):
         resp = await client.set_blocked_applications(profile_id, applications, network_id=network_id)
         cache.invalidate(keys.profile(network_id, profile_id))
+        cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 
@@ -68,6 +69,7 @@ async def set_bedtime(
             profile_id, start_time, end_time, days=days, network_id=network_id
         )
         cache.invalidate(keys.profile(network_id, profile_id))
+        cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 
@@ -83,6 +85,7 @@ async def set_schedule(client: EeroClient, network_id: str, profile_id: str, tim
     with translate_errors(code="set_schedule_failed", message="Failed to set schedule"):
         resp = await client.set_profile_schedule(profile_id, time_blocks, network_id=network_id)
         cache.invalidate(keys.profile(network_id, profile_id))
+        cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 
@@ -90,6 +93,7 @@ async def clear_schedule(client: EeroClient, network_id: str, profile_id: str):
     with translate_errors(code="clear_schedule_failed", message="Failed to clear schedule"):
         resp = await client.clear_profile_schedule(profile_id, network_id=network_id)
         cache.invalidate(keys.profile(network_id, profile_id))
+        cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 

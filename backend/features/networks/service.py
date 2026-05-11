@@ -1,6 +1,7 @@
 from eero import EeroClient
 
 from core import cache
+from core.cache import keys
 from core.errors import translate_errors
 
 
@@ -14,7 +15,7 @@ async def list_networks(client: EeroClient):
             resp = await client.get_networks()
             networks = resp.get("data", {}).get("networks", resp.get("networks", []))
             return {"networks": networks}
-    return await cache.cached("networks", _fetch)
+    return await cache.cached(keys.networks_list(), _fetch)
 
 
 async def get_network(client: EeroClient, network_id: str):
@@ -22,7 +23,7 @@ async def get_network(client: EeroClient, network_id: str):
         with translate_errors(code="get_network_failed", message="Failed to fetch network"):
             resp = await client.get_network(network_id)
             return _data(resp)
-    return await cache.cached(f"net:{network_id}:network", _fetch)
+    return await cache.cached(keys.network(network_id), _fetch)
 
 
 async def list_eeros(client: EeroClient, network_id: str):
@@ -33,7 +34,7 @@ async def list_eeros(client: EeroClient, network_id: str):
             if isinstance(eeros, dict):
                 eeros = eeros.get("eeros", [])
             return {"eeros": eeros}
-    return await cache.cached(f"net:{network_id}:eeros", _fetch)
+    return await cache.cached(keys.eeros(network_id), _fetch)
 
 
 async def get_settings(client: EeroClient, network_id: str):
@@ -60,4 +61,4 @@ async def get_settings(client: EeroClient, network_id: str):
                 "gateway_ip": data.get("gateway_ip", ""),
                 "status": data.get("status", ""),
             }
-    return await cache.cached(f"net:{network_id}:settings", _fetch)
+    return await cache.cached(keys.settings(network_id), _fetch)

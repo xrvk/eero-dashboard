@@ -26,6 +26,27 @@ _store: dict[str, tuple[float, Any]] = {}
 class keys:
     """Centralized cache key generators."""
 
+    # ── networks ──
+    @staticmethod
+    def networks_list() -> str:
+        return "networks"
+
+    @staticmethod
+    def network(network_id: str) -> str:
+        return f"net:{network_id}:network"
+
+    @staticmethod
+    def eeros(network_id: str) -> str:
+        return f"net:{network_id}:eeros"
+
+    @staticmethod
+    def settings(network_id: str) -> str:
+        return f"net:{network_id}:settings"
+
+    @staticmethod
+    def password(network_id: str) -> str:
+        return f"net:{network_id}:password"
+
     # ── profiles ──
     @staticmethod
     def profile_prefix(network_id: str) -> str:
@@ -59,6 +80,56 @@ class keys:
     @staticmethod
     def device_sub(network_id: str, device_id: str, sub: str) -> str:
         return f"net:{network_id}:device:{device_id}:{sub}"
+
+    # ── network settings ──
+    @staticmethod
+    def security(network_id: str) -> str:
+        return f"net:{network_id}:security"
+
+    @staticmethod
+    def dns(network_id: str) -> str:
+        return f"net:{network_id}:dns"
+
+    @staticmethod
+    def sqm(network_id: str) -> str:
+        return f"net:{network_id}:sqm"
+
+    @staticmethod
+    def updates(network_id: str) -> str:
+        return f"net:{network_id}:updates"
+
+    @staticmethod
+    def thread(network_id: str) -> str:
+        return f"net:{network_id}:thread"
+
+    @staticmethod
+    def routing(network_id: str) -> str:
+        return f"net:{network_id}:routing"
+
+    @staticmethod
+    def blacklist(network_id: str) -> str:
+        return f"net:{network_id}:blacklist"
+
+    @staticmethod
+    def forwards(network_id: str) -> str:
+        return f"net:{network_id}:forwards"
+
+    @staticmethod
+    def reservations(network_id: str) -> str:
+        return f"net:{network_id}:reservations"
+
+    # ── activity & diagnostics ──
+    @staticmethod
+    def activity(network_id: str) -> str:
+        return f"net:{network_id}:activity"
+
+    @staticmethod
+    def activity_sub(network_id: str, sub: str) -> str:
+        return f"net:{network_id}:activity:{sub}"
+
+    @staticmethod
+    def diagnostics(network_id: str) -> str:
+        return f"net:{network_id}:diagnostics"
 
 
 def get(key: str) -> Any | None:
