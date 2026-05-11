@@ -1410,7 +1410,8 @@ body {
 }
 .general-detail span:last-child { font-weight: 500; color: var(--text); }
 .general-password { display: flex; align-items: center; gap: 8px; }
-.general-password-actions { display: flex; gap: 4px; }
+.general-password .general-card-value { flex: 1; min-width: 0; }
+.general-password-actions { display: flex; gap: 4px; flex-shrink: 0; }
 .general-section {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
