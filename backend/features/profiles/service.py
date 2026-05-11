@@ -20,7 +20,7 @@ async def list_profiles(client: EeroClient, network_id: str):
         with translate_errors(code="list_profiles_failed", message="Failed to fetch profiles"):
             resp = await client.get_profiles(network_id)
             return {"profiles": _extract_profiles(resp)}
-    return await cache.cached(f"net:{network_id}:profiles", _fetch)
+    return await cache.cached(f"net:{network_id}:profile:list", _fetch)
 
 
 async def get_profile(client: EeroClient, network_id: str, profile_id: str):
@@ -118,7 +118,7 @@ async def rename_profile(client: EeroClient, network_id: str, profile_id: str, n
             auth_token=auth_token,
             json={"name": name},
         )
-        cache.invalidate(f"net:{network_id}:profile:{profile_id}")
+        cache.invalidate(f"net:{network_id}:profile")
         return _data(resp)
 
 

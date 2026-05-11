@@ -72,7 +72,7 @@ async def prefetch(client: EeroClient, network_id: str):
         (f"net:{network_id}:network", _net),
         (f"net:{network_id}:devices", _devices),
         (f"net:{network_id}:eeros", _eeros),
-        (f"net:{network_id}:profiles", _profiles),
+        (f"net:{network_id}:profile:list", _profiles),
         (f"net:{network_id}:security", _security),
         (f"net:{network_id}:dns", _dns),
         (f"net:{network_id}:updates", _updates),
