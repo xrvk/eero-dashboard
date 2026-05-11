@@ -1,10 +1,36 @@
-import { useState, useMemo } from 'react';
-import { useFetch } from '../hooks/useFetch';
+import { useState, useMemo, useEffect } from 'react';
+import { useFetch, prefetchRequest } from '../hooks/useFetch';
 import * as api from '../api';
+import { request } from '../api/client';
 
 function extractId(url?: string) {
   if (!url) return '';
   return url.replace(/\/$/, '').split('/').pop() || '';
+}
+
+// Module-level stable ordering — survives re-renders, reset on network change
+const _profileOrder = new Map<string, string[]>();
+
+function stableSort(networkId: string, raw: api.Profile[]): api.Profile[] {
+  if (raw.length === 0) return raw;
+  const ids = raw.map(p => extractId(p.url) || p.name || '');
+  const saved = _profileOrder.get(networkId);
+  if (!saved) {
+    _profileOrder.set(networkId, ids);
+    return raw;
+  }
+  const orderMap = new Map(saved.map((id, i) => [id, i]));
+  const sorted = [...raw].sort((a, b) => {
+    const aIdx = orderMap.get(extractId(a.url) || a.name || '') ?? Infinity;
+    const bIdx = orderMap.get(extractId(b.url) || b.name || '') ?? Infinity;
+    return aIdx - bIdx;
+  });
+  // Add any new profiles to the saved order
+  const sortedIds = sorted.map(p => extractId(p.url) || p.name || '');
+  if (sortedIds.some(id => !orderMap.has(id))) {
+    _profileOrder.set(networkId, sortedIds);
+  }
+  return sorted;
 }
 
 interface ProfileManagerProps {
@@ -23,7 +49,8 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
 
-  const profiles = data?.profiles ?? [];
+  const rawProfiles = useMemo(() => data?.profiles ?? [], [data]);
+  const profiles = useMemo(() => stableSort(networkId, rawProfiles), [networkId, rawProfiles]);
 
   const handlePause = async (profileId: string, paused: boolean) => {
     setActionLoading(profileId);
@@ -180,6 +207,14 @@ function ProfileDetailPanel({
 }) {
   const [tab, setTab] = useState<DetailTab>('devices');
 
+  // Eager-load schedule + blocked-apps data when panel opens
+  useEffect(() => {
+    const scheduleKey = `/networks/${networkId}/profiles/${profileId}/schedule`;
+    const blockedKey = `/networks/${networkId}/profiles/${profileId}/blocked-apps`;
+    prefetchRequest(scheduleKey, () => request(scheduleKey));
+    prefetchRequest(blockedKey, () => request(blockedKey));
+  }, [networkId, profileId]);
+
   return (
     <div className="profile-detail-panel">
       <div className="profile-detail-header">
@@ -243,6 +278,8 @@ function DevicesTab({
   const { data: devicesData } = useFetch(
     () => api.getDevices(networkId),
     [networkId],
+    {},
+    `/networks/${networkId}/devices`,
   );
   const [editing, setEditing] = useState(false);
 
@@ -294,9 +331,12 @@ function DevicesTab({
 /* ── Schedule Tab (Bedtime) ────────────────────────────── */
 
 function ScheduleTab({ networkId, profileId }: { networkId: string; profileId: string }) {
+  const cacheKey = `/networks/${networkId}/profiles/${profileId}/schedule`;
   const { data: scheduleData, loading, refetch } = useFetch(
     () => api.getProfileSchedule(networkId, profileId),
     [networkId, profileId],
+    {},
+    cacheKey,
   );
   const [weekdayStart, setWeekdayStart] = useState('21:00');
   const [weekdayEnd, setWeekdayEnd] = useState('07:00');
@@ -402,9 +442,12 @@ function ScheduleTab({ networkId, profileId }: { networkId: string; profileId: s
 /* ── Blocked Apps Tab ──────────────────────────────────── */
 
 function BlockedAppsTab({ networkId, profileId }: { networkId: string; profileId: string }) {
+  const cacheKey = `/networks/${networkId}/profiles/${profileId}/blocked-apps`;
   const { data: blockedData, loading, refetch } = useFetch(
     () => api.getBlockedApps(networkId, profileId),
     [networkId, profileId],
+    {},
+    cacheKey,
   );
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [initialized, setInitialized] = useState(false);
