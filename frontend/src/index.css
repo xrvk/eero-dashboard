@@ -1216,6 +1216,9 @@ body {
 .drawer-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
 .drawer-value { font-size: 0.9rem; }
 .drawer-value.mono { font-family: 'SF Mono', monospace; }
+.drawer-value.copyable { cursor: pointer; transition: color 0.15s, background 0.15s; border-radius: 4px; padding: 2px 6px; margin: -2px -6px; }
+.drawer-value.copyable:hover { background: var(--bg-hover, rgba(255,255,255,0.06)); color: var(--accent, #00aaff); }
+.drawer-value.copyable.copied { color: #34d399; }
 .drawer-value-row { display: flex; align-items: center; gap: 8px; }
 .drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .drawer-field { margin-bottom: 4px; }
