@@ -2,6 +2,7 @@ node_modules/
 dist/
 .env
 __pycache__/
+.agents/
 *.py[cod]
 backend/.venv/
 backend/venv/
