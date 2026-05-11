@@ -1,16 +1,15 @@
-const BASE = '/api';
-
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || `Request failed: ${res.status}`);
-  }
-  return res.json();
-}
+import { request } from './api/client';
+export {
+  blockDevice,
+  getDevice,
+  getDevicePriority,
+  getDevices,
+  pauseDevice,
+  renameDevice,
+  setDeviceNickname,
+  setDevicePriority,
+} from './api/devices';
+export type { Device } from './api/devices';
 
 // Auth
 export interface AuthStatus {
@@ -57,26 +56,6 @@ export const getNetwork = (id: string) =>
 
 export const prefetch = (networkId: string) =>
   request<{ status: string; cached: number }>(`/prefetch/${networkId}`, { method: 'POST' }).catch(() => {});
-
-// Devices
-export interface Device {
-  url?: string;
-  hostname?: string;
-  display_name?: string;
-  ip?: string;
-  mac?: string;
-  connection_type?: string;
-  connected?: boolean;
-  wireless?: boolean;
-  manufacturer?: string;
-  device_type?: string;
-  profile?: { url?: string; name?: string };
-  usage?: { down?: number; up?: number };
-  [key: string]: unknown;
-}
-
-export const getDevices = (networkId: string) =>
-  request<{ devices: Device[] }>(`/networks/${networkId}/devices`);
 
 // Eeros (nodes)
 export interface EeroNode {
@@ -139,25 +118,6 @@ export const getDiagnostics = (networkId: string) =>
 
 export const runDiagnostics = (networkId: string) =>
   request<Record<string, unknown>>(`/networks/${networkId}/diagnostics`, { method: 'POST' });
-
-// Device Actions
-export const pauseDevice = (networkId: string, deviceId: string, paused: boolean) =>
-  request(`/networks/${networkId}/devices/${deviceId}/pause`, {
-    method: 'POST',
-    body: JSON.stringify({ paused }),
-  });
-
-export const blockDevice = (networkId: string, deviceId: string, blocked: boolean) =>
-  request(`/networks/${networkId}/devices/${deviceId}/block`, {
-    method: 'POST',
-    body: JSON.stringify({ blocked }),
-  });
-
-export const renameDevice = (networkId: string, deviceId: string, nickname: string) =>
-  request(`/networks/${networkId}/devices/${deviceId}/rename`, {
-    method: 'POST',
-    body: JSON.stringify({ nickname }),
-  });
 
 // Profile Actions
 export const pauseProfile = (networkId: string, profileId: string, paused: boolean) =>
@@ -263,27 +223,6 @@ export const setGuestNetwork = (networkId: string, enabled: boolean, name?: stri
   request(`/networks/${networkId}/guest`, {
     method: 'POST',
     body: JSON.stringify({ enabled, name, password }),
-  });
-
-// Device Detail
-export const getDevice = (networkId: string, deviceId: string) =>
-  request<Device>(`/networks/${networkId}/devices/${deviceId}`);
-
-// Device Nickname
-export const setDeviceNickname = (networkId: string, deviceId: string, nickname: string) =>
-  request(`/networks/${networkId}/devices/${deviceId}/nickname`, {
-    method: 'POST',
-    body: JSON.stringify({ nickname }),
-  });
-
-// Device Priority
-export const getDevicePriority = (networkId: string, deviceId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/devices/${deviceId}/priority`);
-
-export const setDevicePriority = (networkId: string, deviceId: string, prioritized: boolean, durationMinutes?: number) =>
-  request(`/networks/${networkId}/devices/${deviceId}/priority`, {
-    method: 'POST',
-    body: JSON.stringify({ prioritized, duration_minutes: durationMinutes }),
   });
 
 // Node LED

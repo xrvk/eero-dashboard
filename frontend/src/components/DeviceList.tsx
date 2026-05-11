@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useFetch } from '../hooks/useFetch';
-import * as api from '../api';
+import type { Device } from '../api';
+import { devicesClient } from '../features/devices/client';
 import DeviceDrawer from './DeviceDrawer';
 
 function extractId(url?: string) {
@@ -27,7 +28,7 @@ interface DeviceConnectivity {
   rx_rate_info?: { rate_bps?: number; channel_width?: string; phy_type?: string };
 }
 
-function getConn(d: api.Device): DeviceConnectivity | undefined {
+function getConn(d: Device): DeviceConnectivity | undefined {
   return (d as Record<string, unknown>).connectivity as DeviceConnectivity | undefined;
 }
 
@@ -45,7 +46,7 @@ function formatRate(bps?: number): string {
   return `${(bps / 1_000).toFixed(0)} Kbps`;
 }
 
-function sortDevices(devices: api.Device[], col: SortCol, dir: SortDir): api.Device[] {
+function sortDevices(devices: Device[], col: SortCol, dir: SortDir): Device[] {
   const sorted = [...devices].sort((a, b) => {
     let va: string | number = '';
     let vb: string | number = '';
@@ -101,14 +102,14 @@ interface DeviceListProps {
 
 export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
   const { data, loading, error, refetch } = useFetch(
-    () => api.getDevices(networkId),
+    () => devicesClient.list(networkId),
     [networkId]
   );
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ mac: string; type: 'pause' | 'block' } | null>(null);
   const [renameTarget, setRenameTarget] = useState<{ mac: string; name: string } | null>(null);
   const [renameName, setRenameName] = useState('');
-  const [selectedDevice, setSelectedDevice] = useState<api.Device | null>(null);
+  const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [groupBy, setGroupBy] = useState<GroupBy>('none');
@@ -134,8 +135,8 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
   const handleAction = async (deviceId: string, type: 'pause' | 'block', value: boolean) => {
     setActionLoading(deviceId);
     try {
-      if (type === 'pause') await api.pauseDevice(networkId, deviceId, value);
-      else await api.blockDevice(networkId, deviceId, value);
+      if (type === 'pause') await devicesClient.pause(networkId, deviceId, value);
+      else await devicesClient.block(networkId, deviceId, value);
       await refetch();
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Action failed');
@@ -150,7 +151,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
     setActionLoading(renameTarget.mac);
     try {
       // Empty string resets to eero default (hostname/manufacturer)
-      await api.renameDevice(networkId, renameTarget.mac, renameName.trim());
+      await devicesClient.rename(networkId, renameTarget.mac, renameName.trim());
       await refetch();
       setRenameTarget(null);
     } catch (e) {
@@ -188,9 +189,9 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
   }, [allDevices, search, statusFilter, bandFilter]);
 
   const groups = useMemo(() => {
-    const result: { label: string; devices: api.Device[] }[] = [];
+    const result: { label: string; devices: Device[] }[] = [];
 
-    const makeGroup = (label: string, devs: api.Device[]) => {
+    const makeGroup = (label: string, devs: Device[]) => {
       if (devs.length) result.push({ label, devices: sortDevices(devs, sortCol, sortDir) });
     };
 
@@ -209,7 +210,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
         makeGroup('', filtered);
       }
     } else if (groupBy === 'node') {
-      const byNode = new Map<string, api.Device[]>();
+      const byNode = new Map<string, Device[]>();
       for (const d of filtered) {
         const src = (d as Record<string, unknown>).source as Record<string, unknown> | undefined;
         const nodeName = (src?.display_name as string) || (src?.location as string) || 'Unknown Node';
@@ -459,7 +460,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
 }
 
 function DeviceCard({ device: d, networkId: _networkId, actionLoading, onAction, onRename, onReserve, onClick }: {
-  device: api.Device;
+  device: Device;
   networkId: string;
   actionLoading: string | null;
   onAction: (mac: string, type: 'pause' | 'block') => void;
@@ -540,7 +541,7 @@ function DeviceCard({ device: d, networkId: _networkId, actionLoading, onAction,
 }
 
 function TableRowMenu({ device: d, actionLoading, onAction, onRename, onReserve }: {
-  device: api.Device;
+  device: Device;
   actionLoading: string | null;
   onAction: (mac: string, type: 'pause' | 'block') => void;
   onRename: (mac: string, currentName: string) => void;
@@ -581,7 +582,7 @@ function TableRowMenu({ device: d, actionLoading, onAction, onRename, onReserve 
   );
 }
 
-function getDeviceIcon(d: api.Device) {
+function getDeviceIcon(d: Device) {
   const name = (d.display_name || d.hostname || '').toLowerCase();
   const type = (d.device_type || '').toLowerCase();
   if (type.includes('phone') || name.includes('iphone') || name.includes('pixel') || name.includes('galaxy')) return '📱';

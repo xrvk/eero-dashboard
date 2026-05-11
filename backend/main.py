@@ -3,7 +3,6 @@ import json
 import os
 import re
 import time
-from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Coroutine
@@ -13,18 +12,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from eero import EeroClient
+from core.client import COOKIE_FILE, ensure_client, get_client, is_authenticated, lifespan, reset_client
+from features.devices.router import router as devices_router
 
-COOKIE_FILE = str(Path(__file__).parent / ".eero_session")
 DATA_DIR = Path(__file__).parent / "data"
 SPEED_HISTORY_FILE = DATA_DIR / "speed_history.json"
 SPEED_HISTORY_DAYS = int(os.environ.get("SPEED_HISTORY_DAYS", "365"))
 CACHE_TTL = int(os.environ.get("CACHE_TTL", "300"))
 SPEED_TEST_POLL_INTERVAL = int(os.environ.get("SPEED_TEST_POLL_INTERVAL", "10"))
 SPEED_TEST_TIMEOUT = int(os.environ.get("SPEED_TEST_TIMEOUT", "120"))
-
-# Module-level client reference
-_client: EeroClient | None = None
 
 # ── In-memory cache ───────────────────────────────────────────────────────────
 
@@ -61,32 +57,6 @@ async def _cached(key: str, fn: Callable[[], Coroutine[Any, Any, Any]]) -> Any:
     return result
 
 
-def _make_client() -> EeroClient:
-    return EeroClient(cookie_file=COOKIE_FILE, use_keyring=False)
-
-
-async def get_client() -> EeroClient:
-    """Return the authenticated EeroClient, or raise if not authenticated."""
-    global _client
-    if _client is None:
-        _client = _make_client()
-        await _client.__aenter__()
-    if not _client.is_authenticated:
-        raise HTTPException(status_code=401, detail="Not authenticated. Please login first.")
-    return _client
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    global _client
-    _client = _make_client()
-    await _client.__aenter__()
-    yield
-    if _client:
-        await _client.__aexit__(None, None, None)
-        _client = None
-
-
 app = FastAPI(title="eero Dashboard API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
@@ -96,6 +66,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(devices_router)
 
 
 # ── Health ────────────────────────────────────────────────────────────────────
@@ -103,8 +74,7 @@ app.add_middleware(
 
 @app.get("/api/health")
 async def health():
-    global _client
-    authenticated = _client is not None and _client.is_authenticated
+    authenticated = is_authenticated()
     data_dir_ok = DATA_DIR.exists()
     return {
         "status": "ok" if data_dir_ok else "degraded",
@@ -127,13 +97,10 @@ class VerifyRequest(BaseModel):
 
 @app.get("/api/auth/status")
 async def auth_status():
-    global _client
-    if _client is None:
-        _client = _make_client()
-        await _client.__aenter__()
-    if _client.is_authenticated:
+    client = await ensure_client()
+    if client.is_authenticated:
         try:
-            account = await _client.get_account()
+            account = await client.get_account()
             return {
                 "authenticated": True,
                 "name": account.get("name", ""),
@@ -146,12 +113,9 @@ async def auth_status():
 
 @app.post("/api/auth/login")
 async def login(req: LoginRequest):
-    global _client
-    if _client is None:
-        _client = _make_client()
-        await _client.__aenter__()
+    client = await ensure_client()
     try:
-        await _client.login(req.identifier)
+        await client.login(req.identifier)
         is_phone = bool(re.match(r'^[\+\d\s\-\(\)]+$', req.identifier.strip()))
         channel = "phone" if is_phone else "email"
         return {"status": "verification_required", "message": f"Check your {channel} for a verification code."}
@@ -161,11 +125,9 @@ async def login(req: LoginRequest):
 
 @app.post("/api/auth/verify")
 async def verify(req: VerifyRequest):
-    global _client
-    if _client is None:
-        raise HTTPException(status_code=400, detail="No pending login. Call /api/auth/login first.")
+    client = await ensure_client()
     try:
-        await _client.verify(req.code)
+        await client.verify(req.code)
         return {"status": "authenticated"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -173,21 +135,17 @@ async def verify(req: VerifyRequest):
 
 @app.post("/api/auth/logout")
 async def logout():
-    global _client
-    if _client:
-        try:
-            await _client.logout()
-        except Exception:
-            pass
+    client = await ensure_client()
+    try:
+        await client.logout()
+    except Exception:
+        pass
     # Remove cookie file
     cookie_path = Path(COOKIE_FILE)
     if cookie_path.exists():
         cookie_path.unlink()
     # Recreate a fresh client
-    if _client:
-        await _client.__aexit__(None, None, None)
-    _client = _make_client()
-    await _client.__aenter__()
+    await reset_client()
     return {"status": "logged_out"}
 
 
@@ -238,22 +196,6 @@ async def get_network(network_id: str):
         resp = await client.get_network(network_id)
         data = resp.get("data", resp)
         return data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ── Devices ───────────────────────────────────────────────────────────────────
-
-
-@app.get("/api/networks/{network_id}/devices")
-async def list_devices(network_id: str):
-    client = await get_client()
-    try:
-        resp = await client.get_devices(network_id)
-        devices = resp.get("data", resp.get("devices", []))
-        if isinstance(devices, dict):
-            devices = devices.get("devices", [])
-        return {"devices": devices}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -473,51 +415,6 @@ async def run_diagnostics(network_id: str):
     client = await get_client()
     try:
         resp = await client.run_diagnostics(network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ── Device Actions ────────────────────────────────────────────────────────────
-
-
-class DevicePauseRequest(BaseModel):
-    paused: bool
-
-
-class DeviceBlockRequest(BaseModel):
-    blocked: bool
-
-
-class DeviceRenameRequest(BaseModel):
-    nickname: str
-
-
-@app.post("/api/networks/{network_id}/devices/{device_id}/pause")
-async def pause_device(network_id: str, device_id: str, req: DevicePauseRequest):
-    client = await get_client()
-    try:
-        resp = await client.pause_device(device_id, req.paused, network_id=network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/networks/{network_id}/devices/{device_id}/block")
-async def block_device(network_id: str, device_id: str, req: DeviceBlockRequest):
-    client = await get_client()
-    try:
-        resp = await client.block_device(device_id, req.blocked, network_id=network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/networks/{network_id}/devices/{device_id}/rename")
-async def rename_device(network_id: str, device_id: str, req: DeviceRenameRequest):
-    client = await get_client()
-    try:
-        resp = await client.set_device_nickname(device_id, req.nickname, network_id=network_id)
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -796,60 +693,6 @@ async def set_guest_network(network_id: str, req: GuestNetworkRequest):
     try:
         resp = await client.set_guest_network(
             req.enabled, name=req.name, password=req.password, network_id=network_id
-        )
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ── Device Detail & Actions ──────────────────────────────────────────────────
-
-
-@app.get("/api/networks/{network_id}/devices/{device_id}")
-async def get_device(network_id: str, device_id: str):
-    client = await get_client()
-    try:
-        resp = await client.get_device(device_id, network_id=network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-class DeviceNicknameRequest(BaseModel):
-    nickname: str
-
-
-@app.post("/api/networks/{network_id}/devices/{device_id}/nickname")
-async def set_device_nickname(network_id: str, device_id: str, req: DeviceNicknameRequest):
-    client = await get_client()
-    try:
-        resp = await client.set_device_nickname(device_id, req.nickname, network_id=network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-class DevicePriorityRequest(BaseModel):
-    prioritized: bool
-    duration_minutes: int | None = None
-
-
-@app.get("/api/networks/{network_id}/devices/{device_id}/priority")
-async def get_device_priority(network_id: str, device_id: str):
-    client = await get_client()
-    try:
-        resp = await client.get_device_priority(device_id, network_id=network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/networks/{network_id}/devices/{device_id}/priority")
-async def set_device_priority(network_id: str, device_id: str, req: DevicePriorityRequest):
-    client = await get_client()
-    try:
-        resp = await client.set_device_priority(
-            device_id, req.prioritized, duration_minutes=req.duration_minutes, network_id=network_id
         )
         return resp.get("data", resp)
     except Exception as e:
