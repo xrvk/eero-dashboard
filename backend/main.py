@@ -163,13 +163,15 @@ async def run_speed_test(network_id: str):
 
 @app.get("/api/networks/{network_id}/speed-history")
 async def get_speed_history(network_id: str):
-    history_file = SPEED_HISTORY_FILE if SPEED_HISTORY_FILE.exists() else SPEED_HISTORY_SEED
+    using_seed = not SPEED_HISTORY_FILE.exists()
+    history_file = SPEED_HISTORY_SEED if using_seed else SPEED_HISTORY_FILE
     if not history_file.exists():
         return {"history": [], "retention_days": SPEED_HISTORY_DAYS}
     try:
         history = json.loads(history_file.read_text())
-        filtered = [h for h in history if h.get("network_id") == network_id]
-        return {"history": filtered, "retention_days": SPEED_HISTORY_DAYS}
+        if not using_seed:
+            history = [h for h in history if h.get("network_id") == network_id]
+        return {"history": history, "retention_days": SPEED_HISTORY_DAYS}
     except (json.JSONDecodeError, OSError):
         return {"history": [], "retention_days": SPEED_HISTORY_DAYS}
 
