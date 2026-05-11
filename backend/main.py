@@ -1,60 +1,27 @@
 import asyncio
 import json
 import os
-import re
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable, Coroutine
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from core.client import COOKIE_FILE, ensure_client, get_client, is_authenticated, lifespan, reset_client
+from core.client import get_client, is_authenticated, lifespan
+from core.errors import api_error_response
+from features.auth.router import router as auth_router
 from features.devices.router import router as devices_router
+from features.networks.router import router as networks_router
 
 DATA_DIR = Path(__file__).parent / "data"
 SPEED_HISTORY_FILE = DATA_DIR / "speed_history.json"
 SPEED_HISTORY_DAYS = int(os.environ.get("SPEED_HISTORY_DAYS", "365"))
-CACHE_TTL = int(os.environ.get("CACHE_TTL", "300"))
 SPEED_TEST_POLL_INTERVAL = int(os.environ.get("SPEED_TEST_POLL_INTERVAL", "10"))
 SPEED_TEST_TIMEOUT = int(os.environ.get("SPEED_TEST_TIMEOUT", "120"))
-
-# ── In-memory cache ───────────────────────────────────────────────────────────
-
-_cache: dict[str, tuple[float, Any]] = {}
-
-
-def _cache_get(key: str) -> Any | None:
-    entry = _cache.get(key)
-    if entry and (time.monotonic() - entry[0]) < CACHE_TTL:
-        return entry[1]
-    return None
-
-
-def _cache_set(key: str, value: Any) -> None:
-    _cache[key] = (time.monotonic(), value)
-
-
-def _cache_bust(prefix: str = "") -> None:
-    """Clear cache entries matching prefix, or all if empty."""
-    if not prefix:
-        _cache.clear()
-    else:
-        for k in [k for k in _cache if k.startswith(prefix)]:
-            del _cache[k]
-
-
-async def _cached(key: str, fn: Callable[[], Coroutine[Any, Any, Any]]) -> Any:
-    """Return cached result or call fn, cache it, and return."""
-    hit = _cache_get(key)
-    if hit is not None:
-        return hit
-    result = await fn()
-    _cache_set(key, result)
-    return result
 
 
 app = FastAPI(title="eero Dashboard API", version="1.0.0", lifespan=lifespan)
@@ -66,7 +33,44 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(auth_router)
 app.include_router(devices_router)
+app.include_router(networks_router)
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(_: Request, exc: HTTPException):
+    detail = exc.detail
+    code = "http_error"
+    message = "Request failed"
+    if isinstance(detail, dict):
+        code = str(detail.get("code", code))
+        message = str(detail.get("message", detail.get("detail", message)))
+    elif isinstance(detail, str):
+        message = detail
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=api_error_response(
+            status_code=exc.status_code,
+            code=code,
+            message=message,
+            detail=detail,
+        ),
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(_: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content=api_error_response(
+            status_code=500,
+            code="internal_server_error",
+            message="Internal server error",
+            detail=str(exc),
+        ),
+    )
 
 
 # ── Health ────────────────────────────────────────────────────────────────────
@@ -82,71 +86,6 @@ async def health():
         "authenticated": authenticated,
         "data_dir": data_dir_ok,
     }
-
-
-# ── Auth ──────────────────────────────────────────────────────────────────────
-
-
-class LoginRequest(BaseModel):
-    identifier: str
-
-
-class VerifyRequest(BaseModel):
-    code: str
-
-
-@app.get("/api/auth/status")
-async def auth_status():
-    client = await ensure_client()
-    if client.is_authenticated:
-        try:
-            account = await client.get_account()
-            return {
-                "authenticated": True,
-                "name": account.get("name", ""),
-                "email": account.get("email", {}).get("value", ""),
-            }
-        except Exception:
-            return {"authenticated": False}
-    return {"authenticated": False}
-
-
-@app.post("/api/auth/login")
-async def login(req: LoginRequest):
-    client = await ensure_client()
-    try:
-        await client.login(req.identifier)
-        is_phone = bool(re.match(r'^[\+\d\s\-\(\)]+$', req.identifier.strip()))
-        channel = "phone" if is_phone else "email"
-        return {"status": "verification_required", "message": f"Check your {channel} for a verification code."}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.post("/api/auth/verify")
-async def verify(req: VerifyRequest):
-    client = await ensure_client()
-    try:
-        await client.verify(req.code)
-        return {"status": "authenticated"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.post("/api/auth/logout")
-async def logout():
-    client = await ensure_client()
-    try:
-        await client.logout()
-    except Exception:
-        pass
-    # Remove cookie file
-    cookie_path = Path(COOKIE_FILE)
-    if cookie_path.exists():
-        cookie_path.unlink()
-    # Recreate a fresh client
-    await reset_client()
-    return {"status": "logged_out"}
 
 
 # ── Prefetch ─────────────────────────────────────────────────────────────────
@@ -171,63 +110,6 @@ async def prefetch(network_id: str):
         )
         ok = sum(1 for r in results if not isinstance(r, Exception))
         return {"status": "ok", "cached": ok, "total": len(results)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ── Network ───────────────────────────────────────────────────────────────────
-
-
-@app.get("/api/networks")
-async def list_networks():
-    client = await get_client()
-    try:
-        resp = await client.get_networks()
-        networks = resp.get("data", {}).get("networks", resp.get("networks", []))
-        return {"networks": networks}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/networks/{network_id}")
-async def get_network(network_id: str):
-    client = await get_client()
-    try:
-        resp = await client.get_network(network_id)
-        data = resp.get("data", resp)
-        return data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ── Eero Nodes ────────────────────────────────────────────────────────────────
-
-
-@app.get("/api/networks/{network_id}/eeros")
-async def list_eeros(network_id: str):
-    client = await get_client()
-    try:
-        resp = await client.get_eeros(network_id)
-        eeros = resp.get("data", resp.get("eeros", []))
-        if isinstance(eeros, dict):
-            eeros = eeros.get("eeros", [])
-        return {"eeros": eeros}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ── Profiles ──────────────────────────────────────────────────────────────────
-
-
-@app.get("/api/networks/{network_id}/profiles")
-async def list_profiles(network_id: str):
-    client = await get_client()
-    try:
-        resp = await client.get_profiles(network_id)
-        profiles = resp.get("data", resp.get("profiles", []))
-        if isinstance(profiles, dict):
-            profiles = profiles.get("profiles", [])
-        return {"profiles": profiles}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1006,38 +888,6 @@ async def remove_from_blacklist(network_id: str, device_id: str):
     try:
         resp = await client._api.blacklist.remove_from_blacklist(network_id, device_id)
         return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ── General Network Settings ────────────────────────────────────────────────
-
-
-@app.get("/api/networks/{network_id}/settings")
-async def get_settings(network_id: str):
-    client = await get_client()
-    try:
-        resp = await client.get_network(network_id=network_id)
-        data = resp.get("data", resp)
-        return {
-            "name": data.get("name", ""),
-            "password": data.get("password", ""),
-            "timezone": data.get("timezone", ""),
-            "sqm": data.get("sqm", {}),
-            "upnp": data.get("upnp"),
-            "ipv6_upstream": data.get("ipv6_upstream"),
-            "band_steering": data.get("band_steering"),
-            "wpa3": data.get("wpa3"),
-            "thread": data.get("thread"),
-            "guest_network": data.get("guest_network", {}),
-            "dns": data.get("dns", {}),
-            "premium_status": data.get("premium_status", ""),
-            "updates": data.get("updates", {}),
-            "speed": data.get("speed", {}),
-            "wan_ip": data.get("wan_ip", ""),
-            "gateway_ip": data.get("gateway_ip", ""),
-            "status": data.get("status", ""),
-        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

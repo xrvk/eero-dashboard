@@ -136,17 +136,52 @@ export SPEED_HISTORY_DAYS=90
 
 ```
 backend/
-  main.py              # FastAPI app wrapping eero-api
+  main.py                         # App wiring, middleware, shared endpoints
+  core/
+    client.py                     # eero client lifecycle/auth state
+    errors.py                     # Shared backend error translation/shape helpers
+  features/
+    auth/
+      router.py                   # /api/auth/* routes
+      service.py                  # Auth/session behavior
+    devices/
+      router.py                   # /api/networks/{id}/devices* routes
+      service.py                  # Device operations
+    networks/
+      router.py                   # Network/profile/settings read routes
+      service.py                  # Network/profile/settings fetch + shaping
   requirements.txt
+  tests/
+    test_api_smoke.py             # Backend API smoke coverage
 frontend/
   src/
-    api.ts             # API client
-    App.tsx            # Main app shell
+    api.ts                         # Typed API surface
+    api/client.ts                  # Shared request/error handling
+    hooks/useFetch.ts              # Shared loading/error/retry/cancel fetch pattern
+    App.tsx                        # App entry + auth/network state
+    features/app/                  # Sidebar/content feature containers
     components/
-      LoginForm.tsx    # Auth flow
-      DeviceList.tsx   # Connected devices
-      EeroNodes.tsx    # Mesh node status
-      ActivityView.tsx # Speed tests & network activity
+      LoginForm.tsx                # Auth flow
+      DeviceList.tsx               # Connected devices + actions
+      SettingsView.tsx             # Security/settings workflows
+      ActivityView.tsx             # Speed tests & network activity
+    **/*.test.tsx                  # Frontend component tests
 docker-compose.yml     # Single-command Docker setup
 Dockerfile             # Multi-stage build (Node + Python)
+.github/workflows/
+  container-sanity.yml             # Build + startup check for container boot/import sanity
 ```
+
+### Cache behavior
+
+- The backend currently does **not** maintain a response cache for API reads.
+- `/api/prefetch/{network_id}` only warms upstream eero API paths in parallel for faster subsequent reads.
+- Speed test history is persisted to `backend/data/speed_history.json` and pruned using `SPEED_HISTORY_DAYS`.
+- There is no automatic invalidation layer beyond upstream freshness and speed-history retention pruning.
+
+## Validation and release checklist
+
+- Backend: `python -m compileall backend` and `python -m unittest discover -s backend/tests`
+- Frontend: `cd frontend && npm run lint && npm run typecheck && npm run build && npm run test`
+- Container sanity: ensure `.github/workflows/container-sanity.yml` passes (image build + `/api/health` startup check)
+- Before release: verify login/session, device actions, and key settings updates in a running build

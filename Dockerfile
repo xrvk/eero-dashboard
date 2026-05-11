@@ -11,21 +11,23 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install Python dependencies
-COPY backend/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY backend/requirements.txt /app/backend/requirements.txt
+RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 
-# Copy backend
-COPY backend/main.py ./
+# Copy backend package (main + core + features)
+COPY backend/ /app/backend/
 
 # Copy built frontend into backend static dir
-COPY --from=frontend-build /app/frontend/dist ./static/
+COPY --from=frontend-build /app/frontend/dist /app/backend/static/
 
 # Create data directory for speed history and session persistence
-RUN mkdir -p /app/data
+RUN mkdir -p /app/backend/data
 
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8420
+
+WORKDIR /app/backend
 
 HEALTHCHECK --interval=5m --timeout=5s --start-period=15s --retries=3 \
   CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8420/api/health')"]

@@ -1,0 +1,29 @@
+name: Container Sanity
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  startup-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build container image
+        run: docker build -t eero-dashboard:test .
+
+      - name: Start container
+        run: docker run -d --name eero-dashboard-test -p 8420:8420 eero-dashboard:test
+
+      - name: Wait for health endpoint
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8420/api/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs eero-dashboard-test
+          exit 1
