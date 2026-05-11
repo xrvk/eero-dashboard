@@ -1,1 +1,1 @@
-cd frontend && npm run typecheck
+npm run validate
