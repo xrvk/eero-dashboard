@@ -809,7 +809,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
         </div>
       </div>
 
-      {/* Security */}
+      {/* Security & Connectivity */}
       <div className="general-section">
         <h3>🔒 Security & Connectivity</h3>
         <div className="toggle-list">
@@ -830,6 +830,65 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
               </div>
             );
           })}
+          <div className="toggle-row">
+            <div className="toggle-info">
+              <span className="toggle-name">SQM</span>
+              <span className="toggle-desc">Reduce bufferbloat for gaming, video calls, streaming</span>
+            </div>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={sqmEnabled} disabled={sqmSaving} onChange={handleSqmToggle} />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+          {sqmEnabled && (
+            <div style={{ paddingLeft: 4 }}>
+              {sqmEditMode ? (
+                <div className="sqm-edit-form">
+                  <div className="form-field">
+                    <label>Upload (Mbps)</label>
+                    <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)} placeholder="e.g. 50" min="1" />
+                  </div>
+                  <div className="form-field">
+                    <label>Download (Mbps)</label>
+                    <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)} placeholder="e.g. 500" min="1" />
+                  </div>
+                  <div className="dns-edit-actions">
+                    <button className="btn-primary" onClick={handleSqmSave} disabled={sqmSaving}>{sqmSaving ? 'Saving…' : 'Save'}</button>
+                    <button className="btn-cancel" onClick={() => setSqmEditMode(false)}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="general-card-details">
+                  <div className="general-detail"><span>Mode</span><span>{sqmMode}</span></div>
+                  {currentUpload != null && <div className="general-detail"><span>Upload</span><span>{currentUpload} Mbps</span></div>}
+                  {currentDownload != null && <div className="general-detail"><span>Download</span><span>{currentDownload} Mbps</span></div>}
+                  <div className="sqm-mode-buttons" style={{ marginTop: 8 }}>
+                    <button className="btn-primary btn-sm" onClick={handleSqmAuto} disabled={sqmSaving}>Auto Optimize</button>
+                    <button className="btn-text" onClick={() => { setUploadMbps(currentUpload ? String(currentUpload) : ''); setDownloadMbps(currentDownload ? String(currentDownload) : ''); setSqmEditMode(true); }}>✏️ Manual</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="toggle-row">
+            <div className="toggle-info">
+              <span className="toggle-name">
+                Thread
+                {(!!thread.name || !!thread.channel) && (
+                  <span
+                    className="thread-info-badge"
+                    title={[thread.name && `Network: ${thread.name}`, thread.channel && `Channel: ${thread.channel}`].filter(Boolean).join(' · ')}
+                  >ℹ️</span>
+                )}
+              </span>
+              <span className="toggle-desc">IoT mesh networking protocol</span>
+            </div>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={!!(security as Record<string, unknown>).thread} disabled={secSaving}
+                onChange={() => handleSecurityToggle('thread', !(security as Record<string, unknown>).thread)} />
+              <span className="toggle-slider" />
+            </label>
+          </div>
         </div>
       </div>
 
@@ -881,73 +940,6 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
 
       {/* Node Controls */}
       <NodeControlsSection networkId={networkId} />
-
-      {/* QoS / SQM */}
-      <div className="general-section">
-        <h3>🚀 QoS (Smart Queue Management)</h3>
-        <div className="toggle-row">
-          <div className="toggle-info">
-            <span className="toggle-name">SQM</span>
-            <span className="toggle-desc">Reduce bufferbloat for gaming, video calls, streaming</span>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={sqmEnabled} disabled={sqmSaving} onChange={handleSqmToggle} />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-        {sqmEnabled && (
-          <div style={{ marginTop: 12 }}>
-            {sqmEditMode ? (
-              <div className="sqm-edit-form">
-                <div className="form-field">
-                  <label>Upload (Mbps)</label>
-                  <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)} placeholder="e.g. 50" min="1" />
-                </div>
-                <div className="form-field">
-                  <label>Download (Mbps)</label>
-                  <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)} placeholder="e.g. 500" min="1" />
-                </div>
-                <div className="dns-edit-actions">
-                  <button className="btn-primary" onClick={handleSqmSave} disabled={sqmSaving}>{sqmSaving ? 'Saving…' : 'Save'}</button>
-                  <button className="btn-cancel" onClick={() => setSqmEditMode(false)}>Cancel</button>
-                </div>
-              </div>
-            ) : (
-              <div className="general-card-details">
-                <div className="general-detail"><span>Mode</span><span>{sqmMode}</span></div>
-                {currentUpload != null && <div className="general-detail"><span>Upload</span><span>{currentUpload} Mbps</span></div>}
-                {currentDownload != null && <div className="general-detail"><span>Download</span><span>{currentDownload} Mbps</span></div>}
-                <div className="sqm-mode-buttons" style={{ marginTop: 8 }}>
-                  <button className="btn-primary btn-sm" onClick={handleSqmAuto} disabled={sqmSaving}>Auto Optimize</button>
-                  <button className="btn-text" onClick={() => { setUploadMbps(currentUpload ? String(currentUpload) : ''); setDownloadMbps(currentDownload ? String(currentDownload) : ''); setSqmEditMode(true); }}>✏️ Manual</button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Thread */}
-      <div className="general-section">
-        <h3>🧵 Thread</h3>
-        <div className="toggle-row">
-          <div className="toggle-info">
-            <span className="toggle-name">Thread</span>
-            <span className="toggle-desc">IoT mesh networking protocol</span>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={!!(security as Record<string, unknown>).thread} disabled={secSaving}
-              onChange={() => handleSecurityToggle('thread', !(security as Record<string, unknown>).thread)} />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-        {(!!thread.name || !!thread.channel) && (
-          <div className="general-info-grid" style={{ marginTop: 12 }}>
-            {!!thread.name && <div className="general-detail"><span>Network</span><span className="mono">{String(thread.name)}</span></div>}
-            {!!thread.channel && <div className="general-detail"><span>Channel</span><span>{String(thread.channel)}</span></div>}
-          </div>
-        )}
-      </div>
 
       {/* Actions */}
       <div className="general-actions-row">

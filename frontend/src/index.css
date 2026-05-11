@@ -1557,6 +1557,14 @@ body {
 .node-control-name { font-weight: 600; font-size: 0.9rem; }
 .node-control-model { font-size: 0.75rem; color: var(--text-muted); }
 
+/* Thread info tooltip badge */
+.thread-info-badge {
+  display: inline-flex; align-items: center; margin-left: 6px;
+  cursor: help; font-size: 0.75rem; opacity: 0.7;
+  transition: opacity 0.15s;
+}
+.thread-info-badge:hover { opacity: 1; }
+
 /* ── Guest Network ─────────────────────────── */
 .guest-network { max-width: 600px; }
 .guest-details { margin-top: 8px; }
