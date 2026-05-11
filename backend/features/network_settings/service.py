@@ -1,6 +1,6 @@
 from eero import EeroClient
 
-from core import cache
+from core import cache, facade
 from core.cache import keys
 from core.errors import translate_errors
 
@@ -110,7 +110,7 @@ async def get_blacklist(client: EeroClient, network_id: str):
 
 async def add_to_blacklist(client: EeroClient, network_id: str, device_id: str):
     with translate_errors(code="add_blacklist_failed", message="Failed to add to blacklist"):
-        resp = await client._api.blacklist.add_to_blacklist(network_id, device_id)
+        resp = await facade.add_to_blacklist(client, network_id, device_id)
         cache.invalidate(keys.blacklist(network_id))
         cache.clear_upstream("devices", network_id=network_id)
         return resp.get("data", resp)
@@ -118,7 +118,7 @@ async def add_to_blacklist(client: EeroClient, network_id: str, device_id: str):
 
 async def remove_from_blacklist(client: EeroClient, network_id: str, device_id: str):
     with translate_errors(code="remove_blacklist_failed", message="Failed to remove from blacklist"):
-        resp = await client._api.blacklist.remove_from_blacklist(network_id, device_id)
+        resp = await facade.remove_from_blacklist(client, network_id, device_id)
         cache.invalidate(keys.blacklist(network_id))
         cache.clear_upstream("devices", network_id=network_id)
         return resp.get("data", resp)

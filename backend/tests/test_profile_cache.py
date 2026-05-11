@@ -30,7 +30,7 @@ def make_mock_client():
     client.set_profile_schedule.return_value = {"data": {}}
     client.clear_profile_schedule.return_value = {"data": {}}
     client.set_profile_devices.return_value = {"data": {}}
-    # For create/rename/delete which use low-level API
+    # For create/rename/delete which use the facade (which calls client._api)
     client._api = MagicMock()
     client._api.profiles._auth_api.get_auth_token = AsyncMock(return_value="token")
     client._api.profiles.post = AsyncMock(return_value={"data": {"name": "new"}})
