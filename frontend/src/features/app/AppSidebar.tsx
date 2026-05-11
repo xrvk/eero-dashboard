@@ -10,6 +10,7 @@ interface AppSidebarProps {
   setSelectedNetwork: (networkId: string) => void;
   networkDetail: api.Network | null;
   auth: api.AuthStatus;
+  onNavClick?: () => void;
 }
 
 function getNetworkId(n: api.Network): string {
@@ -27,7 +28,13 @@ export default function AppSidebar({
   setSelectedNetwork,
   networkDetail,
   auth,
+  onNavClick,
 }: AppSidebarProps) {
+  const handleTab = (t: AppTab) => {
+    setTab(t);
+    onNavClick?.();
+  };
+
   return (
     <aside className="app-sidebar">
       <div className="sidebar-logo">
@@ -40,35 +47,35 @@ export default function AppSidebar({
       </div>
 
       <nav className="sidebar-nav">
-        <button className={`sidebar-item ${tab === 'devices' ? 'active' : ''}`} onClick={() => setTab('devices')}>
+        <button className={`sidebar-item ${tab === 'devices' ? 'active' : ''}`} onClick={() => handleTab('devices')}>
           <span className="sidebar-icon">📱</span> Devices
         </button>
-        <button className={`sidebar-item ${tab === 'activity' ? 'active' : ''}`} onClick={() => setTab('activity')}>
+        <button className={`sidebar-item ${tab === 'activity' ? 'active' : ''}`} onClick={() => handleTab('activity')}>
           <span className="sidebar-icon">💚</span> Health
         </button>
-        <button className={`sidebar-item ${tab === 'profiles' ? 'active' : ''}`} onClick={() => setTab('profiles')}>
+        <button className={`sidebar-item ${tab === 'profiles' ? 'active' : ''}`} onClick={() => handleTab('profiles')}>
           <span className="sidebar-icon">👤</span> Profiles
         </button>
         <button
           className={`sidebar-item sidebar-section-parent ${tab.startsWith('settings-') ? 'active' : ''}`}
-          onClick={() => setTab('settings-general')}
+          onClick={() => handleTab('settings-general')}
         >
           <span className="sidebar-icon">⚙️</span> Settings
         </button>
         <div className="sidebar-sub-items">
-          <button className={`sidebar-item sidebar-sub ${tab === 'settings-general' ? 'active' : ''}`} onClick={() => setTab('settings-general')}>
+          <button className={`sidebar-item sidebar-sub ${tab === 'settings-general' ? 'active' : ''}`} onClick={() => handleTab('settings-general')}>
             General
           </button>
-          <button className={`sidebar-item sidebar-sub ${tab === 'settings-forwards' ? 'active' : ''}`} onClick={() => setTab('settings-forwards')}>
+          <button className={`sidebar-item sidebar-sub ${tab === 'settings-forwards' ? 'active' : ''}`} onClick={() => handleTab('settings-forwards')}>
             Port Forwards
           </button>
-          <button className={`sidebar-item sidebar-sub ${tab === 'settings-reservations' ? 'active' : ''}`} onClick={() => setTab('settings-reservations')}>
+          <button className={`sidebar-item sidebar-sub ${tab === 'settings-reservations' ? 'active' : ''}`} onClick={() => handleTab('settings-reservations')}>
             DHCP Reservations
           </button>
-          <button className={`sidebar-item sidebar-sub ${tab === 'settings-guest' ? 'active' : ''}`} onClick={() => setTab('settings-guest')}>
+          <button className={`sidebar-item sidebar-sub ${tab === 'settings-guest' ? 'active' : ''}`} onClick={() => handleTab('settings-guest')}>
             Guest Network
           </button>
-          <button className={`sidebar-item sidebar-sub ${tab === 'settings-blacklist' ? 'active' : ''}`} onClick={() => setTab('settings-blacklist')}>
+          <button className={`sidebar-item sidebar-sub ${tab === 'settings-blacklist' ? 'active' : ''}`} onClick={() => handleTab('settings-blacklist')}>
             Blacklist
           </button>
         </div>
