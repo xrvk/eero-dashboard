@@ -27,6 +27,9 @@ def make_mock_client():
     client.block_device.return_value = {"data": {"blocked": True}}
     client.set_device_nickname.return_value = {"data": {"nickname": "new"}}
     client.set_device_priority.return_value = {"data": {"prioritized": True}}
+    # Upstream eero-api client cache
+    client._cache = {"profiles": {}, "devices": {}, "eeros": {}, "network": {}}
+    cache.set_client(client)
     return client
 
 

@@ -20,6 +20,7 @@ async def pause_device(client: EeroClient, network_id: str, device_id: str, paus
     with translate_errors(code="pause_device_failed", message="Failed to pause device"):
         resp = await client.pause_device(device_id, paused, network_id=network_id)
         cache.invalidate(keys.device_prefix(network_id))
+        cache.clear_upstream("devices", network_id=network_id)
         return resp.get("data", resp)
 
 
@@ -27,6 +28,7 @@ async def block_device(client: EeroClient, network_id: str, device_id: str, bloc
     with translate_errors(code="block_device_failed", message="Failed to update block status"):
         resp = await client.block_device(device_id, blocked, network_id=network_id)
         cache.invalidate(keys.device_prefix(network_id))
+        cache.clear_upstream("devices", network_id=network_id)
         return resp.get("data", resp)
 
 
@@ -42,6 +44,7 @@ async def set_device_nickname(client: EeroClient, network_id: str, device_id: st
     with translate_errors(code="rename_device_failed", message="Failed to update nickname"):
         resp = await client.set_device_nickname(device_id, nickname, network_id=network_id)
         cache.invalidate(keys.device_prefix(network_id))
+        cache.clear_upstream("devices", network_id=network_id)
         return resp.get("data", resp)
 
 
@@ -66,4 +69,5 @@ async def set_device_priority(
         )
         cache.invalidate(keys.device(network_id, device_id))
         cache.invalidate(keys.device_list(network_id))
+        cache.clear_upstream("devices", network_id=network_id)
         return resp.get("data", resp)

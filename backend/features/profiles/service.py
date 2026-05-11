@@ -16,14 +16,6 @@ def _extract_profiles(resp: dict) -> list:
     return profiles
 
 
-def _clear_upstream_profile_cache(client: EeroClient, network_id: str, profile_id: str | None = None):
-    """Clear the eero-api client's internal profile cache."""
-    upstream = client._cache.get("profiles", {})
-    upstream.pop(f"{network_id}_profiles", None)
-    if profile_id:
-        upstream.pop(f"{network_id}_{profile_id}", None)
-
-
 async def list_profiles(client: EeroClient, network_id: str):
     async def _fetch():
         with translate_errors(code="list_profiles_failed", message="Failed to fetch profiles"):
@@ -44,7 +36,7 @@ async def pause_profile(client: EeroClient, network_id: str, profile_id: str, pa
     with translate_errors(code="pause_profile_failed", message="Failed to update profile pause status"):
         resp = await client.pause_profile(profile_id, paused, network_id=network_id)
         cache.invalidate(keys.profile_prefix(network_id))
-        _clear_upstream_profile_cache(client, network_id, profile_id)
+        cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 
@@ -105,7 +97,7 @@ async def set_devices(client: EeroClient, network_id: str, profile_id: str, devi
     with translate_errors(code="set_devices_failed", message="Failed to update profile devices"):
         resp = await client.set_profile_devices(profile_id, device_urls, network_id=network_id)
         cache.invalidate(keys.profile_prefix(network_id))
-        _clear_upstream_profile_cache(client, network_id, profile_id)
+        cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 
@@ -118,7 +110,7 @@ async def create_profile(client: EeroClient, network_id: str, name: str):
             json={"name": name},
         )
         cache.invalidate(keys.profile_prefix(network_id))
-        _clear_upstream_profile_cache(client, network_id)
+        cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 
@@ -131,7 +123,7 @@ async def rename_profile(client: EeroClient, network_id: str, profile_id: str, n
             json={"name": name},
         )
         cache.invalidate(keys.profile_prefix(network_id))
-        _clear_upstream_profile_cache(client, network_id, profile_id)
+        cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 
@@ -143,5 +135,5 @@ async def delete_profile(client: EeroClient, network_id: str, profile_id: str):
             auth_token=auth_token,
         )
         cache.invalidate(keys.profile_prefix(network_id))
-        _clear_upstream_profile_cache(client, network_id, profile_id)
+        cache.clear_upstream("profiles", network_id=network_id)
         return resp

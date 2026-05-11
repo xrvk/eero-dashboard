@@ -78,18 +78,65 @@ def put(key: str, value: Any, ttl: int = DEFAULT_TTL) -> None:
 
 def invalidate(prefix: str) -> None:
     """Remove all entries whose key starts with *prefix*."""
-    keys = [k for k in _store if k.startswith(prefix)]
-    for k in keys:
+    ks = [k for k in _store if k.startswith(prefix)]
+    for k in ks:
         del _store[k]
 
 
 def invalidate_network(network_id: str) -> None:
-    """Invalidate all cached data for a specific network."""
+    """Invalidate all cached data for a specific network (both layers)."""
     invalidate(f"net:{network_id}:")
+    clear_upstream("network", "eeros", "devices", "profiles", network_id=network_id)
 
 
 def clear() -> None:
     _store.clear()
+
+
+# ── Upstream eero-api client cache ───────────────────────────────────────────
+# The eero-api EeroClient maintains its own internal cache keyed by category
+# (account, networks, network, eeros, devices, profiles). When our app
+# mutates data, we must clear BOTH our app cache AND the upstream client cache
+# to prevent stale reads.
+
+_eero_client = None  # set via set_client() during app startup
+
+
+def set_client(client: Any) -> None:
+    """Register the eero client so upstream cache can be cleared."""
+    global _eero_client
+    _eero_client = client
+
+
+def clear_upstream(*categories: str, network_id: str | None = None) -> None:
+    """Clear the eero-api client's internal cache for given categories.
+
+    Args:
+        categories: One or more of "profiles", "devices", "eeros", "network", "networks"
+        network_id: If provided, only clear the subkey for this network (where applicable)
+    """
+    if _eero_client is None:
+        return
+    upstream = getattr(_eero_client, "_cache", None)
+    if upstream is None:
+        return
+    for cat in categories:
+        bucket = upstream.get(cat)
+        if bucket is None:
+            continue
+        if isinstance(bucket, dict) and "data" in bucket:
+            # Simple category (e.g. networks, account): reset data
+            bucket["data"] = None
+            bucket["timestamp"] = 0
+        elif isinstance(bucket, dict):
+            # Keyed category (e.g. profiles, devices, eeros, network)
+            if network_id:
+                # Clear entries matching this network
+                to_del = [k for k in bucket if k.startswith(network_id)]
+                for k in to_del:
+                    del bucket[k]
+            else:
+                bucket.clear()
 
 
 async def cached(

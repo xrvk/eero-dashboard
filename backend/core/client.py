@@ -20,6 +20,8 @@ async def ensure_client() -> EeroClient:
     if _client is None:
         _client = _make_client()
         await _client.__aenter__()
+        from core import cache
+        cache.set_client(_client)
     return _client
 
 
