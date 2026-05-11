@@ -7,7 +7,7 @@
 
 ## Core Identity
 
-The eero Dashboard uses a **minimal, data-dense, dark-first** design with emoji-based iconography, no external icon libraries, and a restrained color palette. The aesthetic is functional and calm — closer to a macOS system preference panel than a flashy SaaS dashboard.
+The eero Dashboard uses a **minimal, data-dense, dark-first** design with Lucide React iconography, atmospheric gradients, and a refined color palette. The aesthetic is functional and calm — closer to a macOS system preference panel than a flashy SaaS dashboard.
 
 ---
 
@@ -43,7 +43,7 @@ The eero Dashboard uses a **minimal, data-dense, dark-first** design with emoji-
 ## Typography
 
 ```css
-font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 ```
 
 | Element          | Size      | Weight | Notes                              |
@@ -54,7 +54,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 | Body text        | `0.85rem` | 400    |                                    |
 | Table headers    | `0.75rem` | 500    | `text-transform: uppercase; letter-spacing: 0.05em` |
 | Labels / meta    | `0.75–0.8rem` | 400 | `color: var(--text-muted)`        |
-| Monospace values | `0.8rem`  | 400    | `font-family: 'SF Mono', monospace` — IPs, MACs, speeds |
+| Monospace values | `0.8rem`  | 400    | `font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace` — IPs, MACs, speeds |
 | Hero numbers     | `2.8rem`  | 800    | Speed test results (responsive: `1.5rem` mobile) |
 | Empty state icon | `2.5rem`  | —      | Emoji in `.empty-icon`             |
 
@@ -171,79 +171,56 @@ animation: slideUp 0.25s ease-out
 ## Emoji Icon System
 
 ### Principles
-1. **Inline SVG for action icons.** All interactive button icons use `18×18` (or `16×16` small) inline SVGs with `stroke="currentColor"`, `strokeWidth="2"`, `fill="none"`, and round caps/joins.
-2. **Emoji for decorative/categorical icons.** Device types, section headers, navigation, connection badges, and empty states still use emoji.
-3. **Plain text for menu items.** Context menu actions (Rename, Reserve IP, Pause, Block) use text-only — no emoji or icon prefix.
-4. **Size tiers:** SVG action icons: `18×18` (standard), `16×16` (compact/toolbar), `14×14` (inline). Emoji decorative: `1.1–1.3rem` (card icons), `2.5rem` (empty states).
-5. **Wrapping:** SVG icon buttons use `.btn-icon-sm` class. Card-level emoji use `<span className="general-card-icon">`.
+1. **Lucide React for all icons.** All icons use `lucide-react` components with consistent sizing. No system emoji in the UI.
+2. **Semantic consistency.** Each icon has one primary meaning (see table below).
+3. **Size tiers:** Inline (`14–16px`), Standard (`18–20px`), Card icon (`20px` in `.general-card-icon`), Hero (`40px` in empty states).
+4. **Wrapping:** Card-level icons use `<span className="general-card-icon">`. Section headers use Lucide components directly before h3 text.
 
-### SVG Icon Reference (action buttons)
+### Lucide Icon Reference
 
-All icons follow the Feather icon convention: `viewBox="0 0 24 24"`, `fill="none"`, `stroke="currentColor"`, `strokeWidth="2"`, `strokeLinecap="round"`, `strokeLinejoin="round"`.
+All icons imported from `lucide-react`. Use `size` prop for sizing and they inherit `currentColor` automatically.
 
-| Icon | SVG Key Elements | Usage |
-|------|-----------------|-------|
-| Eye (show) | `<path d="M1 12s4-8 11-8..."/><circle cx="12" cy="12" r="3"/>` | Show password `.btn-icon-sm` |
-| Eye-off (hide) | `<path .../><line x1="1" y1="1" x2="23" y2="23"/>` | Hide password `.btn-icon-sm` |
-| Copy | `<rect x="9" y="9".../><path d="M5 15H4..."/>` | Copy to clipboard `.btn-icon-sm` |
-| Edit/pencil | `<path d="M11 4H4a2 2 0 0 0-2 2v14..."/><path d="M18.5 2.5..."/>` | Edit action `.btn-icon-sm` |
-| Check | `<polyline points="20 6 9 17 4 12"/>` | Copied/success confirmation |
-| Trash | `<polyline points="3 6 5 6 21 6"/><path d="M19 6v14..."/>` | Delete `.btn-icon` |
-| Refresh | `<polyline points="23 4 23 10 17 10"/><path d="M20.49 15..."/>` | Reboot `.btn-action` |
-| Search | `<circle cx="11" cy="11" r="8"/><line x1="21" y1="21".../>` | Search field `.search-icon` |
-| Chart | `<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>` | Chart view toggle |
-| Table/Grid | `<rect .../><line .../>` (grid lines) | Table view toggle |
-| Download | `<path d="M21 15v4..."/><polyline points="7 10 12 15 17 10"/>` | Export button |
-
-### Canonical Emoji Dictionary
-
-| Emoji | Meaning | CSS Class / Context |
-|-------|---------|-------------------|
-| 📱 | Phone / tablet device | `.device-icon`, sidebar nav |
-| 💻 | Laptop | `.device-icon` |
-| 🖥️ | Desktop | `.device-icon` |
-| 📺 | TV / streaming | `.device-icon` |
-| 🔊 | Speaker / smart speaker | `.device-icon` |
-| 📷 | Camera | `.device-icon` |
-| 🖨️ | Printer | `.device-icon` |
-| 🎮 | Game console | `.device-icon` |
-| 🌐 | Unknown device / DNS / globe | `.device-icon` fallback, section header |
-| 📶 | Wireless connection | inline badge |
-| 🔌 | Wired connection | inline badge |
-| 📡 | Network node / eero unit | `.general-card-icon`, group header, card icon |
-| 🏠 | Gateway node | `.node-icon` |
-| 🔑 | Wi-Fi password | `.general-card-icon` |
-| ⬆️ | Firmware / updates | `.general-card-icon` |
-| 🔒 | Security section | section h3 prefix |
-| 🚀 | Speed test / QoS | section h3 prefix, button text |
-| 🔍 | Search / diagnostics | `.search-icon`, section h3 prefix, empty state |
-| 🔄 | Reboot / refresh | button text, dialog |
-| ✏️ | **REMOVED** — use plain text "Edit" / "Rename" buttons instead | `.btn-text` exclusively |
-| 🗑 | Delete / clear | `.btn-text` |
-| 📋 | Copy to clipboard | `.btn-text` |
-| 📌 | Reserve IP / pin | `.btn-text`, badge |
-| ⏸️ | Pause internet | dialog, button |
-| 🚫 | Block device | dialog |
-| ✅ | Success / up-to-date | status text |
-| ⚠️ | Warning / error | status text, confirm dialog |
-| ⚡ | Priority device | `.priority-badge` |
-| ℹ️ | Info notice | inline info block |
-| 👤 | User profile | sidebar, profile cards, device drawer |
-| 👥 | Guest network / multiple users | empty state |
-| 👁️ | Show password | `.btn-text` toggle |
-| 🙈 | Hide password | `.btn-text` toggle |
-| 🌙 | Dark theme | theme switcher |
-| ☀️ | Light theme | theme switcher |
-| 🌗 | Auto theme | theme switcher |
-| 💚 | Health tab | sidebar nav |
-
-### Rules for Icons
-1. **Action buttons** → always use inline SVG with `stroke="currentColor"` (never emoji).
-2. **Menu/text buttons** → plain text only, no emoji or icon prefix.
-3. **Decorative/categorical** → emoji is fine (device types, section headers, navigation, connection badges, empty states).
-4. Check the SVG Icon Reference above before creating new icons — reuse existing ones.
-5. New SVG icons must match the Feather convention (`viewBox="0 0 24 24"`, stroke-based, round caps).
-6. Test in both dark and light themes — `currentColor` handles this automatically.
+| Icon | Component | Usage |
+|------|-----------|-------|
+| Smartphone | `<Smartphone />` | Phone/tablet device type |
+| Laptop | `<Laptop />` | Laptop device type |
+| Monitor | `<Monitor />` | Desktop device type |
+| Tv | `<Tv />` | TV/streaming device type |
+| Speaker | `<Speaker />` | Smart speaker device type |
+| Camera | `<Camera />` | Camera device type |
+| Printer | `<Printer />` | Printer device type |
+| Gamepad2 | `<Gamepad2 />` | Game console device type |
+| Globe | `<Globe />` | Unknown device fallback, DNS section |
+| Wifi | `<Wifi />` | Wireless connection badge |
+| Cable | `<Cable />` | Wired connection badge |
+| Radio | `<Radio />` | Network node / eero unit |
+| Home | `<Home />` | Gateway node |
+| Key | `<Key />` | Wi-Fi password section |
+| ArrowUpCircle | `<ArrowUpCircle />` | Firmware/updates section |
+| Shield | `<Shield />` | Security section header |
+| Gauge | `<Gauge />` | QoS section header |
+| Search | `<Search />` | Search field, diagnostics |
+| RotateCcw | `<RotateCcw />` | Reboot / network restart |
+| Lightbulb | `<Lightbulb />` | Node controls (LED) |
+| User | `<User />` | User profile |
+| Users | `<Users />` | Guest network |
+| Moon | `<Moon />` | Dark theme |
+| Sun | `<Sun />` | Light theme |
+| SunMoon | `<SunMoon />` | Auto theme |
+| HeartPulse | `<HeartPulse />` | Health tab |
+| Settings | `<Settings />` | Settings nav |
+| Zap | `<Zap />` | Priority device |
+| AlertTriangle | `<AlertTriangle />` | Warning / error |
+| CheckCircle | `<CheckCircle />` | Success / up-to-date |
+| Info | `<Info />` | Info notice |
+| Ban | `<Ban />` | Blacklist / blocked |
+| RefreshCw | `<RefreshCw />` | Refresh button |
+| LayoutGrid | `<LayoutGrid />` | Grid view toggle |
+| List | `<List />` | List view toggle |
+| ArrowUp/Down | `<ArrowUp />` / `<ArrowDown />` | Sort indicators, speed arrows |
+| X | `<X />` | Close / cancel buttons |
+| Plus | `<Plus />` | Add / create buttons |
+| ChevronRight/Down | `<ChevronRight />` / `<ChevronDown />` | Expand/collapse |
 
 ---
 
@@ -328,8 +305,8 @@ grid-template-columns: 1fr 1fr; gap: 16px;
 
 ### DO ✅
 - Use CSS variables for all colors — never hardcode hex values
-- Use inline SVGs (`18×18`, `stroke="currentColor"`) for all action button icons
-- Use plain text for context menu items (no emoji prefix)
+- Use Lucide React icons (`lucide-react`) for all iconography — no system emoji in the UI
+- Use `currentColor` inheritance — icons automatically adapt to dark/light themes
 - Keep cards at `border-radius: var(--radius)` (12px)
 - Use monospace font for technical values (IPs, MACs, speeds, versions)
 - Test both dark and light themes
@@ -340,12 +317,12 @@ grid-template-columns: 1fr 1fr; gap: 16px;
 - Maintain consistent spacing (8px base grid)
 
 ### DON'T ❌
-- Don't use emoji for action buttons — use inline SVGs instead
-- Don't install icon libraries (Font Awesome, Heroicons, Lucide, etc.) — use inline SVG
+- Don't use system emoji in UI components — use Lucide React icons instead
+- Don't install additional icon libraries — Lucide React is the single icon source
 - Don't use raw color hex values — always use `var(--token)`
 - Don't add new CSS variables without documenting them here
 - Don't use `border-radius` values outside the established scale (8px, 12px, 22px, 50%)
 - Don't use font sizes outside the established scale
 - Don't add animations longer than 0.3s
-- Don't use emoji not listed in the Canonical Dictionary for decorative purposes without adding it first
+- Don't use icons not listed in the Lucide Icon Reference without adding them to the table first
 - Don't use different emoji for the same concept across components
