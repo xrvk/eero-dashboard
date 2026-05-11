@@ -94,6 +94,7 @@ export default function AppSidebar({
                 key={node.serial || i}
                 className="sidebar-node"
                 onClick={() => onNodeClick?.(eeroId, node)}
+                onMouseEnter={() => selectedNetwork && eeroId && api.prefetchEero(selectedNetwork, eeroId)}
                 title="View node details"
               >
                 <span className={`sidebar-node-dot status-dot-${node.status}`} />
