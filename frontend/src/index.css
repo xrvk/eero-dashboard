@@ -483,6 +483,8 @@ body {
 @media (max-width: 600px) {
   .activity-panels { grid-template-columns: 1fr; }
   .speed-result { gap: 20px; }
+  .speed-value { font-size: 2rem; }
+  .speed-unit { font-size: 0.75rem; }
 }
 
 /* ── Device Toolbar ─────────────────────────── */
