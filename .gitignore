@@ -10,6 +10,7 @@ backend/.eero_session
 backend/data/
 .DS_Store
 .github/copilot-instructions.md
+scripts/deploy-nas.sh
 
 # ─── Solo Dev Vibecoding Notes ───────────────────────────────────────
 #
