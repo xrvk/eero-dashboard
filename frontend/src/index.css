@@ -382,7 +382,7 @@ body {
 }
 .activity-panel {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 18px;
+  border-radius: var(--radius); padding: 18px; overflow: hidden;
 }
 .activity-panel.full-width { grid-column: 1 / -1; }
 .activity-panel h3 { font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted); }
@@ -482,7 +482,7 @@ body {
 
 @media (max-width: 600px) {
   .activity-panels { grid-template-columns: 1fr; }
-  .speed-result { gap: 20px; }
+  .speed-result { gap: 16px; flex-wrap: wrap; }
   .speed-value { font-size: 2rem; }
   .speed-unit { font-size: 0.75rem; }
 }
