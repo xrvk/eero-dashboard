@@ -1,16 +1,19 @@
-const BASE = '/api';
+import { request } from './api/client';
+import { prefetchRequest } from './hooks/useFetch';
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || `Request failed: ${res.status}`);
-  }
-  return res.json();
-}
+// Compatibility exports:
+// prefer importing from feature API modules (e.g. ./api/devices) for new work.
+export {
+  blockDevice,
+  getDevice,
+  getDevicePriority,
+  getDevices,
+  pauseDevice,
+  renameDevice,
+  setDeviceNickname,
+  setDevicePriority,
+} from './api/devices';
+export type { Device } from './api/devices';
 
 // Auth
 export interface AuthStatus {
@@ -46,6 +49,20 @@ export interface Network {
   eeros?: { count: number };
   clients?: { count: number };
   gateway_eero?: string;
+  password?: string;
+  timezone?: { value?: string } | string;
+  sqm?: SqmSettings;
+  upnp?: boolean;
+  ipv6_upstream?: boolean;
+  band_steering?: boolean;
+  wpa3?: boolean;
+  thread?: boolean;
+  guest_network?: GuestNetworkSettings;
+  dns?: DnsSettingsData;
+  premium_status?: string;
+  updates?: FirmwareUpdate[] | Record<string, unknown>;
+  wan_ip?: string;
+  gateway_ip?: string;
   [key: string]: unknown;
 }
 
@@ -55,28 +72,21 @@ export const getNetworks = () =>
 export const getNetwork = (id: string) =>
   request<Network>(`/networks/${id}`);
 
-export const prefetch = (networkId: string) =>
+export const prefetch = (networkId: string) => {
+  // Warm backend cache
   request<{ status: string; cached: number }>(`/prefetch/${networkId}`, { method: 'POST' }).catch(() => {});
 
-// Devices
-export interface Device {
-  url?: string;
-  hostname?: string;
-  display_name?: string;
-  ip?: string;
-  mac?: string;
-  connection_type?: string;
-  connected?: boolean;
-  wireless?: boolean;
-  manufacturer?: string;
-  device_type?: string;
-  profile?: { url?: string; name?: string };
-  usage?: { down?: number; up?: number };
-  [key: string]: unknown;
-}
-
-export const getDevices = (networkId: string) =>
-  request<{ devices: Device[] }>(`/networks/${networkId}/devices`);
+  // Warm frontend response cache so first tab visit is instant
+  const endpoints = [
+    'settings', 'password', 'updates', 'thread', 'routing',
+    'security', 'dns', 'sqm', 'forwards', 'reservations',
+    'blacklist', 'devices', 'eeros', 'profiles',
+  ];
+  for (const ep of endpoints) {
+    const path = `/networks/${networkId}/${ep}`;
+    prefetchRequest(path, () => request(path));
+  }
+};
 
 // Eeros (nodes)
 export interface EeroNode {
@@ -104,25 +114,116 @@ export interface Profile {
   [key: string]: unknown;
 }
 
+export interface DnsCustomConfig {
+  ips?: string[];
+}
+
+export interface DnsSettingsData {
+  mode?: string;
+  caching?: boolean;
+  custom?: DnsCustomConfig;
+  [key: string]: unknown;
+}
+
+export interface SecuritySettings {
+  wpa3?: boolean;
+  band_steering?: boolean;
+  upnp?: boolean;
+  ipv6_upstream?: boolean;
+  thread?: boolean;
+  [key: string]: unknown;
+}
+
+export interface ForwardEntry {
+  url?: string;
+  ip?: string;
+  gateway_port?: number;
+  client_port?: number;
+  protocol?: string;
+  description?: string;
+  enabled?: boolean;
+}
+
+export interface ReservationEntry {
+  url?: string;
+  ip?: string;
+  mac?: string;
+  description?: string;
+  hostname?: string;
+  nickname?: string;
+}
+
+export interface BlacklistEntry {
+  url?: string;
+  mac?: string;
+  display_name?: string;
+  hostname?: string;
+  nickname?: string;
+}
+
+export interface SqmSettings {
+  enabled?: boolean;
+  mode?: string;
+  upload_bandwidth_mbps?: number;
+  download_bandwidth_mbps?: number;
+  [key: string]: unknown;
+}
+
+export interface FirmwareUpdate {
+  title?: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
+export interface DiagnosticsResult {
+  [key: string]: unknown;
+}
+
+export interface GuestNetworkSettings {
+  enabled?: boolean;
+  name?: string;
+  password?: string;
+}
+
+export interface NetworkSettingsSummary {
+  name: string;
+  password: string;
+  timezone: { value?: string } | string;
+  sqm: SqmSettings;
+  upnp?: boolean;
+  ipv6_upstream?: boolean;
+  band_steering?: boolean;
+  wpa3?: boolean;
+  thread?: boolean;
+  guest_network: GuestNetworkSettings;
+  dns: DnsSettingsData;
+  premium_status: string;
+  updates: FirmwareUpdate[] | Record<string, unknown>;
+  speed: Network['speed'];
+  wan_ip: string;
+  gateway_ip: string;
+  status: string;
+}
+
 export const getProfiles = (networkId: string) =>
   request<{ profiles: Profile[] }>(`/networks/${networkId}/profiles`);
 
 // Activity
 export const getActivity = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/activity`);
+  request<{ summary?: Record<string, unknown>; [key: string]: unknown }>(`/networks/${networkId}/activity`);
 
 export const getActivityHistory = (networkId: string, period = 'day') =>
-  request<Record<string, unknown>>(`/networks/${networkId}/activity/history?period=${period}`);
+  request<{ history?: Array<Record<string, unknown>>; [key: string]: unknown }>(`/networks/${networkId}/activity/history?period=${period}`);
 
 export const getActivityClients = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/activity/clients`);
+  request<{ clients?: Array<Record<string, unknown>>; [key: string]: unknown }>(`/networks/${networkId}/activity/clients`);
 
 export const getActivityCategories = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/activity/categories`);
+  request<{ categories?: Array<Record<string, unknown>>; [key: string]: unknown }>(`/networks/${networkId}/activity/categories`);
 
 // Speed Test
 export const runSpeedTest = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/speed-test`, { method: 'POST' });
+  request<Network['speed']>(`/networks/${networkId}/speed-test`, { method: 'POST' });
 
 export interface SpeedHistoryEntry {
   date: string;
@@ -135,29 +236,10 @@ export const getSpeedHistory = (networkId: string) =>
 
 // Diagnostics
 export const getDiagnostics = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/diagnostics`);
+  request<DiagnosticsResult>(`/networks/${networkId}/diagnostics`);
 
 export const runDiagnostics = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/diagnostics`, { method: 'POST' });
-
-// Device Actions
-export const pauseDevice = (networkId: string, deviceId: string, paused: boolean) =>
-  request(`/networks/${networkId}/devices/${deviceId}/pause`, {
-    method: 'POST',
-    body: JSON.stringify({ paused }),
-  });
-
-export const blockDevice = (networkId: string, deviceId: string, blocked: boolean) =>
-  request(`/networks/${networkId}/devices/${deviceId}/block`, {
-    method: 'POST',
-    body: JSON.stringify({ blocked }),
-  });
-
-export const renameDevice = (networkId: string, deviceId: string, nickname: string) =>
-  request(`/networks/${networkId}/devices/${deviceId}/rename`, {
-    method: 'POST',
-    body: JSON.stringify({ nickname }),
-  });
+  request<DiagnosticsResult>(`/networks/${networkId}/diagnostics`, { method: 'POST' });
 
 // Profile Actions
 export const pauseProfile = (networkId: string, profileId: string, paused: boolean) =>
@@ -191,10 +273,6 @@ export const getProfileSchedule = (networkId: string, profileId: string) =>
   request<Record<string, unknown>>(`/networks/${networkId}/profiles/${profileId}/schedule`);
 
 // Security
-export interface SecuritySettings {
-  [key: string]: unknown;
-}
-
 export const getSecurity = (networkId: string) =>
   request<SecuritySettings>(`/networks/${networkId}/security`);
 
@@ -208,7 +286,7 @@ export const updateSecurity = (networkId: string, settings: {
 
 // DNS
 export const getDns = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/dns`);
+  request<{ dns?: DnsSettingsData } & DnsSettingsData>(`/networks/${networkId}/dns`);
 
 export const setDnsMode = (networkId: string, mode: string, customServers?: string[]) =>
   request(`/networks/${networkId}/dns/mode`, {
@@ -224,7 +302,7 @@ export const setDnsCaching = (networkId: string, enabled: boolean) =>
 
 // Port Forwarding & Reservations
 export const getForwards = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/forwards`);
+  request<{ forwards?: ForwardEntry[] } | ForwardEntry[]>(`/networks/${networkId}/forwards`);
 
 export const createForward = (networkId: string, data: {
   ip: string; gateway_port: number; client_port: number; protocol?: string; description?: string; enabled?: boolean;
@@ -235,7 +313,7 @@ export const deleteForward = (networkId: string, forwardId: string) =>
   request(`/networks/${networkId}/forwards/${forwardId}`, { method: 'DELETE' });
 
 export const getReservations = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/reservations`);
+  request<{ reservations?: ReservationEntry[] } | ReservationEntry[]>(`/networks/${networkId}/reservations`);
 
 export const createReservation = (networkId: string, data: { ip: string; mac: string; description?: string }) =>
   request(`/networks/${networkId}/reservations`, { method: 'POST', body: JSON.stringify(data) });
@@ -249,7 +327,7 @@ export const rebootEero = (networkId: string, eeroId: string) =>
 
 // Wi-Fi Password
 export const getPassword = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/password`);
+  request<{ password?: string; key?: string }>(`/networks/${networkId}/password`);
 
 // Network Name
 export const setNetworkName = (networkId: string, name: string) =>
@@ -265,30 +343,9 @@ export const setGuestNetwork = (networkId: string, enabled: boolean, name?: stri
     body: JSON.stringify({ enabled, name, password }),
   });
 
-// Device Detail
-export const getDevice = (networkId: string, deviceId: string) =>
-  request<Device>(`/networks/${networkId}/devices/${deviceId}`);
-
-// Device Nickname
-export const setDeviceNickname = (networkId: string, deviceId: string, nickname: string) =>
-  request(`/networks/${networkId}/devices/${deviceId}/nickname`, {
-    method: 'POST',
-    body: JSON.stringify({ nickname }),
-  });
-
-// Device Priority
-export const getDevicePriority = (networkId: string, deviceId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/devices/${deviceId}/priority`);
-
-export const setDevicePriority = (networkId: string, deviceId: string, prioritized: boolean, durationMinutes?: number) =>
-  request(`/networks/${networkId}/devices/${deviceId}/priority`, {
-    method: 'POST',
-    body: JSON.stringify({ prioritized, duration_minutes: durationMinutes }),
-  });
-
 // Node LED
 export const getLedStatus = (networkId: string, eeroId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/eeros/${eeroId}/led`);
+  request<{ led_on?: boolean; brightness?: number }>(`/networks/${networkId}/eeros/${eeroId}/led`);
 
 export const setLed = (networkId: string, eeroId: string, enabled: boolean) =>
   request(`/networks/${networkId}/eeros/${eeroId}/led`, {
@@ -304,7 +361,7 @@ export const setLedBrightness = (networkId: string, eeroId: string, brightness: 
 
 // Nightlight
 export const getNightlight = (networkId: string, eeroId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/eeros/${eeroId}/nightlight`);
+  request<{ enabled?: boolean; brightness?: number; [key: string]: unknown }>(`/networks/${networkId}/eeros/${eeroId}/nightlight`);
 
 export const setNightlight = (networkId: string, eeroId: string, settings: {
   enabled?: boolean; brightness?: number; schedule_enabled?: boolean;
@@ -317,7 +374,7 @@ export const setNightlight = (networkId: string, eeroId: string, settings: {
 
 // SQM / QoS
 export const getSqm = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/sqm`);
+  request<SqmSettings>(`/networks/${networkId}/sqm`);
 
 export const setSqmEnabled = (networkId: string, enabled: boolean) =>
   request(`/networks/${networkId}/sqm`, {
@@ -372,7 +429,7 @@ export const clearProfileSchedule = (networkId: string, profileId: string) =>
 
 // Firmware Updates
 export const getUpdates = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/updates`);
+  request<FirmwareUpdate[] | Record<string, unknown>>(`/networks/${networkId}/updates`);
 
 // Network Reboot
 export const rebootNetwork = (networkId: string) =>
@@ -380,14 +437,14 @@ export const rebootNetwork = (networkId: string) =>
 
 // Thread / Smart Home
 export const getThread = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/thread`);
+  request<{ enabled?: boolean; status?: string; [key: string]: unknown }>(`/networks/${networkId}/thread`);
 
 export const getRouting = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/routing`);
+  request<{ mode?: string; [key: string]: unknown }>(`/networks/${networkId}/routing`);
 
 // Blacklist
 export const getBlacklist = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/blacklist`);
+  request<{ blacklist?: BlacklistEntry[] } | BlacklistEntry[]>(`/networks/${networkId}/blacklist`);
 
 export const addToBlacklist = (networkId: string, deviceId: string) =>
   request(`/networks/${networkId}/blacklist/${deviceId}`, { method: 'POST' });
@@ -397,4 +454,4 @@ export const removeFromBlacklist = (networkId: string, deviceId: string) =>
 
 // General Settings
 export const getSettings = (networkId: string) =>
-  request<Record<string, unknown>>(`/networks/${networkId}/settings`);
+  request<NetworkSettingsSummary>(`/networks/${networkId}/settings`);
