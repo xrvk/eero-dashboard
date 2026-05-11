@@ -735,7 +735,9 @@ body {
 }
 
 .band-bars { display: flex; flex-direction: column; gap: 8px; }
-.band-row { display: flex; align-items: center; gap: 10px; }
+.band-row { display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: var(--radius-sm); transition: background 0.15s; }
+.band-row.clickable { cursor: pointer; }
+.band-row.clickable:hover { background: var(--bg-card-hover); }
 .band-label { font-size: 0.8rem; min-width: 80px; color: var(--text-muted); }
 .band-bar-track {
   flex: 1; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden;
@@ -747,6 +749,9 @@ body {
 .band-bar-fill.band-Wired { background: var(--text-muted); }
 .band-bar-fill.band-node { background: var(--accent); }
 .band-count { font-size: 0.8rem; font-weight: 600; min-width: 24px; text-align: right; }
+.band-link-arrow { font-size: 0.8rem; color: var(--text-dim); transition: color 0.15s, transform 0.15s; }
+.band-row.clickable:hover .band-link-arrow { color: var(--accent); transform: translateX(2px); }
+.band-row.clickable:hover .band-label { color: var(--text); }
 
 /* Signal bars */
 .signal-bars { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 14px; vertical-align: middle; }
@@ -1456,6 +1461,26 @@ body {
   .toolbar-row { flex-wrap: wrap; }
   .filter-group { flex-wrap: wrap; }
 }
+
+/* ── Health → Devices filter chips ─────────── */
+.signal-filter-chip,
+.band-filter-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.8rem; color: var(--accent);
+  background: rgba(110,160,255,0.08);
+  border: 1px solid rgba(110,160,255,0.2);
+  border-radius: var(--radius-sm); padding: 4px 10px;
+}
+.signal-filter-clear,
+.band-filter-clear {
+  background: none; border: none; color: var(--text-muted);
+  cursor: pointer; font-size: 1rem; line-height: 1;
+  padding: 0 0 0 4px; transition: color 0.15s;
+}
+.signal-filter-clear:hover,
+.band-filter-clear:hover { color: var(--text); }
+.signal-filter-row,
+.band-filter-row { justify-content: flex-start; }
 
 /* ── Sidebar Settings Group ─────────────────── */
 .sidebar-group { margin-top: 8px; }

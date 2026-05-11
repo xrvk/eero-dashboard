@@ -1,12 +1,15 @@
-import { useState, useMemo, useCallback } from 'react';
-import { useFetch } from '../hooks/useFetch';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useFetch, prefetchRequest } from '../hooks/useFetch';
 import * as api from '../api';
+import { request } from '../api/client';
 import SpeedHistory from './SpeedHistory';
-import type { SignalFilter } from '../features/app/types';
+import ClickableStatRow from './ClickableStatRow';
+import type { SignalFilter, BandClickFilter } from '../features/app/types';
 
 interface ActivityViewProps {
   networkId: string;
   onSignalClick?: (tier: SignalFilter) => void;
+  onBandClick?: (band: BandClickFilter) => void;
 }
 
 interface ConnectedDevice extends api.Device {
@@ -19,6 +22,17 @@ function freqToBand(freq?: number) {
   if (freq < 3000) return '2.4 GHz';
   if (freq < 5900) return '5 GHz';
   return '6 GHz';
+}
+
+const BAND_LABEL_TO_KEY: Record<string, BandClickFilter> = {
+  '2.4 GHz': '2.4ghz',
+  '5 GHz': '5ghz',
+  '6 GHz': '6ghz',
+  'Wired': 'wired',
+};
+
+function bandLabelToKey(label: string): BandClickFilter {
+  return BAND_LABEL_TO_KEY[label] ?? 'all';
 }
 
 function extractId(url?: string) {
@@ -61,7 +75,13 @@ function getFeatureEnabled(
   return typeof v === 'boolean' ? v : undefined;
 }
 
-export default function ActivityView({ networkId, onSignalClick }: ActivityViewProps) {
+export default function ActivityView({ networkId, onSignalClick, onBandClick }: ActivityViewProps) {
+  // Warm devices cache so click-through to Devices tab is instant
+  useEffect(() => {
+    const path = `/networks/${networkId}/devices`;
+    prefetchRequest(path, () => request(path));
+  }, [networkId]);
+
   const { data: devData, loading: devLoading } = useFetch(
     () => api.getDevices(networkId),
     [networkId],
@@ -184,18 +204,20 @@ export default function ActivityView({ networkId, onSignalClick }: ActivityViewP
         <div className="activity-panel">
           <h3>Clients by Band</h3>
           <div className="band-bars">
-            {Object.entries(bandCounts).filter(([, c]) => c > 0).map(([band, count]) => (
-              <div key={band} className="band-row">
-                <span className="band-label">{band}</span>
-                <div className="band-bar-track">
-                  <div
-                    className={`band-bar-fill band-${band.replace(/[\s.]/g, '')}`}
-                    style={{ width: `${Math.max(5, (count / (connected.length || 1)) * 100)}%` }}
-                  />
-                </div>
-                <span className="band-count">{count}</span>
-              </div>
-            ))}
+            {Object.entries(bandCounts).filter(([, c]) => c > 0).map(([band, count]) => {
+              const bandKey = bandLabelToKey(band);
+              return (
+                <ClickableStatRow
+                  key={band}
+                  label={band}
+                  count={count}
+                  total={connected.length}
+                  barClass={`band-${band.replace(/[\s.]/g, '')}`}
+                  onClick={onBandClick ? () => onBandClick(bandKey) : undefined}
+                  tooltip={onBandClick ? `View ${count} ${band} device${count !== 1 ? 's' : ''}` : undefined}
+                />
+              );
+            })}
           </div>
         </div>
         <div className="activity-panel">
@@ -207,19 +229,15 @@ export default function ActivityView({ networkId, onSignalClick }: ActivityViewP
               { label: '●●●○○ Fair', tier: 'fair' as SignalFilter, count: signalDist.fair, cls: 'band-24GHz' },
               { label: '●●○○○ Poor', tier: 'poor' as SignalFilter, count: signalDist.poor, cls: 'band-poor' },
             ].filter(r => r.count > 0).map((row) => (
-              <div
+              <ClickableStatRow
                 key={row.label}
-                className={`band-row ${onSignalClick ? 'clickable' : ''}`}
-                onClick={() => onSignalClick?.(row.tier)}
-                title={onSignalClick ? `View ${row.tier} signal devices` : undefined}
-              >
-                <span className="band-label">{row.label}</span>
-                <div className="band-bar-track">
-                  <div className={`band-bar-fill ${row.cls}`} style={{ width: `${Math.max(5, (row.count / (connected.length || 1)) * 100)}%` }} />
-                </div>
-                <span className="band-count">{row.count}</span>
-                {onSignalClick && <span className="band-link-arrow">→</span>}
-              </div>
+                label={row.label}
+                count={row.count}
+                total={connected.length}
+                barClass={row.cls}
+                onClick={onSignalClick ? () => onSignalClick(row.tier) : undefined}
+                tooltip={onSignalClick ? `View ${row.count} ${row.tier} signal device${row.count !== 1 ? 's' : ''}` : undefined}
+              />
             ))}
           </div>
         </div>
