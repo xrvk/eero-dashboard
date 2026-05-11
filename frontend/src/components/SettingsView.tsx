@@ -28,7 +28,6 @@ export function SecuritySettings({ networkId }: { networkId: string }) {
     { key: 'band_steering', label: 'Band Steering', desc: 'Auto-assign devices to optimal band' },
     { key: 'upnp', label: 'UPnP', desc: 'Allow devices to open ports automatically' },
     { key: 'ipv6_upstream', label: 'IPv6', desc: 'Enable IPv6 networking', apiKey: 'ipv6' },
-    { key: 'thread', label: 'Thread', desc: 'IoT mesh networking protocol' },
   ];
 
   return (
@@ -641,7 +640,6 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
     { key: 'band_steering', label: 'Band Steering', desc: 'Auto-assign devices to optimal band' },
     { key: 'upnp', label: 'UPnP', desc: 'Allow devices to open ports automatically' },
     { key: 'ipv6_upstream', label: 'IPv6', desc: 'Enable IPv6 networking', apiKey: 'ipv6' },
-    { key: 'thread', label: 'Thread', desc: 'IoT mesh networking protocol' },
   ];
 
   const handleSecurityToggle = async (key: string, value: boolean, apiKey?: string) => {
@@ -768,8 +766,22 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           <div className="general-password">
             <span className="general-card-value mono">{showPassword ? password : '••••••••••'}</span>
             <div className="general-password-actions">
-              <button className="btn-icon-sm" onClick={() => setShowPassword(!showPassword)}>{showPassword ? '🙈' : '👁️'}</button>
-              {password && <button className="btn-icon-sm" onClick={handleCopy}>{copied ? '✅' : '📋'}</button>}
+              <button className="btn-icon-sm" onClick={() => setShowPassword(!showPassword)} title={showPassword ? 'Hide' : 'Show'}>
+                {showPassword ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                )}
+              </button>
+              {password && (
+                <button className="btn-icon-sm" onClick={handleCopy} title="Copy">
+                  {copied ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -823,11 +835,8 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
 
       {/* DNS */}
       <div className="general-section">
-        <div className="section-header-inline">
-          <h3>🌐 DNS</h3>
-          {!dnsEditing && <button className="btn-text" onClick={startDnsEdit}>✏️ Edit</button>}
-        </div>
-        <div className="toggle-row" style={{ marginBottom: dnsEditing ? 16 : 0 }}>
+        <h3>🌐 DNS</h3>
+        <div className="toggle-row">
           <div className="toggle-info">
             <span className="toggle-name">DNS Caching</span>
             <span className="toggle-desc">Cache lookups locally for faster resolution</span>
@@ -838,7 +847,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           </label>
         </div>
         {dnsEditing ? (
-          <div className="dns-edit-form">
+          <div className="dns-edit-form" style={{ marginTop: 16 }}>
             <div className="dns-mode-select">
               <label className={`dns-mode-option ${dnsMode === 'default' ? 'selected' : ''}`}>
                 <input type="radio" name="dns-mode" value="default" checked={dnsMode === 'default'} onChange={() => setDnsMode('default')} />
@@ -860,14 +869,13 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
               <button className="btn-cancel" onClick={() => setDnsEditing(false)}>Cancel</button>
             </div>
           </div>
-        ) : customIps.length > 0 ? (
-          <div className="dns-servers" style={{ marginTop: 12 }}>
-            <div className="dns-server-list">
-              {customIps.map((ip, i) => <span key={i} className="dns-server-chip">{ip}</span>)}
+        ) : (
+          <div className="general-info-grid" style={{ marginTop: 12 }}>
+            <div className="general-detail">
+              <span>DNS Servers</span>
+              <span>{customIps.length > 0 ? customIps.join(', ') : 'eero Default'} <button className="btn-text" onClick={startDnsEdit}>✏️</button></span>
             </div>
           </div>
-        ) : (
-          <span className="toggle-desc" style={{ display: 'block', marginTop: 8 }}>Using eero default DNS</span>
         )}
       </div>
 
@@ -917,16 +925,26 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
       </div>
 
       {/* Thread */}
-      {thread.enabled != null && (
-        <div className="general-section">
-          <h3>🧵 Thread</h3>
-          <div className="general-info-grid">
-            <div className="general-detail"><span>Status</span><span className={thread.enabled ? 'text-green' : 'text-muted'}>{thread.enabled ? '● Enabled' : '○ Disabled'}</span></div>
+      <div className="general-section">
+        <h3>🧵 Thread</h3>
+        <div className="toggle-row">
+          <div className="toggle-info">
+            <span className="toggle-name">Thread</span>
+            <span className="toggle-desc">IoT mesh networking protocol</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" checked={!!(security as Record<string, unknown>).thread} disabled={secSaving}
+              onChange={() => handleSecurityToggle('thread', !(security as Record<string, unknown>).thread)} />
+            <span className="toggle-slider" />
+          </label>
+        </div>
+        {(!!thread.name || !!thread.channel) && (
+          <div className="general-info-grid" style={{ marginTop: 12 }}>
             {!!thread.name && <div className="general-detail"><span>Network</span><span className="mono">{String(thread.name)}</span></div>}
             {!!thread.channel && <div className="general-detail"><span>Channel</span><span>{String(thread.channel)}</span></div>}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Actions */}
       <div className="general-actions-row">
