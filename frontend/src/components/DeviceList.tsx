@@ -248,7 +248,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
       {confirmAction && (
         <div className="confirm-overlay" onClick={() => setConfirmAction(null)}>
           <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
-            <p>{confirmAction.type === 'pause' ? '⏸️ Pause' : '🚫 Block'} this device?</p>
+            <p>{confirmAction.type === 'pause' ? 'Pause' : 'Block'} this device?</p>
             <div className="confirm-actions">
               <button className="btn-confirm" onClick={() => handleAction(confirmAction.mac, confirmAction.type, true)}>
                 {actionLoading ? 'Working…' : 'Confirm'}
@@ -262,7 +262,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
       {renameTarget && (
         <div className="confirm-overlay" onClick={() => setRenameTarget(null)}>
           <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
-            <p style={{ marginBottom: 12 }}>✏️ Rename device</p>
+            <p style={{ marginBottom: 12 }}>Rename device</p>
             <input
               className="rename-input"
               type="text"
@@ -286,7 +286,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
       <div className="device-toolbar">
         <div className="toolbar-row">
           <div className="search-box">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
             <input
               type="text"
               placeholder="Name, IP, or MAC…"
@@ -509,27 +509,27 @@ function DeviceCard({ device: d, actionLoading, onAction, onRename, onReserve, o
                   className="card-menu-item"
                   onClick={() => { setMenuOpen(false); onRename(d.mac!, d.display_name || d.hostname || ''); }}
                 >
-                  ✏️ Rename
+                  Rename
                 </button>
                 <button
                   className="card-menu-item"
                   onClick={() => { setMenuOpen(false); onReserve(); }}
                 >
-                  📌 Reserve IP
+                  Reserve IP
                 </button>
                 <button
                   className="card-menu-item"
                   disabled={actionLoading === d.mac}
                   onClick={() => { setMenuOpen(false); onAction(d.mac!, 'pause'); }}
                 >
-                  ⏸️ Pause Internet
+                  Pause Internet
                 </button>
                 <button
                   className="card-menu-item danger"
                   disabled={actionLoading === d.mac}
                   onClick={() => { setMenuOpen(false); onAction(d.mac!, 'block'); }}
                 >
-                  🚫 Block Device
+                  Block Device
                 </button>
               </div>
             )}
@@ -565,16 +565,16 @@ function TableRowMenu({ device: d, actionLoading, onAction, onRename, onReserve 
       {open && (
         <div className="card-menu">
           <button className="card-menu-item" onClick={() => { setOpen(false); onRename(d.mac!, d.display_name || d.hostname || ''); }}>
-            ✏️ Rename
+            Rename
           </button>
           <button className="card-menu-item" onClick={() => { setOpen(false); onReserve(); }}>
-            📌 Reserve IP
+            Reserve IP
           </button>
           <button className="card-menu-item" disabled={actionLoading === d.mac} onClick={() => { setOpen(false); onAction(d.mac!, 'pause'); }}>
-            ⏸️ Pause Internet
+            Pause Internet
           </button>
           <button className="card-menu-item danger" disabled={actionLoading === d.mac} onClick={() => { setOpen(false); onAction(d.mac!, 'block'); }}>
-            🚫 Block Device
+            Block Device
           </button>
         </div>
       )}

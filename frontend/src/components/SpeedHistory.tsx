@@ -125,17 +125,17 @@ export default function SpeedHistory({ networkId, refreshKey }: SpeedHistoryProp
               className={`toggle-btn${view === 'chart' ? ' active' : ''}`}
               onClick={() => setView('chart')}
               title="Chart view"
-            >📈</button>
+            ><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button>
             <button
               className={`toggle-btn${view === 'table' ? ' active' : ''}`}
               onClick={() => setView('table')}
               title="Table view"
-            >📋</button>
+            ><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg></button>
           </div>
 
           {/* Export */}
           <button className="speed-export-btn" onClick={handleExport} title="Export CSV">
-            ⬇ CSV
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> CSV
           </button>
         </div>
       </div>
