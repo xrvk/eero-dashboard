@@ -33,6 +33,8 @@ else         → <AppSidebar /> + <AppContent />
 
 ## API layer
 
+All API functions live in feature-scoped modules under `api/`. The top-level `api.ts` is a thin re-export barrel (`export * from './api/index'`) so existing `import * as api from '../api'` imports continue to work.
+
 ### `api/client.ts` — Base request handler
 
 ```ts
@@ -44,15 +46,45 @@ request<T>(path: string, options?: RequestInit): Promise<T>
 - Extracts error messages from `{ detail, error.message }` on failure
 - All API modules use this as their HTTP primitive
 
-### `api/devices.ts` — Feature API module
+### `api/types.ts` — Shared types
 
-Typed functions: `getDevices()`, `pauseDevice()`, `blockDevice()`, `setDeviceNickname()`, `getDevicePriority()`, `setDevicePriority()`.
+Cross-cutting types used by multiple modules: `SqmSettings`, `GuestNetworkSettings`, `DnsSettingsData`, `DnsCustomConfig`, `FirmwareUpdate`.
+
+### `api/auth.ts` — Authentication
+
+`AuthStatus` type. Functions: `getAuthStatus()`, `login()`, `verify()`, `logout()`.
+
+### `api/networks.ts` — Networks & speed
+
+`Network`, `SpeedHistoryEntry` types. Functions: `getNetworks()`, `getNetwork()`, `runSpeedTest()`, `getSpeedHistory()`.
+
+### `api/eeros.ts` — Eero nodes
+
+`EeroNode` type. Functions: `getEeros()`, `getEero()`, `prefetchEero()`, `rebootEero()`, `getLedStatus()`, `setLed()`, `setLedBrightness()`, `getNightlight()`, `setNightlight()`.
+
+### `api/devices.ts` — Devices
+
+`Device` type. Functions: `getDevices()`, `getDevice()`, `pauseDevice()`, `blockDevice()`, `setDeviceNickname()`, `renameDevice()`, `getDevicePriority()`, `setDevicePriority()`.
+
+### `api/profiles.ts` — Profiles & parental controls
+
+`Profile` type. Functions: `getProfiles()`, `createProfile()`, `renameProfile()`, `deleteProfile()`, `pauseProfile()`, `setBedtime()`, `getBlockedApps()`, `setBlockedApps()`, `setProfileDevices()`, `getProfileSchedule()`, `setProfileScheduleFull()`, `setWeekdayBedtime()`, `setWeekendBedtime()`, `clearProfileSchedule()`, `updateContentFilter()`, `updateBlockList()`.
+
+### `api/settings.ts` — Network settings
+
+Types: `SecuritySettings`, `ForwardEntry`, `ReservationEntry`, `BlacklistEntry`, `DiagnosticsResult`, `NetworkSettingsSummary`. Functions for security, DNS, port forwarding, reservations, SQM, blacklist, firmware updates, network reboot, password, guest network, thread, routing, and diagnostics.
+
+### `api/activity.ts` — Activity & health
+
+Functions: `getActivity()`, `getActivityHistory()`, `getActivityClients()`, `getActivityCategories()`.
+
+### `api/prefetch.ts` — Cache warming
+
+`prefetch()` warms both the backend TTL cache and the frontend response cache on network select.
 
 ### `api.ts` — Legacy barrel
 
-Re-exports everything from `api/devices.ts` plus all other API functions (networks, auth, settings, profiles, etc.) and TypeScript type definitions. Existing components import from here. New code should prefer feature-scoped imports.
-
-**Key types defined here:** `AuthStatus`, `Network`, `EeroNode`, `Profile`, `Device`, `SecuritySettings`, `ForwardEntry`, `ReservationEntry`, `BlacklistEntry`, `NetworkSettingsSummary`.
+Re-exports everything from `api/index.ts`. Existing components import from here. New code should prefer feature-scoped imports (e.g. `import { getDevices } from './api/devices'`).
 
 ## Hooks
 
@@ -140,13 +172,13 @@ Thin wrapper that re-exports device API functions under a `devicesClient` object
 | Component | File | Purpose |
 |-----------|------|---------|
 | `LoginForm` | `LoginForm.tsx` | Email/phone → verification code 2FA flow |
-| `DeviceList` | `DeviceList.tsx` | Device grid/list with filtering, sorting, grouping by node |
+| `DeviceList` | `devices/` | Device grid/list with filtering, sorting, grouping by node. Split into sub-components: `DeviceCard`, `TableRowMenu`, plus `utils.ts` for `getDeviceIcon` and connectivity helpers. |
 | `DeviceDrawer` | `DeviceDrawer.tsx` | Slide-out device detail panel (priority, DHCP reservation) |
 | `NodeDrawer` | `NodeDrawer.tsx` | Slide-out node detail panel (LED, firmware, connectivity) |
 | `ActivityView` | `ActivityView.tsx` | Speed test trigger + network health monitoring |
 | `ClickableStatRow` | `ClickableStatRow.tsx` | Shared clickable bar-chart row used by Health tab band/signal sections |
-| `ProfileManager` | `ProfileManager.tsx` | Parental controls: pause, bedtime, content filters, scheduling |
-| `SettingsView` | `SettingsView.tsx` | Multi-section: security, DNS, SQM, port forwards, DHCP, blacklist |
+| `ProfileManager` | `profiles/` | Parental controls: pause, bedtime, content filters, scheduling. Split into sub-components: `ProfileDetailPanel`, `DevicesTab`, `ScheduleTab`, `BlockedAppsTab`, `DevicePicker`, `CreateProfileForm`, `InlineEditName`, `EeroPlusBanner`, plus `utils.ts` for helpers. |
+| `SettingsView` | `SettingsView.tsx` → `settings/` | Barrel re-export; individual components split into `components/settings/` (SecuritySettings, DnsSettings, GeneralSettings, SqmSettings, PortForwardsSettings, DhcpReservationsSettings, BlacklistSettings) |
 | `GuestNetwork` | `GuestNetwork.tsx` | Guest network enable/disable + credentials |
 | `SpeedHistory` | `SpeedHistory.tsx` | Recharts line chart of historical speed test data |
 
@@ -154,9 +186,18 @@ Thin wrapper that re-exports device API functions under a `devicesClient` object
 
 ## Styling
 
-- **Plain CSS** — `index.css` (global), `App.css` (layout)
+- **Plain CSS** — `index.css` is an import aggregator that loads split files from `styles/`:
+  - `styles/variables.css` — CSS custom properties (`:root`, `[data-theme]`, color-scheme media query)
+  - `styles/base.css` — Reset (`*`), `body`, and app-loading spinner
+  - `styles/layout.css` — App shell: sidebar, header, main content area, theme toggle, sidebar speed widget
+  - `styles/components.css` — All UI components: cards, buttons, toggles, forms, tables, tabs, badges, filters, etc.
+  - `styles/drawers.css` — Slide-out drawer panels (device drawer, node drawer)
+  - `styles/charts.css` — Speed history charts, tooltips, speed table
+  - `styles/animations.css` — `@keyframes` definitions and spinner
+  - `styles/responsive.css` — All `@media` breakpoint overrides
+- **`App.css`** — Additional layout styles
 - **Theme:** Dark / light / auto via `data-theme` attribute on `<html>`
-- **CSS variables** for colors, shadows, and gradients: `--bg-card`, `--text`, `--accent`, `--shadow-card`, `--gradient-card`, etc.
+- **CSS variables** for colors, shadows, and gradients: `--bg-card`, `--text`, `--accent`, etc.
 - **Typography:** DM Sans (body), JetBrains Mono (monospace values)
 - **Icons:** Lucide React (`lucide-react`) — all icons are SVG components with `currentColor`
 - **Atmosphere:** Radial gradient overlays on body/login, gradient card surfaces, glow shadows on hover

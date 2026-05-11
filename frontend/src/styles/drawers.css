@@ -1,0 +1,95 @@
+/* ── Device Drawer ─────────────────────────── */
+.drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 1000; display: flex; justify-content: flex-end;
+  animation: fadeIn 0.15s ease;
+}
+.drawer-panel {
+  width: min(480px, 90vw); height: 100vh; background: var(--bg-card);
+  border-left: 1px solid var(--border); display: flex; flex-direction: column;
+  animation: slideInRight 0.2s ease;
+  overflow-y: auto;
+}
+
+
+.drawer-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+}
+.drawer-header h2 { font-size: 1.1rem; font-weight: 600; }
+.btn-close {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 1.2rem; cursor: pointer; padding: 4px 8px;
+}
+.btn-close:hover { color: var(--text); }
+.drawer-body { padding: 20px 24px; flex: 1; }
+.drawer-section { margin-top: 8px; margin-bottom: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
+.drawer-section h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted); }
+.drawer-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
+.drawer-value { font-size: 0.9rem; }
+.drawer-value.mono { font-family: 'SF Mono', monospace; }
+.drawer-value.copyable { cursor: pointer; transition: color 0.15s, background 0.15s; border-radius: 4px; padding: 2px 6px; margin: -2px -6px; }
+.drawer-value.copyable:hover { background: var(--bg-hover, rgba(255,255,255,0.06)); color: var(--accent, #00aaff); }
+.drawer-value.copyable.copied { color: #34d399; }
+.drawer-value-row { display: flex; align-items: center; gap: 8px; }
+.drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.drawer-field { margin-bottom: 4px; }
+.drawer-desc { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
+.drawer-inline-edit { display: flex; align-items: center; gap: 6px; }
+.drawer-inline-edit input {
+  flex: 1; padding: 6px 10px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-size: 0.9rem; outline: none;
+}
+.drawer-inline-edit input:focus { border-color: var(--accent); }
+.text-green { color: var(--green); }
+.text-muted { color: var(--text-muted); }
+.text-yellow { color: var(--yellow); }
+
+/* Priority */
+.priority-active { display: flex; align-items: center; gap: 12px; }
+.priority-badge {
+  background: rgba(251,191,36,0.15); color: var(--yellow);
+  padding: 6px 14px; border-radius: var(--radius-sm);
+  font-size: 0.85rem; font-weight: 600;
+}
+.priority-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* DHCP Reservation in drawer */
+.reservation-badge {
+  background: rgba(59,130,246,0.15); color: var(--accent);
+}
+.reserve-ip-form { display: flex; flex-direction: column; gap: 6px; }
+.drawer-hint { font-size: 0.75rem; color: var(--text-muted); }
+
+/* ── Node Drawer ──────────────────────────── */
+.node-drawer-title { display: flex; align-items: center; gap: 12px; }
+.node-drawer-icon { font-size: 1.8rem; flex-shrink: 0; }
+.node-drawer-title h2 { margin: 0; }
+.node-drawer-subtitle { font-size: 0.8rem; color: var(--text-muted); }
+.node-drawer-loading {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text-muted); font-size: 0.85rem; padding: 12px 0;
+}
+.text-green { color: var(--green); }
+.text-yellow { color: var(--yellow); }
+.text-red { color: var(--red); }
+.firmware-tag {
+  font-family: 'SF Mono', monospace; font-size: 0.82rem;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 8px;
+}
+.backhaul-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.85rem; padding: 2px 8px;
+  border-radius: 4px; background: var(--bg);
+  border: 1px solid var(--border);
+}
+.backhaul-badge.wired { border-color: var(--green); color: var(--green); }
+.update-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.82rem; padding: 4px 10px;
+  border-radius: 4px; background: rgba(250,204,21,0.1);
+  border: 1px solid rgba(250,204,21,0.3); color: var(--yellow);
+}
+.drawer-field-full { grid-column: 1 / -1; }
+
