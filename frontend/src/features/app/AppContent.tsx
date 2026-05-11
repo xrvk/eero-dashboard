@@ -1,5 +1,4 @@
 import type { AppTab, SignalFilter } from './types';
-import type { EeroNode } from '../../api';
 import DeviceList from '../../components/DeviceList';
 import ActivityView from '../../components/ActivityView';
 import ProfileManager from '../../components/ProfileManager';
@@ -13,10 +12,9 @@ interface AppContentProps {
   signalFilter?: SignalFilter;
   onClearSignalFilter?: () => void;
   onSignalClick?: (tier: SignalFilter) => void;
-  onNodeClick?: (eeroId: string, node: EeroNode) => void;
 }
 
-export default function AppContent({ selectedNetwork, tab, setTab, signalFilter, onClearSignalFilter, onSignalClick, onNodeClick: _onNodeClick }: AppContentProps) {
+export default function AppContent({ selectedNetwork, tab, setTab, signalFilter, onClearSignalFilter, onSignalClick }: AppContentProps) {
   if (!selectedNetwork) return null;
 
   return (
