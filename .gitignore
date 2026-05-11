@@ -10,3 +10,39 @@ backend/.eero_session
 backend/data/
 .DS_Store
 .github/copilot-instructions.md
+
+# ─── Solo Dev Vibecoding Notes ───────────────────────────────────────
+#
+# This is a locally-hosted app built solo with AI-assisted development.
+# Here's how the workflow is set up:
+#
+# Git strategy:
+#   - main is always deployable — branch off, squash-merge back, delete
+#   - Commit messy on feature branches (it's your undo history)
+#   - Tag milestones: git tag v0.1-auth-working
+#   - Don't bikeshed branch names or commit messages pre-squash
+#
+# Testing philosophy (80/20 rule):
+#   - tsc + vite build + unit tests on tricky logic = 80% safety for 5% effort
+#   - Write tests when bugs bite you, not for everything
+#   - Skip E2E early — slow, brittle, overkill for solo dev
+#   - Regression tests grow organically: bug appears → test first → fix
+#
+# Local workflow:
+#   - npm run test:watch     → vitest watch mode (fast feedback while coding)
+#   - npm run validate       → full lint+typecheck+build+test before merge
+#   - Pre-commit hook runs validate automatically
+#   - npm run test           → quick frontend+backend tests
+#
+# CI (GitHub Actions):
+#   - validate.yml           → lint, typecheck, build, test (frontend+backend)
+#   - container-sanity.yml   → Docker build + health check
+#   - docker-publish.yml     → GHCR publish on main/tags
+#
+# Process exists to protect you from yourself:
+#   - Roll back mistakes quickly (squash-merged PRs + tags)
+#   - Understand what you did in 2 weeks (PR descriptions + clean main)
+#   - Not lose work (commit often, push often)
+#   - Skip anything that doesn't serve those three goals
+#
+# ─────────────────────────────────────────────────────────────────────
