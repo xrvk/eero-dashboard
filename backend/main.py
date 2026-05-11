@@ -20,7 +20,9 @@ from features.network_ops.router import router as network_ops_router
 from features.networks.router import router as networks_router
 
 DATA_DIR = Path(__file__).parent / "data"
+SEED_DIR = Path(__file__).parent / "seed"
 SPEED_HISTORY_FILE = DATA_DIR / "speed_history.json"
+SPEED_HISTORY_SEED = SEED_DIR / "speed_history_sample.json"
 SPEED_HISTORY_DAYS = int(os.environ.get("SPEED_HISTORY_DAYS", "365"))
 SPEED_TEST_POLL_INTERVAL = int(os.environ.get("SPEED_TEST_POLL_INTERVAL", "10"))
 SPEED_TEST_TIMEOUT = int(os.environ.get("SPEED_TEST_TIMEOUT", "120"))
@@ -161,10 +163,11 @@ async def run_speed_test(network_id: str):
 
 @app.get("/api/networks/{network_id}/speed-history")
 async def get_speed_history(network_id: str):
-    if not SPEED_HISTORY_FILE.exists():
+    history_file = SPEED_HISTORY_FILE if SPEED_HISTORY_FILE.exists() else SPEED_HISTORY_SEED
+    if not history_file.exists():
         return {"history": [], "retention_days": SPEED_HISTORY_DAYS}
     try:
-        history = json.loads(SPEED_HISTORY_FILE.read_text())
+        history = json.loads(history_file.read_text())
         filtered = [h for h in history if h.get("network_id") == network_id]
         return {"history": filtered, "retention_days": SPEED_HISTORY_DAYS}
     except (json.JSONDecodeError, OSError):

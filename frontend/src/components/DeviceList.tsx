@@ -380,7 +380,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
                   <th className="sortable-th" onClick={() => handleSort('name')}>Name{sortIndicator('name')}</th>
                   <th className="sortable-th" onClick={() => handleSort('ip')}>IP{sortIndicator('ip')}</th>
                   <th className="sortable-th" onClick={() => handleSort('mac')}>MAC{sortIndicator('mac')}</th>
-                  <th className="sortable-th" onClick={() => handleSort('type')}>Connection{sortIndicator('type')}</th>
+                  <th className="sortable-th" onClick={() => handleSort('type')}>Conn{sortIndicator('type')}</th>
                   <th className="sortable-th" onClick={() => handleSort('signal')}>Signal{sortIndicator('signal')}</th>
                   <th className="sortable-th" onClick={() => handleSort('speed')}>Speed{sortIndicator('speed')}</th>
                   <th></th>
