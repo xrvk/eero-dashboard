@@ -2,6 +2,7 @@ from eero import EeroClient
 
 from core import cache
 from core.cache import keys
+from core import facade
 from core.errors import translate_errors
 
 
@@ -52,6 +53,7 @@ async def set_blocked_apps(client: EeroClient, network_id: str, profile_id: str,
     with translate_errors(code="set_blocked_apps_failed", message="Failed to update blocked apps"):
         resp = await client.set_blocked_applications(profile_id, applications, network_id=network_id)
         cache.invalidate(keys.profile(network_id, profile_id))
+        cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 
@@ -68,6 +70,7 @@ async def set_bedtime(
             profile_id, start_time, end_time, days=days, network_id=network_id
         )
         cache.invalidate(keys.profile(network_id, profile_id))
+        cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 
@@ -83,6 +86,7 @@ async def set_schedule(client: EeroClient, network_id: str, profile_id: str, tim
     with translate_errors(code="set_schedule_failed", message="Failed to set schedule"):
         resp = await client.set_profile_schedule(profile_id, time_blocks, network_id=network_id)
         cache.invalidate(keys.profile(network_id, profile_id))
+        cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 
@@ -90,6 +94,7 @@ async def clear_schedule(client: EeroClient, network_id: str, profile_id: str):
     with translate_errors(code="clear_schedule_failed", message="Failed to clear schedule"):
         resp = await client.clear_profile_schedule(profile_id, network_id=network_id)
         cache.invalidate(keys.profile(network_id, profile_id))
+        cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 
@@ -103,12 +108,7 @@ async def set_devices(client: EeroClient, network_id: str, profile_id: str, devi
 
 async def create_profile(client: EeroClient, network_id: str, name: str):
     with translate_errors(code="create_profile_failed", message="Failed to create profile"):
-        auth_token = await client._api.profiles._auth_api.get_auth_token()
-        resp = await client._api.profiles.post(
-            f"networks/{network_id}/profiles",
-            auth_token=auth_token,
-            json={"name": name},
-        )
+        resp = await facade.create_profile(client, network_id, name)
         cache.invalidate(keys.profile_prefix(network_id))
         cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
@@ -116,12 +116,7 @@ async def create_profile(client: EeroClient, network_id: str, name: str):
 
 async def rename_profile(client: EeroClient, network_id: str, profile_id: str, name: str):
     with translate_errors(code="rename_profile_failed", message="Failed to rename profile"):
-        auth_token = await client._api.profiles._auth_api.get_auth_token()
-        resp = await client._api.profiles.put(
-            f"networks/{network_id}/profiles/{profile_id}",
-            auth_token=auth_token,
-            json={"name": name},
-        )
+        resp = await facade.rename_profile(client, network_id, profile_id, name)
         cache.invalidate(keys.profile_prefix(network_id))
         cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
@@ -129,11 +124,7 @@ async def rename_profile(client: EeroClient, network_id: str, profile_id: str, n
 
 async def delete_profile(client: EeroClient, network_id: str, profile_id: str):
     with translate_errors(code="delete_profile_failed", message="Failed to delete profile"):
-        auth_token = await client._api.profiles._auth_api.get_auth_token()
-        resp = await client._api.profiles.delete(
-            f"networks/{network_id}/profiles/{profile_id}",
-            auth_token=auth_token,
-        )
+        resp = await facade.delete_profile(client, network_id, profile_id)
         cache.invalidate(keys.profile_prefix(network_id))
         cache.clear_upstream("profiles", network_id=network_id)
         return resp

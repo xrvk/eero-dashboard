@@ -1,25 +1,21 @@
 import { Suspense, lazy, useCallback, useEffect, useState, useRef } from 'react';
 import { Moon, Sun, SunMoon } from 'lucide-react';
 
-import * as api from './api';
 import LoginForm from './components/LoginForm';
 import NodeDrawer from './components/NodeDrawer';
-import { useFetch } from './hooks/useFetch';
 import { useHashRoute } from './hooks/useHashRoute';
 import AppContent from './features/app/AppContent';
 import AppSidebar from './features/app/AppSidebar';
 import type { AppTab } from './features/app/types';
 import type { SignalFilter, BandClickFilter } from './features/app/types';
+import { ThemeProvider, useTheme } from './features/app/ThemeContext';
+import { AuthProvider, useAuth } from './features/app/AuthContext';
+import { NetworkProvider, useNetwork } from './features/app/NetworkContext';
+import type { EeroNode } from './api';
 
 const MOBILE_BREAKPOINT = 768;
 
 const SpeedHistory = lazy(() => import('./components/SpeedHistory'));
-
-function getNetworkId(n: api.Network): string {
-  if (n.id != null) return String(n.id);
-  if (n.url) return n.url.replace(/\/$/, '').split('/').pop() || '';
-  return '';
-}
 
 export default function App() {
   if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('preview') === 'speed') {
@@ -39,14 +35,33 @@ export default function App() {
     );
   }
 
-  return <AppMain />;
+  return (
+    <ThemeProvider>
+      <NetworkProvider>
+        <AppShell />
+      </NetworkProvider>
+    </ThemeProvider>
+  );
+}
+
+function AppShell() {
+  const { setNetworks } = useNetwork();
+
+  const handleNetworksLoaded = useCallback((nets: import('./api').Network[]) => {
+    setNetworks(nets);
+  }, [setNetworks]);
+
+  return (
+    <AuthProvider onNetworksLoaded={handleNetworksLoaded}>
+      <AppMain />
+    </AuthProvider>
+  );
 }
 
 function AppMain() {
-  const [auth, setAuth] = useState<api.AuthStatus | null>(null);
-  const [checking, setChecking] = useState(true);
-  const [networks, setNetworks] = useState<api.Network[]>([]);
-  const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
+  const { auth, checking, checkAuth, logout } = useAuth();
+  const { networks, selectedNetwork, setSelectedNetwork, networkDetail, eeros, setNetworks } = useNetwork();
+  const { theme, setTheme } = useTheme();
   const { tab, params, setRoute } = useHashRoute();
   const setTab = useCallback((t: AppTab) => setRoute(t), [setRoute]);
   const signalFilter = (params.get('signal') as SignalFilter) || 'all';
@@ -64,10 +79,9 @@ function AppMain() {
     setRoute('devices');
   }, [setRoute]);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
-  const [theme, setTheme] = useState<'dark' | 'light' | 'auto'>(() => (localStorage.getItem('theme') as 'dark' | 'light' | 'auto') || 'dark');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const [nodeDrawer, setNodeDrawer] = useState<{ node: api.EeroNode } | null>(null);
+  const [nodeDrawer, setNodeDrawer] = useState<{ node: EeroNode } | null>(null);
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return;
@@ -79,63 +93,12 @@ function AppMain() {
 
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 
-  const { data: networkDetail } = useFetch(
-    () => selectedNetwork ? api.getNetwork(selectedNetwork) : Promise.resolve(null),
-    [selectedNetwork],
-    {},
-    selectedNetwork ? `/networks/${selectedNetwork}` : undefined,
-  );
-  const { data: eeroData } = useFetch(
-    () => selectedNetwork ? api.getEeros(selectedNetwork) : Promise.resolve({ eeros: [] }),
-    [selectedNetwork],
-    {},
-    selectedNetwork ? `/networks/${selectedNetwork}/eeros` : undefined,
-  );
-
-  useEffect(() => {
-    localStorage.setItem('theme', theme);
-    const root = document.documentElement;
-    if (theme === 'auto') root.removeAttribute('data-theme');
-    else root.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  const checkAuth = useCallback(async () => {
-    try {
-      const status = await api.getAuthStatus();
-      setAuth(status);
-      if (status.authenticated) {
-        const res = await api.getNetworks();
-        setNetworks(res.networks);
-        if (res.networks.length > 0 && !selectedNetwork) {
-          const id = getNetworkId(res.networks[0]);
-          setSelectedNetwork(id);
-        }
-      }
-    } catch {
-      setAuth({ authenticated: false });
-    } finally {
-      setChecking(false);
-    }
-  }, [selectedNetwork]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void checkAuth();
-  }, [checkAuth]);
-
-  useEffect(() => {
-    if (!selectedNetwork) return;
-    void api.prefetch(selectedNetwork);
-  }, [selectedNetwork]);
-
   const handleLogout = async () => {
-    await api.logout();
-    setAuth({ authenticated: false });
+    await logout();
     setNetworks([]);
-    setSelectedNetwork(null);
   };
 
-  const handleNodeClick = useCallback((_eeroId: string, node: api.EeroNode) => {
+  const handleNodeClick = useCallback((_eeroId: string, node: EeroNode) => {
     setNodeDrawer({ node });
   }, []);
 
@@ -149,7 +112,7 @@ function AppMain() {
         <AppSidebar
           tab={tab}
           setTab={setTab}
-          eeros={eeroData?.eeros ?? []}
+          eeros={eeros}
           networks={networks}
           selectedNetwork={selectedNetwork}
           setSelectedNetwork={setSelectedNetwork}

@@ -26,12 +26,39 @@ Simple dict-based cache: `{key: (expiry_monotonic, value)}`.
 | `put(key, value, ttl)` | Store with monotonic expiry (default 300s) |
 | `cached(key, factory, ttl)` | Check cache → call `factory()` on miss → store → return |
 | `invalidate(prefix)` | Delete all keys starting with prefix |
-| `invalidate_network(id)` | Shorthand for `invalidate(f"net:{id}:")` |
+| `invalidate_network(id)` | Shorthand for `invalidate(f"net:{id}:")` + clear upstream |
 | `clear()` | Flush everything |
+| `clear_upstream(*cats)` | Clear eero-api client's internal cache for given categories |
 
-**Cache key convention:** `net:{network_id}:{resource}` — e.g. `net:6274130:devices`, `net:6274130:security`.
+**Cache key convention:** Always use `cache.keys.*` methods — never hardcode f-strings.
+
+```python
+cache.keys.device_list(network_id)    # "net:{id}:device:list"
+cache.keys.security(network_id)       # "net:{id}:security"
+cache.keys.profile(network_id, pid)   # "net:{id}:profile:{pid}"
+```
+
+Available key generators: `networks_list`, `network`, `eeros`, `settings`, `password`, `security`, `dns`, `sqm`, `updates`, `thread`, `routing`, `blacklist`, `forwards`, `reservations`, `activity`, `activity_sub`, `diagnostics`, plus device/profile prefix/list/detail/sub variants.
 
 **TTL:** 5 minutes. Mutations call `invalidate()` on affected keys so stale data is never served after a write.
+
+**Upstream cache clearing:** Every mutation **must** call `cache.clear_upstream()` to also clear the eero-api library's internal cache.
+
+### `core/facade.py` — eero-api facade
+
+Wraps `client._api.*` access behind clean async functions. Service modules should **never** access `client._api` directly.
+
+| Function | Wraps |
+|----------|-------|
+| `create_profile()` | `client._api.profiles.post(...)` |
+| `rename_profile()` | `client._api.profiles.put(...)` |
+| `delete_profile()` | `client._api.profiles.delete(...)` |
+| `add_to_blacklist()` | `client._api.blacklist.add_to_blacklist(...)` |
+| `remove_from_blacklist()` | `client._api.blacklist.remove_from_blacklist(...)` |
+| `create_forward()` | `client._api.forwards.create_forward(...)` |
+| `delete_forward()` | `client._api.forwards.delete_forward(...)` |
+| `create_reservation()` | `client._api.reservations.create_reservation(...)` |
+| `delete_reservation()` | `client._api.reservations.delete_reservation(...)` |
 
 ### `core/errors.py` — Error handling
 

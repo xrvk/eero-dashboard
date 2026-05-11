@@ -84,8 +84,12 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const handleSecurityToggle = async (key: string, value: boolean, apiKey?: string) => {
     setSecSaving(true);
     try {
-      await api.updateSecurity(networkId, { [apiKey || key]: value });
+      const resp = await api.updateSecurity(networkId, { [apiKey || key]: value });
       await refetchSecurity();
+      const actual = (resp as Record<string, unknown>)[key];
+      if (typeof actual === 'boolean' && actual !== value) {
+        alert(`${key} could not be changed — this may require eero Plus or compatible hardware.`);
+      }
     } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
     finally { setSecSaving(false); }
   };
@@ -144,8 +148,10 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   // SQM handlers
   const handleSqmToggle = async () => {
     setSqmSaving(true);
-    try { await api.setSqmEnabled(networkId, !sqmEnabled); await refetchSqm(); }
-    catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    try {
+      await api.setSqmEnabled(networkId, !sqmEnabled);
+      await refetchSqm();
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
     finally { setSqmSaving(false); }
   };
   const handleSqmAuto = async () => {

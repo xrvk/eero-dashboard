@@ -8,7 +8,8 @@
     "test:backend": "backend/.venv/bin/python -m unittest discover -s backend/tests",
     "test:watch": "npm --prefix frontend run test",
     "validate": "npm run validate:frontend && npm run validate:backend",
-    "validate:frontend": "npm --prefix frontend run lint && npm --prefix frontend run typecheck && npm --prefix frontend run build && npm --prefix frontend run test -- --watch=false",
+    "quick-check": "npm --prefix frontend run lint && npm --prefix frontend run typecheck",
+    "validate:frontend": "npm --prefix frontend run lint && npm --prefix frontend run build && npm --prefix frontend run test -- --watch=false",
     "validate:backend": "backend/.venv/bin/python -m compileall backend && backend/.venv/bin/python -m unittest discover -s backend/tests"
   },
   "devDependencies": {

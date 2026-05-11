@@ -30,7 +30,14 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
     try {
       await api.setGuestNetwork(networkId, !enabled);
       await refetch();
-    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed';
+      if (msg.includes('404')) {
+        alert('Guest network toggle is not supported on this network — this may require eero Plus or compatible hardware.');
+      } else {
+        alert(msg);
+      }
+    }
     finally { setSaving(false); }
   };
 

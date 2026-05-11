@@ -2,34 +2,32 @@
 
 ## Entry point
 
-**`main.tsx`** renders `<App />` inside `<StrictMode>`. No router library — navigation is tab-based state managed in `App.tsx`.
+**`main.tsx`** renders `<App />` inside `<StrictMode>`. No router library — navigation is tab-based state managed via `useHashRoute` hook. Global state lives in React Contexts (Theme, Auth, Network) rather than prop drilling from App.tsx.
 
 ## Root component (`App.tsx`)
 
-`App.tsx` owns all top-level state:
+`App.tsx` wraps the app in context providers and delegates state management:
 
-| State | Type | Purpose |
-|-------|------|---------|
-| `auth` | `AuthStatus \| null` | Current auth status |
-| `checking` | `boolean` | Initial auth check in progress |
-| `networks` | `Network[]` | User's eero networks |
-| `selectedNetwork` | `string \| null` | Active network ID |
-| `tab` | `AppTab` | Current view (devices, activity, profiles, settings-*) |
-| `theme` | `dark \| light \| auto` | Persisted to localStorage |
+| Provider | Context | State Managed |
+|----------|---------|--------------|
+| `ThemeProvider` | `ThemeContext` | theme (dark/light/auto), localStorage sync |
+| `NetworkProvider` | `NetworkContext` | networks, selectedNetwork, networkDetail, eeros, prefetch |
+| `AuthProvider` | `AuthContext` | auth status, checkAuth flow, logout |
 
 ### Render logic
 
 ```
-checking?    → spinner
-!auth?       → <LoginForm />
-else         → <AppSidebar /> + <AppContent />
+ThemeProvider → NetworkProvider → AuthProvider → AppMain
+  checking?    → spinner
+  !auth?       → <LoginForm />
+  else         → <AppSidebar /> + <AppContent />
 ```
 
 ### Key effects
 
-- **On mount:** `checkAuth()` → fetch auth status → load networks → auto-select first network
-- **On network select:** Fire `prefetch(selectedNetwork)` which warms **both** the backend TTL cache and the frontend response cache (see [Data flow](./data-flow.md))
-- **On theme change:** Set `data-theme` attribute on `<html>`, persist to localStorage
+- **On mount:** `AuthProvider.checkAuth()` → fetch auth status → load networks → auto-select first
+- **On network select:** `NetworkProvider` fires `prefetch(selectedNetwork)` which warms **both** the backend TTL cache and the frontend response cache (see [Data flow](./data-flow.md))
+- **On theme change:** `ThemeProvider` sets `data-theme` attribute on `<html>`, persists to localStorage
 
 ## API layer
 
@@ -121,9 +119,21 @@ const { data, loading, error } = useFetch(
 
 ## Features
 
+### `features/app/ThemeContext.tsx` — Theme management
+
+Provides `useTheme()` hook returning `{ theme, setTheme }`. Handles localStorage persistence and `data-theme` attribute sync.
+
+### `features/app/AuthContext.tsx` — Authentication state
+
+Provides `useAuth()` hook returning `{ auth, checking, checkAuth, logout }`. Manages the auth lifecycle including initial status check.
+
+### `features/app/NetworkContext.tsx` — Network data
+
+Provides `useNetwork()` hook returning `{ networks, selectedNetwork, setSelectedNetwork, networkDetail, eeros, setNetworks }`. Owns data fetching (via `useFetch`) and prefetch triggering.
+
 ### `features/app/AppContent.tsx` — Tab router
 
-All tab components are **eagerly imported** — no `React.lazy()` or `Suspense`. This eliminates the loading spinner flash on first tab visit.
+All tab components are **eagerly imported** — no `React.lazy()` or `Suspense`. Each tab is wrapped in an `ErrorBoundary` for per-feature crash isolation (a crash in Devices doesn't take down Profiles).
 
 > **Design decision:** Lazy loading was removed because the perceived half-second delay from `Suspense` fallbacks was worse than the slightly larger initial bundle. Since the frontend prefetch already warms the response cache before any tab is visited, eager imports make tab switching feel instant.
 
@@ -171,6 +181,8 @@ Thin wrapper that re-exports device API functions under a `devicesClient` object
 
 | Component | File | Purpose |
 |-----------|------|---------|
+| `CopyableValue` | `shared/CopyableValue.tsx` | Click-to-copy monospace value with feedback |
+| `ErrorBoundary` | `shared/ErrorBoundary.tsx` | Per-feature crash isolation with retry button |
 | `LoginForm` | `LoginForm.tsx` | Email/phone → verification code 2FA flow |
 | `DeviceList` | `devices/` | Device grid/list with filtering, sorting, grouping by node. Split into sub-components: `DeviceCard`, `TableRowMenu`, plus `utils.ts` for `getDeviceIcon` and connectivity helpers. |
 | `DeviceDrawer` | `DeviceDrawer.tsx` | Slide-out device detail panel (priority, DHCP reservation) |
