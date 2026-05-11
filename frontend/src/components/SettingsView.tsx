@@ -612,16 +612,16 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   if (isLoading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
   if (sError) return <div className="card error-card">Error: {sError}</div>;
 
-  const settings = settingsData as Record<string, unknown> || {};
+  const settings = (settingsData ?? {}) as api.NetworkSettingsSummary;
   const pw = passwordData as Record<string, unknown> || {};
   const password = String(pw.password || pw.key || '');
-  const networkName = String(settings.name || settings.ssid || '');
+  const networkName = String(settings.name || '');
   const updates = updatesData as Record<string, unknown> || {};
   const thread = threadData as Record<string, unknown> || {};
   const security = securityData || {} as Record<string, unknown>;
   const wanIp = String(settings.wan_ip || '');
   const gatewayIp = String(settings.gateway_ip || '');
-  const timezone = (settings.timezone as Record<string, unknown>)?.value as string || '';
+  const timezone = typeof settings.timezone === 'string' ? settings.timezone : (settings.timezone?.value || '');
 
   // DNS
   const dns = (dnsData as Record<string, unknown>)?.dns as Record<string, unknown> | undefined;

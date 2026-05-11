@@ -3,20 +3,22 @@ import { describe, expect, it, vi } from 'vitest';
 
 import DeviceList from './DeviceList';
 
-const list = vi.fn().mockResolvedValue({
-  devices: [
-    {
-      mac: 'aa:bb:cc:dd:ee:ff',
-      display_name: 'iPhone',
-      connected: true,
-      wireless: true,
-      usage: { down: 0, up: 0 },
-    },
-  ],
-});
-const pause = vi.fn().mockResolvedValue({});
-const block = vi.fn().mockResolvedValue({});
-const rename = vi.fn().mockResolvedValue({});
+const { list, pause, block, rename } = vi.hoisted(() => ({
+  list: vi.fn().mockResolvedValue({
+    devices: [
+      {
+        mac: 'aa:bb:cc:dd:ee:ff',
+        display_name: 'iPhone',
+        connected: true,
+        wireless: true,
+        usage: { down: 0, up: 0 },
+      },
+    ],
+  }),
+  pause: vi.fn().mockResolvedValue({}),
+  block: vi.fn().mockResolvedValue({}),
+  rename: vi.fn().mockResolvedValue({}),
+}));
 
 vi.mock('../features/devices/client', () => ({
   devicesClient: { list, pause, block, rename },

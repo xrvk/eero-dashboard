@@ -81,6 +81,7 @@ function AppMain() {
   }, [selectedNetwork]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void checkAuth();
   }, [checkAuth]);
 

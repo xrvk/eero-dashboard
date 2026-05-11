@@ -2,6 +2,7 @@ from eero import EeroClient
 
 from core.errors import translate_errors
 
+
 async def list_devices(client: EeroClient, network_id: str):
     with translate_errors(code="list_devices_failed", message="Failed to fetch devices"):
         resp = await client.get_devices(network_id)

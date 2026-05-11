@@ -1,7 +1,11 @@
 import unittest
+import sys
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 import core.client as core_client
 import features.auth.service as auth_service

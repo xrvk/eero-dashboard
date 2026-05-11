@@ -3,17 +3,26 @@ import { describe, expect, it, vi } from 'vitest';
 
 import App from './App';
 
-const getAuthStatus = vi.fn().mockResolvedValue({ authenticated: true, name: 'Tester' });
-const getNetworks = vi.fn().mockResolvedValue({
-  networks: [
-    { id: 1, name: 'Home' },
-    { id: 2, name: 'Office' },
-  ],
-});
-const getNetwork = vi.fn().mockResolvedValue({ name: 'Home' });
-const getEeros = vi.fn().mockResolvedValue({ eeros: [] });
-const prefetch = vi.fn().mockResolvedValue({});
-const logout = vi.fn().mockResolvedValue({});
+const {
+  getAuthStatus,
+  getNetworks,
+  getNetwork,
+  getEeros,
+  prefetch,
+  logout,
+} = vi.hoisted(() => ({
+  getAuthStatus: vi.fn().mockResolvedValue({ authenticated: true, name: 'Tester' }),
+  getNetworks: vi.fn().mockResolvedValue({
+    networks: [
+      { id: 1, name: 'Home' },
+      { id: 2, name: 'Office' },
+    ],
+  }),
+  getNetwork: vi.fn().mockResolvedValue({ name: 'Home' }),
+  getEeros: vi.fn().mockResolvedValue({ eeros: [] }),
+  prefetch: vi.fn().mockResolvedValue({}),
+  logout: vi.fn().mockResolvedValue({}),
+}));
 
 vi.mock('./api', async (orig) => {
   const actual = await orig<Record<string, unknown>>();
@@ -35,7 +44,7 @@ vi.mock('./features/app/AppContent', () => ({
 describe('App', () => {
   it('loads authenticated state and allows network selection', async () => {
     render(<App />);
-    await screen.findByText('Devices');
+    await screen.findByRole('heading', { name: 'Devices' });
 
     fireEvent.click(screen.getByRole('button', { name: 'Office' }));
 
