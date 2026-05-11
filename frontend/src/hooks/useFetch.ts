@@ -21,7 +21,7 @@ export function useFetch<T>(
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [fetcherRef]);
+  }, []);
 
   const refetch = useCallback(() => {
     executeFetch();
