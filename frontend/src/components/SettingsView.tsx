@@ -877,7 +877,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
                 {(!!thread.name || !!thread.channel) && (
                   <span
                     className="thread-info-badge"
-                    title={[thread.name && `Network: ${thread.name}`, thread.channel && `Channel: ${thread.channel}`].filter(Boolean).join(' · ')}
+                    data-tip={[thread.name && `Network: ${thread.name}`, thread.channel && `Channel: ${thread.channel}`].filter(Boolean).join(' · ')}
                   >ℹ️</span>
                 )}
               </span>

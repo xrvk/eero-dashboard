@@ -1561,9 +1561,19 @@ body {
 .thread-info-badge {
   display: inline-flex; align-items: center; margin-left: 6px;
   cursor: help; font-size: 0.75rem; opacity: 0.7;
-  transition: opacity 0.15s;
+  transition: opacity 0.15s; position: relative;
 }
 .thread-info-badge:hover { opacity: 1; }
+.thread-info-badge:hover::after {
+  content: attr(data-tip);
+  position: absolute; left: 50%; bottom: 100%;
+  transform: translateX(-50%); margin-bottom: 6px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 10px;
+  font-size: 0.75rem; white-space: nowrap;
+  color: var(--text); box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 10; pointer-events: none;
+}
 
 /* ── Guest Network ─────────────────────────── */
 .guest-network { max-width: 600px; }
