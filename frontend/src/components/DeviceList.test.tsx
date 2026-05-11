@@ -30,7 +30,7 @@ describe('DeviceList', () => {
 
     await screen.findByText('iPhone');
     fireEvent.click(screen.getByTitle('Actions'));
-    fireEvent.click(screen.getByText('⏸️ Pause Internet'));
+    fireEvent.click(screen.getByText('Pause Internet'));
     fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
 
     await waitFor(() => {
