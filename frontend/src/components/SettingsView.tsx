@@ -872,76 +872,72 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
             <span className="toggle-slider" />
           </label>
         </div>
-        <div style={{ marginTop: 12 }}>
-          <label className="drawer-label">DNS Provider</label>
-          <div className="dns-provider-row">
-            <select
-              className="dns-select"
-              value={dnsEditing ? dnsMode : dnsCurrentMode}
-              onChange={(e) => {
-                const val = e.target.value;
-                setDnsMode(val);
-                if (val === 'custom') setDnsServers([customIps[0] || '', customIps[1] || '']);
-                setDnsEditing(true);
-              }}
-              disabled={dnsSaving}
-            >
-              <option value="default">eero Default</option>
-              <option value="cloudflare">Cloudflare (1.1.1.1)</option>
-              <option value="google">Google (8.8.8.8)</option>
-              <option value="opendns">OpenDNS (208.67.222.222)</option>
-              <option value="custom">Custom</option>
-            </select>
-            {dnsEditing && dnsMode !== 'custom' && (
-              <button className="btn-primary btn-sm" onClick={handleDnsSave} disabled={dnsSaving}>
-                {dnsSaving ? '…' : 'Apply'}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* QoS / SQM */}
-      <div className="general-section">
-        <h3><Gauge size={16} /> QoS (Smart Queue Management)</h3>
-        <div className="toggle-row">
-          <div className="toggle-info">
-            <span className="toggle-name">SQM</span>
-            <span className="toggle-desc">Reduce bufferbloat for gaming, video calls, streaming</span>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={sqmEnabled} disabled={sqmSaving} onChange={handleSqmToggle} />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-
-        {((dnsEditing && dnsMode === 'custom') || (!dnsEditing && dnsCurrentMode === 'custom')) && (
-          <div className="dns-server-inputs">
-            {['Primary', 'Secondary'].map((label, i) => (
-              <div key={i} className="form-field">
-                <label>{label} {i === 1 && '(optional)'}</label>
-                <input
-                  className="dns-input" type="text"
-                  placeholder={i === 0 ? '1.1.1.1 or 2606:4700:4700::1111' : '8.8.8.8'}
-                  value={dnsEditing ? dnsServers[i] : (customIps[i] || '')}
-                  onFocus={() => { if (!dnsEditing) { setDnsMode('custom'); setDnsServers([customIps[0] || '', customIps[1] || '']); setDnsEditing(true); } }}
-                  onChange={(e) => { const s = [...dnsServers]; s[i] = e.target.value; setDnsServers(s); if (!dnsEditing) { setDnsMode('custom'); setDnsEditing(true); } }}
-                />
-              </div>
-            ))}
-            {dnsEditing && (
-              <div className="dns-edit-actions">
-                <button className="btn-primary" onClick={handleDnsSave} disabled={dnsSaving}>{dnsSaving ? 'Saving…' : 'Save'}</button>
-                <button className="btn-cancel" onClick={() => setDnsEditing(false)}>Cancel</button>
+        {dnsEditing ? (
+          <div style={{ marginTop: 12 }}>
+            <label className="drawer-label">DNS Provider</label>
+            <div className="dns-provider-row">
+              <select
+                className="dns-select"
+                value={dnsMode}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDnsMode(val);
+                  if (val === 'custom') setDnsServers([customIps[0] || '', customIps[1] || '']);
+                }}
+                onKeyDown={(e) => { if (e.key === 'Escape') setDnsEditing(false); }}
+                disabled={dnsSaving}
+              >
+                <option value="default">eero Default</option>
+                <option value="cloudflare">Cloudflare (1.1.1.1)</option>
+                <option value="google">Google (8.8.8.8)</option>
+                <option value="opendns">OpenDNS (208.67.222.222)</option>
+                <option value="custom">Custom</option>
+              </select>
+              {dnsMode !== 'custom' && (
+                <button className="btn-primary btn-sm" onClick={handleDnsSave} disabled={dnsSaving}>
+                  {dnsSaving ? '…' : 'Apply'}
+                </button>
+              )}
+            </div>
+            {((dnsEditing && dnsMode === 'custom') || (!dnsEditing && dnsCurrentMode === 'custom')) && (
+              <div className="dns-server-inputs">
+                {['Primary', 'Secondary'].map((label, i) => (
+                  <div key={i} className="form-field">
+                    <label>{label} {i === 1 && '(optional)'}</label>
+                    <input
+                      className="dns-input" type="text"
+                      placeholder={i === 0 ? '1.1.1.1 or 2606:4700:4700::1111' : '8.8.8.8'}
+                      value={dnsServers[i]}
+                      onChange={(e) => { const s = [...dnsServers]; s[i] = e.target.value; setDnsServers(s); }}
+                      onKeyDown={(e) => { if (e.key === 'Escape') setDnsEditing(false); }}
+                    />
+                  </div>
+                ))}
+                <div className="dns-edit-actions">
+                  <button className="btn-primary" onClick={handleDnsSave} disabled={dnsSaving}>{dnsSaving ? 'Saving…' : 'Save'}</button>
+                  <button className="btn-cancel" onClick={() => setDnsEditing(false)}>Cancel</button>
+                </div>
               </div>
             )}
+          </div>
+        ) : (
+          <div className="general-info-grid" style={{ marginTop: 12 }}>
+            <div className="general-detail">
+              <span>DNS Servers</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span className="mono" style={{ fontWeight: 500, color: 'var(--text)' }}>{customIps.length > 0 ? customIps.join(', ') : 'eero Default'}</span>
+                <button className="btn-icon-sm" onClick={startDnsEdit} title="Edit DNS">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
       {/* QoS / SQM */}
       <div className="general-section">
-        <h3>🚀 QoS (Smart Queue Management)</h3>
+        <h3><Gauge size={16} /> QoS (Smart Queue Management)</h3>
         <div className="toggle-row">
           <div className="toggle-info">
             <span className="toggle-name">SQM</span>
@@ -958,11 +954,11 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
               <div className="sqm-edit-form">
                 <div className="form-field">
                   <label>Upload (Mbps)</label>
-                  <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)} placeholder="e.g. 50" min="1" />
+                  <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setSqmEditMode(false); }} placeholder="e.g. 50" min="1" />
                 </div>
                 <div className="form-field">
                   <label>Download (Mbps)</label>
-                  <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)} placeholder="e.g. 500" min="1" />
+                  <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setSqmEditMode(false); }} placeholder="e.g. 500" min="1" />
                 </div>
                 <div className="dns-edit-actions">
                   <button className="btn-primary" onClick={handleSqmSave} disabled={sqmSaving}>{sqmSaving ? 'Saving…' : 'Save'}</button>
