@@ -2,7 +2,10 @@ node_modules/
 dist/
 .env
 __pycache__/
-.agents
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/eero-*/
 *.py[cod]
 backend/.venv/
 backend/venv/
