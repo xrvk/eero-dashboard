@@ -397,7 +397,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
                     <td className="td-name">{d.display_name || d.hostname || 'Unknown'}</td>
                     <td className="td-mono">{d.ip || '—'}</td>
                     <td className="td-mono">{d.mac || '—'}</td>
-                    <td>
+                    <td className="td-conn">
                       {d.wireless ? (
                         <>📶 {conn?.frequency ? freqToBand(conn.frequency) : 'Wireless'}</>
                       ) : '🔌 Wired'}

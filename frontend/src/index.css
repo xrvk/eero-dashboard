@@ -581,6 +581,8 @@ body {
   .toolbar-controls { justify-content: flex-end; }
   .device-table { font-size: 0.75rem; }
   .device-table thead th, .device-table tbody td { padding: 6px 6px; }
+  .td-name { max-width: 120px; }
+  .td-conn { white-space: nowrap; }
 }
 
 /* ── Card Menu (⋯ dropdown) ────────────────── */
