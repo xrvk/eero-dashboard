@@ -32,6 +32,8 @@ def make_mock_client():
     client.set_profile_devices.return_value = {"data": {}}
     # For create/rename/delete which use the facade (which calls client._api)
     client._api = MagicMock()
+    # Facade uses client._api.networks._auth_api.get_auth_token() for token
+    client._api.networks._auth_api.get_auth_token = AsyncMock(return_value="token")
     client._api.profiles._auth_api.get_auth_token = AsyncMock(return_value="token")
     client._api.profiles.post = AsyncMock(return_value={"data": {"name": "new"}})
     client._api.profiles.put = AsyncMock(return_value={"data": {"name": "renamed"}})

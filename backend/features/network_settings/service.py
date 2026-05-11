@@ -16,7 +16,7 @@ async def get_password(client: EeroClient, network_id: str):
 
 async def set_network_name(client: EeroClient, network_id: str, name: str):
     with translate_errors(code="set_name_failed", message="Failed to set network name"):
-        resp = await client.set_network_name(name, network_id=network_id)
+        resp = await facade.set_network_name(client, network_id, name)
         cache.invalidate_network(network_id)
         cache.clear_upstream("network", network_id=network_id)
         return resp.get("data", resp)
@@ -46,7 +46,7 @@ async def get_sqm(client: EeroClient, network_id: str):
 
 async def set_sqm_enabled(client: EeroClient, network_id: str, enabled: bool):
     with translate_errors(code="set_sqm_failed", message="Failed to set SQM enabled"):
-        resp = await client.set_sqm_enabled(enabled, network_id=network_id)
+        resp = await facade.set_sqm_enabled(client, network_id, enabled)
         cache.invalidate(keys.sqm(network_id))
         cache.invalidate(keys.network(network_id))
         cache.invalidate(keys.settings(network_id))
@@ -56,9 +56,7 @@ async def set_sqm_enabled(client: EeroClient, network_id: str, enabled: bool):
 
 async def configure_sqm(client: EeroClient, network_id: str, enabled: bool, upload_mbps: int | None, download_mbps: int | None):
     with translate_errors(code="configure_sqm_failed", message="Failed to configure SQM"):
-        resp = await client.configure_sqm(
-            enabled, upload_mbps=upload_mbps, download_mbps=download_mbps, network_id=network_id
-        )
+        resp = await facade.configure_sqm(client, network_id, enabled, upload_mbps, download_mbps)
         cache.invalidate(keys.sqm(network_id))
         cache.invalidate(keys.network(network_id))
         cache.invalidate(keys.settings(network_id))
@@ -68,7 +66,7 @@ async def configure_sqm(client: EeroClient, network_id: str, enabled: bool, uplo
 
 async def set_sqm_auto(client: EeroClient, network_id: str):
     with translate_errors(code="set_sqm_auto_failed", message="Failed to set SQM auto"):
-        resp = await client.set_sqm_auto(network_id=network_id)
+        resp = await facade.set_sqm_auto(client, network_id)
         cache.invalidate(keys.sqm(network_id))
         cache.invalidate(keys.network(network_id))
         cache.invalidate(keys.settings(network_id))
