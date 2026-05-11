@@ -482,10 +482,6 @@ body {
 
 @media (max-width: 600px) {
   .activity-panels { grid-template-columns: 1fr; }
-  .speed-result { gap: 16px; }
-  .speed-value { font-size: 1.6rem; }
-  .speed-dir { font-size: 0.85rem; }
-  .speed-unit { font-size: 0.7rem; }
 }
 
 /* ── Device Toolbar ─────────────────────────── */
@@ -932,6 +928,12 @@ body {
 .speed-dir { font-size: 1.2rem; }
 .speed-unit { font-size: 0.9rem; }
 .speed-result { gap: 40px; padding: 16px 0; }
+@media (max-width: 600px) {
+  .speed-value { font-size: 1.5rem; }
+  .speed-dir { font-size: 0.85rem; }
+  .speed-unit { font-size: 0.7rem; }
+  .speed-result { gap: 16px; }
+}
 
 /* ── Bar charts taller with gradients ───────── */
 .band-bar-track { height: 12px; }
