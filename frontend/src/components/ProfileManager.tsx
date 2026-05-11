@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useFetch, prefetchRequest } from '../hooks/useFetch';
+import { User, X, Plus, LayoutGrid, List, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
 import * as api from '../api';
 import { request } from '../api/client';
 
@@ -112,21 +113,21 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
             onClick={() => setShowCreateForm(!showCreateForm)}
             title={showCreateForm ? 'Cancel' : 'Create profile'}
           >
-            {showCreateForm ? '✕' : '＋'}<span className="btn-create-label"> New</span>
+            {showCreateForm ? <X size={16} /> : <Plus size={16} />}<span className="btn-create-label"> New</span>
           </button>
           <div className="view-toggle">
             <button
               className={`view-toggle-btn ${viewMode === 'cards' ? 'active' : ''}`}
               onClick={() => setViewMode('cards')}
               title="Card view"
-            >▦</button>
+            ><LayoutGrid size={16} /></button>
             <button
               className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
               onClick={() => setViewMode('list')}
               title="List view"
-            >☰</button>
+            ><List size={16} /></button>
           </div>
-          <button className="btn-icon" onClick={refetch} title="Refresh">↻</button>
+          <button className="btn-icon" onClick={refetch} title="Refresh"><RefreshCw size={16} /></button>
         </div>
       </div>
 
@@ -144,7 +145,7 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
 
       {profiles.length === 0 && !showCreateForm ? (
         <div className="empty-state">
-          <p className="empty-icon">👤</p>
+          <p className="empty-icon"><User size={24} /></p>
           <p className="empty-text">No profiles configured</p>
           <p className="empty-subtext">Click <strong>＋ New</strong> to create one</p>
         </div>
@@ -161,7 +162,7 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
                 onClick={() => toggleSelect(pid)}
               >
                 <div className="profile-header">
-                  <span className="profile-icon">👤</span>
+                  <span className="profile-icon"><User size={20} /></span>
                   <div className="profile-info">
                     <span className="profile-name">{p.name || 'Unnamed'}</span>
                     <span className="profile-devices">
@@ -197,7 +198,7 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
                 className={`profile-row ${p.paused ? 'paused' : ''} ${isSelected ? 'expanded' : ''}`}
               >
                 <div className="profile-header" onClick={() => toggleSelect(pid)}>
-                  <span className="profile-expand">{isSelected ? '▾' : '▸'}</span>
+                  <span className="profile-expand">{isSelected ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</span>
                   <div className="profile-info">
                     <span className="profile-name">{p.name || 'Unnamed'}</span>
                     <span className="profile-meta">
@@ -275,7 +276,7 @@ function ProfileDetailPanel({
     <div className="profile-detail-panel">
       <div className="profile-detail-header">
         <div className="profile-detail-title">
-          <span className="profile-icon">👤</span>
+          <span className="profile-icon"><User size={20} /></span>
           <InlineEditName
             value={profile.name || 'Unnamed'}
             onSave={onRename}
@@ -307,7 +308,7 @@ function ProfileDetailPanel({
               </button>
             </div>
           )}
-          <button className="btn-icon" onClick={onClose} title="Close">✕</button>
+          <button className="btn-icon" onClick={onClose} title="Close"><X size={16} /></button>
         </div>
       </div>
 
@@ -381,7 +382,7 @@ function DevicesTab({
           className="btn-text"
           onClick={() => setEditing(!editing)}
         >
-          {editing ? '✕ Cancel' : 'Edit'}
+          {editing ? <><X size={16} /> Cancel</> : 'Edit'}
         </button>
       </div>
 
@@ -742,7 +743,7 @@ function CreateProfileForm({
 
   return (
     <form className="create-profile-form" onSubmit={handleSubmit}>
-      <div className="create-profile-icon">👤</div>
+      <div className="create-profile-icon"><User size={20} /></div>
       <input
         ref={inputRef}
         type="text"
