@@ -608,7 +608,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const [uploadMbps, setUploadMbps] = useState('');
   const [downloadMbps, setDownloadMbps] = useState('');
 
-  const isLoading = sLoading || pLoading || uLoading || tLoading || rLoading || secLoading || dnsLoading || sqmLoading;
+  const isLoading = sLoading && pLoading && uLoading && tLoading && rLoading && secLoading && dnsLoading && sqmLoading;
   if (isLoading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
   if (sError) return <div className="card error-card">Error: {sError}</div>;
 
