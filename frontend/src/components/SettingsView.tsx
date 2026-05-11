@@ -821,11 +821,8 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
 
       {/* DNS */}
       <div className="general-section">
-        <div className="section-header-inline">
-          <h3>🌐 DNS</h3>
-          {!dnsEditing && <button className="btn-text" onClick={startDnsEdit}>✏️ Edit</button>}
-        </div>
-        <div className="toggle-row" style={{ marginBottom: dnsEditing ? 16 : 0 }}>
+        <h3>🌐 DNS</h3>
+        <div className="toggle-row">
           <div className="toggle-info">
             <span className="toggle-name">DNS Caching</span>
             <span className="toggle-desc">Cache lookups locally for faster resolution</span>
@@ -836,7 +833,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           </label>
         </div>
         {dnsEditing ? (
-          <div className="dns-edit-form">
+          <div className="dns-edit-form" style={{ marginTop: 16 }}>
             <div className="dns-mode-select">
               <label className={`dns-mode-option ${dnsMode === 'default' ? 'selected' : ''}`}>
                 <input type="radio" name="dns-mode" value="default" checked={dnsMode === 'default'} onChange={() => setDnsMode('default')} />
@@ -858,14 +855,17 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
               <button className="btn-cancel" onClick={() => setDnsEditing(false)}>Cancel</button>
             </div>
           </div>
-        ) : customIps.length > 0 ? (
-          <div className="dns-servers" style={{ marginTop: 12 }}>
-            <div className="dns-server-list">
-              {customIps.map((ip, i) => <span key={i} className="dns-server-chip">{ip}</span>)}
+        ) : (
+          <div className="general-info-grid" style={{ marginTop: 12 }}>
+            <div className="general-detail">
+              <span>DNS Servers</span>
+              <span>{customIps.length > 0 ? customIps.join(', ') : 'eero Default'}</span>
+            </div>
+            <div className="general-detail">
+              <span></span>
+              <button className="btn-text" onClick={startDnsEdit}>Edit DNS Settings</button>
             </div>
           </div>
-        ) : (
-          <span className="toggle-desc" style={{ display: 'block', marginTop: 8 }}>Using eero default DNS</span>
         )}
       </div>
 
