@@ -110,6 +110,27 @@ All tab components are **eagerly imported** — no `React.lazy()` or `Suspense`.
 
 Renders network selector dropdown, tab navigation buttons, eero node status indicators, and speed widget.
 
+### `features/app/types.ts` — Shared types
+
+| Type | Values | Purpose |
+|------|--------|---------|
+| `AppTab` | `devices`, `activity`, `profiles`, `settings-*` | Tab navigation IDs |
+| `SignalFilter` | `all`, `excellent`, `good`, `fair`, `poor` | Signal quality click-through filter |
+| `BandClickFilter` | `all`, `2.4ghz`, `5ghz`, `6ghz`, `wired` | Band click-through filter from Health tab |
+
+### Cross-tab click-throughs (Health → Devices)
+
+The Health tab (`ActivityView`) has clickable stat rows in "Clients by Band" and "Signal Quality" panels. Clicking a row navigates to the Devices tab with a URL filter parameter:
+
+```
+Health tab band row click    →  #/devices?band=5ghz
+Health tab signal row click  →  #/devices?signal=excellent
+```
+
+The flow is: `ActivityView` → `onBandClick`/`onSignalClick` callback → `App.tsx` calls `setRoute('devices', { band })` → `useHashRoute` updates URL hash → `DeviceList` reads `bandClickFilter`/`signalFilter` prop and applies the filter. Both filters show a dismissible chip in the DeviceList toolbar.
+
+`ActivityView` also calls `prefetchRequest` on mount for the devices endpoint, ensuring the response cache is warm even if the initial prefetch has expired.
+
 ### `features/devices/client.ts` — Feature-scoped device client
 
 Thin wrapper that re-exports device API functions under a `devicesClient` object for use by `DeviceList`.
@@ -123,6 +144,7 @@ Thin wrapper that re-exports device API functions under a `devicesClient` object
 | `DeviceDrawer` | `DeviceDrawer.tsx` | Slide-out device detail panel (priority, DHCP reservation) |
 | `NodeDrawer` | `NodeDrawer.tsx` | Slide-out node detail panel (LED, firmware, connectivity) |
 | `ActivityView` | `ActivityView.tsx` | Speed test trigger + network health monitoring |
+| `ClickableStatRow` | `ClickableStatRow.tsx` | Shared clickable bar-chart row used by Health tab band/signal sections |
 | `ProfileManager` | `ProfileManager.tsx` | Parental controls: pause, bedtime, content filters, scheduling |
 | `SettingsView` | `SettingsView.tsx` | Multi-section: security, DNS, SQM, port forwards, DHCP, blacklist |
 | `GuestNetwork` | `GuestNetwork.tsx` | Guest network enable/disable + credentials |

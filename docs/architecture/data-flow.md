@@ -120,12 +120,18 @@ No state management library. All state lives in `App.tsx` root component and is 
 ```
 App.tsx
 ├── auth, networks, selectedNetwork, tab, theme
+├── signalFilter, bandClickFilter (from URL hash params)
 ├── <AppSidebar />     ← receives networks, eeros, tab setter
-└── <AppContent />     ← receives selectedNetwork, tab
-    └── <DeviceList /> ← uses useFetch internally, owns its own loading/data/error
+└── <AppContent />     ← receives selectedNetwork, tab, filters
+    ├── <ActivityView /> ← receives onSignalClick, onBandClick callbacks
+    └── <DeviceList />   ← receives signalFilter, bandClickFilter props
 ```
 
 Each leaf component manages its own fetch state via `useFetch`. No global data store.
+
+### Cross-tab navigation
+
+The Health tab (`ActivityView`) exposes click-through rows that navigate to the Devices tab with URL-driven filters via `useHashRoute`. The URL hash encodes the filter (e.g. `#/devices?band=5ghz` or `#/devices?signal=excellent`), which `App.tsx` reads and passes as props to `DeviceList`.
 
 ## Error handling
 

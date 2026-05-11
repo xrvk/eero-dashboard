@@ -9,7 +9,7 @@ import { useHashRoute } from './hooks/useHashRoute';
 import AppContent from './features/app/AppContent';
 import AppSidebar from './features/app/AppSidebar';
 import type { AppTab } from './features/app/types';
-import type { SignalFilter } from './features/app/types';
+import type { SignalFilter, BandClickFilter } from './features/app/types';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -54,6 +54,13 @@ function AppMain() {
     setRoute('devices', { signal: tier });
   }, [setRoute]);
   const handleClearSignalFilter = useCallback(() => {
+    setRoute('devices');
+  }, [setRoute]);
+  const bandClickFilter = (params.get('band') as BandClickFilter) || 'all';
+  const handleBandClick = useCallback((band: BandClickFilter) => {
+    setRoute('devices', { band });
+  }, [setRoute]);
+  const handleClearBandClickFilter = useCallback(() => {
     setRoute('devices');
   }, [setRoute]);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
@@ -207,6 +214,9 @@ function AppMain() {
           signalFilter={signalFilter}
           onClearSignalFilter={handleClearSignalFilter}
           onSignalClick={handleSignalClick}
+          bandClickFilter={bandClickFilter}
+          onClearBandClickFilter={handleClearBandClickFilter}
+          onBandClick={handleBandClick}
         />
       </main>
 

@@ -9,7 +9,7 @@ import { useFetch } from '../hooks/useFetch';
 import type { Device } from '../api';
 import { devicesClient } from '../features/devices/client';
 import DeviceDrawer from './DeviceDrawer';
-import type { SignalFilter } from '../features/app/types';
+import type { SignalFilter, BandClickFilter } from '../features/app/types';
 
 function extractId(url?: string) {
   if (!url) return '';
@@ -26,6 +26,13 @@ type StatusFilter = 'all' | 'online' | 'offline';
 type BandFilter = 'all' | 'wired' | 'wireless';
 type SortCol = 'name' | 'ip' | 'mac' | 'type' | 'signal' | 'band' | 'speed' | 'down' | 'up';
 type SortDir = 'asc' | 'desc';
+
+const BAND_DISPLAY_NAMES: Record<string, string> = {
+  '2.4ghz': '2.4 GHz',
+  '5ghz': '5 GHz',
+  '6ghz': '6 GHz',
+  'wired': 'Wired',
+};
 
 interface DeviceConnectivity {
   signal?: string;
@@ -116,14 +123,28 @@ function matchesSignalTier(d: Device, tier: SignalFilter): boolean {
   }
 }
 
+function matchesBandClick(d: Device, band: BandClickFilter): boolean {
+  if (band === 'all') return true;
+  if (band === 'wired') return !d.wireless;
+  if (!d.wireless) return false;
+  const freq = getConn(d)?.frequency;
+  if (!freq) return false;
+  if (band === '2.4ghz') return freq < 3000;
+  if (band === '5ghz') return freq >= 3000 && freq < 5900;
+  if (band === '6ghz') return freq >= 5900;
+  return true;
+}
+
 interface DeviceListProps {
   networkId: string;
   onNavigate?: (tab: string) => void;
   signalFilter?: SignalFilter;
   onClearSignalFilter?: () => void;
+  bandClickFilter?: BandClickFilter;
+  onClearBandClickFilter?: () => void;
 }
 
-export default function DeviceList({ networkId, onNavigate, signalFilter = 'all', onClearSignalFilter }: DeviceListProps) {
+export default function DeviceList({ networkId, onNavigate, signalFilter = 'all', onClearSignalFilter, bandClickFilter = 'all', onClearBandClickFilter }: DeviceListProps) {
   const { data, loading, error, refetch } = useFetch(
     () => devicesClient.list(networkId),
     [networkId],
@@ -193,13 +214,17 @@ export default function DeviceList({ networkId, onNavigate, signalFilter = 'all'
     // Status filter
     if (statusFilter === 'online') result = result.filter(d => d.connected);
     else if (statusFilter === 'offline') result = result.filter(d => !d.connected);
-    // Band filter
+    // Band filter (local toolbar toggle)
     if (bandFilter !== 'all') {
       result = result.filter(d => {
         if (bandFilter === 'wired') return !d.wireless;
         if (bandFilter === 'wireless') return !!d.wireless;
         return true;
       });
+    }
+    // Band click filter (from Health tab click-through)
+    if (bandClickFilter && bandClickFilter !== 'all') {
+      result = result.filter(d => matchesBandClick(d, bandClickFilter));
     }
     // Signal quality filter
     if (signalFilter && signalFilter !== 'all') {
@@ -215,7 +240,7 @@ export default function DeviceList({ networkId, onNavigate, signalFilter = 'all'
       const manufacturer = (d.manufacturer || '').toLowerCase();
       return name.includes(q) || ip.includes(q) || mac.includes(q) || manufacturer.includes(q);
     });
-  }, [allDevices, search, statusFilter, bandFilter, signalFilter]);
+  }, [allDevices, search, statusFilter, bandFilter, bandClickFilter, signalFilter]);
 
   const groups = useMemo(() => {
     const result: { label: string; devices: Device[] }[] = [];
@@ -377,6 +402,16 @@ export default function DeviceList({ networkId, onNavigate, signalFilter = 'all'
               📶 Showing {signalFilter} signal devices
               {onClearSignalFilter && (
                 <button className="signal-filter-clear" onClick={onClearSignalFilter} title="Clear signal filter">×</button>
+              )}
+            </span>
+          </div>
+        )}
+        {bandClickFilter && bandClickFilter !== 'all' && (
+          <div className="toolbar-row band-filter-row">
+            <span className="band-filter-chip">
+              📡 Showing {BAND_DISPLAY_NAMES[bandClickFilter]} devices
+              {onClearBandClickFilter && (
+                <button className="band-filter-clear" onClick={onClearBandClickFilter} title="Clear band filter">×</button>
               )}
             </span>
           </div>

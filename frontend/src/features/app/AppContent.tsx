@@ -1,4 +1,4 @@
-import type { AppTab, SignalFilter } from './types';
+import type { AppTab, SignalFilter, BandClickFilter } from './types';
 import DeviceList from '../../components/DeviceList';
 import ActivityView from '../../components/ActivityView';
 import ProfileManager from '../../components/ProfileManager';
@@ -12,9 +12,12 @@ interface AppContentProps {
   signalFilter?: SignalFilter;
   onClearSignalFilter?: () => void;
   onSignalClick?: (tier: SignalFilter) => void;
+  bandClickFilter?: BandClickFilter;
+  onClearBandClickFilter?: () => void;
+  onBandClick?: (band: BandClickFilter) => void;
 }
 
-export default function AppContent({ selectedNetwork, tab, setTab, signalFilter, onClearSignalFilter, onSignalClick }: AppContentProps) {
+export default function AppContent({ selectedNetwork, tab, setTab, signalFilter, onClearSignalFilter, onSignalClick, bandClickFilter, onClearBandClickFilter, onBandClick }: AppContentProps) {
   if (!selectedNetwork) return null;
 
   return (
@@ -25,9 +28,11 @@ export default function AppContent({ selectedNetwork, tab, setTab, signalFilter,
           onNavigate={(t) => setTab(t as AppTab)}
           signalFilter={signalFilter}
           onClearSignalFilter={onClearSignalFilter}
+          bandClickFilter={bandClickFilter}
+          onClearBandClickFilter={onClearBandClickFilter}
         />
       )}
-      {tab === 'activity' && <ActivityView networkId={selectedNetwork} onSignalClick={onSignalClick} />}
+      {tab === 'activity' && <ActivityView networkId={selectedNetwork} onSignalClick={onSignalClick} onBandClick={onBandClick} />}
       {tab === 'profiles' && <ProfileManager networkId={selectedNetwork} />}
       {tab === 'settings-general' && <GeneralSettings networkId={selectedNetwork} />}
       {tab === 'settings-forwards' && <PortForwardsSettings networkId={selectedNetwork} />}
