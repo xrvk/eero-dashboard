@@ -476,7 +476,10 @@ function ScheduleTab({ networkId, profileId }: { networkId: string; profileId: s
     );
   }
 
-  const hasSchedule = scheduleData && typeof scheduleData === 'object' && Object.keys(scheduleData).length > 0;
+  const scheduleArray = scheduleData && typeof scheduleData === 'object'
+    ? (scheduleData as Record<string, unknown>).schedule
+    : null;
+  const hasSchedule = Array.isArray(scheduleArray) && scheduleArray.length > 0;
 
   return (
     <div className="schedule-section">
