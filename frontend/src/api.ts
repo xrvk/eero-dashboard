@@ -208,6 +208,21 @@ export interface NetworkSettingsSummary {
 export const getProfiles = (networkId: string) =>
   request<{ profiles: Profile[] }>(`/networks/${networkId}/profiles`);
 
+export const createProfile = (networkId: string, name: string) =>
+  request<Profile>(`/networks/${networkId}/profiles`, {
+    method: 'POST',
+    body: JSON.stringify({ name }),
+  });
+
+export const renameProfile = (networkId: string, profileId: string, name: string) =>
+  request<Profile>(`/networks/${networkId}/profiles/${profileId}/rename`, {
+    method: 'PUT',
+    body: JSON.stringify({ name }),
+  });
+
+export const deleteProfile = (networkId: string, profileId: string) =>
+  request(`/networks/${networkId}/profiles/${profileId}`, { method: 'DELETE' });
+
 // Activity
 export const getActivity = (networkId: string) =>
   request<{ summary?: Record<string, unknown>; [key: string]: unknown }>(`/networks/${networkId}/activity`);

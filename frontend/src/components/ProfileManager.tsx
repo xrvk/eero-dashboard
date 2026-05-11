@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useFetch, prefetchRequest } from '../hooks/useFetch';
 import * as api from '../api';
 import { request } from '../api/client';
@@ -48,6 +48,7 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const rawProfiles = useMemo(() => data?.profiles ?? [], [data]);
   const profiles = useMemo(() => stableSort(networkId, rawProfiles), [networkId, rawProfiles]);
@@ -61,6 +62,29 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
       alert(e instanceof Error ? e.message : 'Failed to update profile');
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async (profileId: string) => {
+    setActionLoading(profileId);
+    try {
+      await api.deleteProfile(networkId, profileId);
+      if (selectedProfile === profileId) setSelectedProfile(null);
+      _profileOrder.delete(networkId);
+      await refetch();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to delete profile');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRename = async (profileId: string, name: string) => {
+    try {
+      await api.renameProfile(networkId, profileId, name);
+      await refetch();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to rename profile');
     }
   };
 
@@ -80,6 +104,13 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
       <div className="section-header">
         <span className="results-counter">{profiles.length} profile{profiles.length !== 1 ? 's' : ''}</span>
         <div className="profile-header-actions">
+          <button
+            className={`btn-create-profile ${showCreateForm ? 'active' : ''}`}
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            title={showCreateForm ? 'Cancel' : 'Create profile'}
+          >
+            {showCreateForm ? '✕' : '＋'}<span className="btn-create-label"> New</span>
+          </button>
           <div className="view-toggle">
             <button
               className={`view-toggle-btn ${viewMode === 'cards' ? 'active' : ''}`}
@@ -96,11 +127,23 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
         </div>
       </div>
 
-      {profiles.length === 0 ? (
+      {showCreateForm && (
+        <CreateProfileForm
+          networkId={networkId}
+          onCreated={() => {
+            setShowCreateForm(false);
+            _profileOrder.delete(networkId);
+            refetch();
+          }}
+          onCancel={() => setShowCreateForm(false)}
+        />
+      )}
+
+      {profiles.length === 0 && !showCreateForm ? (
         <div className="empty-state">
           <p className="empty-icon">👤</p>
           <p className="empty-text">No profiles configured</p>
-          <p className="empty-subtext">Profiles are created in the eero app</p>
+          <p className="empty-subtext">Click <strong>＋ New</strong> to create one</p>
         </div>
       ) : viewMode === 'cards' ? (
         <div className="profile-grid">
@@ -184,6 +227,9 @@ export default function ProfileManager({ networkId }: ProfileManagerProps) {
           profileId={selectedProfile}
           onClose={() => setSelectedProfile(null)}
           onRefresh={refetch}
+          onRename={(name) => handleRename(selectedProfile, name)}
+          onDelete={() => handleDelete(selectedProfile)}
+          isDeleting={actionLoading === selectedProfile}
         />
       )}
     </div>
@@ -198,14 +244,21 @@ function ProfileDetailPanel({
   profileId,
   onClose,
   onRefresh,
+  onRename,
+  onDelete,
+  isDeleting,
 }: {
   networkId: string;
   profile: api.Profile;
   profileId: string;
   onClose: () => void;
   onRefresh: () => void;
+  onRename: (name: string) => void;
+  onDelete: () => void;
+  isDeleting: boolean;
 }) {
   const [tab, setTab] = useState<DetailTab>('devices');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   // Eager-load schedule + blocked-apps data when panel opens
   useEffect(() => {
@@ -220,10 +273,39 @@ function ProfileDetailPanel({
       <div className="profile-detail-header">
         <div className="profile-detail-title">
           <span className="profile-icon">👤</span>
-          <h3>{profile.name || 'Unnamed'}</h3>
+          <InlineEditName
+            value={profile.name || 'Unnamed'}
+            onSave={onRename}
+          />
           {profile.paused && <span className="profile-paused-badge">Paused</span>}
         </div>
-        <button className="btn-icon" onClick={onClose} title="Close">✕</button>
+        <div className="profile-detail-header-actions">
+          {!confirmDelete ? (
+            <button
+              className="btn-icon btn-icon-danger"
+              onClick={() => setConfirmDelete(true)}
+              title="Delete profile"
+            >🗑</button>
+          ) : (
+            <div className="delete-confirm">
+              <span className="delete-confirm-text">Delete?</span>
+              <button
+                className="btn-sm btn-danger-solid"
+                onClick={() => { onDelete(); setConfirmDelete(false); }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? '…' : 'Yes'}
+              </button>
+              <button
+                className="btn-sm"
+                onClick={() => setConfirmDelete(false)}
+              >
+                No
+              </button>
+            </div>
+          )}
+          <button className="btn-icon" onClick={onClose} title="Close">✕</button>
+        </div>
       </div>
 
       <div className="profile-detail-tabs">
@@ -620,6 +702,124 @@ function DevicePicker({ networkId, profileId, currentDeviceUrls, allDevices, onS
         </button>
       </div>
     </div>
+  );
+}
+
+/* ── Create Profile Form ───────────────────────────────── */
+
+function CreateProfileForm({
+  networkId,
+  onCreated,
+  onCancel,
+}: {
+  networkId: string;
+  onCreated: () => void;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      await api.createProfile(networkId, name.trim());
+      onCreated();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to create profile');
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form className="create-profile-form" onSubmit={handleSubmit}>
+      <div className="create-profile-icon">👤</div>
+      <input
+        ref={inputRef}
+        type="text"
+        className="create-profile-input"
+        placeholder="Profile name…"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        disabled={saving}
+        maxLength={50}
+      />
+      <button
+        type="submit"
+        className="btn-sm btn-primary"
+        disabled={saving || !name.trim()}
+      >
+        {saving ? 'Creating…' : 'Create'}
+      </button>
+      <button
+        type="button"
+        className="btn-sm"
+        onClick={onCancel}
+        disabled={saving}
+      >
+        Cancel
+      </button>
+    </form>
+  );
+}
+
+/* ── Inline Edit Name ──────────────────────────────────── */
+
+function InlineEditName({ value, onSave }: { value: string; onSave: (name: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [editing]);
+
+  const commit = () => {
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== value) {
+      onSave(trimmed);
+    } else {
+      setDraft(value);
+    }
+    setEditing(false);
+  };
+
+  if (!editing) {
+    return (
+      <h3
+        className="profile-detail-name editable"
+        onClick={() => setEditing(true)}
+        title="Click to rename"
+      >
+        {value}
+        <span className="edit-hint">✎</span>
+      </h3>
+    );
+  }
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      className="inline-edit-input"
+      value={draft}
+      onChange={e => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={e => {
+        if (e.key === 'Enter') commit();
+        if (e.key === 'Escape') { setDraft(value); setEditing(false); }
+      }}
+      maxLength={50}
+    />
   );
 }
 

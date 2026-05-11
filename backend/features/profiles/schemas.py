@@ -21,3 +21,11 @@ class ProfileDevicesRequest(BaseModel):
 
 class ProfileScheduleRequest(BaseModel):
     time_blocks: list[dict]
+
+
+class ProfileCreateRequest(BaseModel):
+    name: str
+
+
+class ProfileRenameRequest(BaseModel):
+    name: str

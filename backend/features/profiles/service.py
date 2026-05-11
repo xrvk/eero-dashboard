@@ -96,3 +96,38 @@ async def set_devices(client: EeroClient, network_id: str, profile_id: str, devi
         resp = await client.set_profile_devices(profile_id, device_urls, network_id=network_id)
         cache.invalidate(f"net:{network_id}:profile:{profile_id}")
         return _data(resp)
+
+
+async def create_profile(client: EeroClient, network_id: str, name: str):
+    with translate_errors(code="create_profile_failed", message="Failed to create profile"):
+        auth_token = await client._api.profiles._auth_api.get_auth_token()
+        resp = await client._api.profiles.post(
+            f"networks/{network_id}/profiles",
+            auth_token=auth_token,
+            json={"name": name},
+        )
+        cache.invalidate(f"net:{network_id}:profile")
+        return _data(resp)
+
+
+async def rename_profile(client: EeroClient, network_id: str, profile_id: str, name: str):
+    with translate_errors(code="rename_profile_failed", message="Failed to rename profile"):
+        auth_token = await client._api.profiles._auth_api.get_auth_token()
+        resp = await client._api.profiles.put(
+            f"networks/{network_id}/profiles/{profile_id}",
+            auth_token=auth_token,
+            json={"name": name},
+        )
+        cache.invalidate(f"net:{network_id}:profile:{profile_id}")
+        return _data(resp)
+
+
+async def delete_profile(client: EeroClient, network_id: str, profile_id: str):
+    with translate_errors(code="delete_profile_failed", message="Failed to delete profile"):
+        auth_token = await client._api.profiles._auth_api.get_auth_token()
+        resp = await client._api.profiles.delete(
+            f"networks/{network_id}/profiles/{profile_id}",
+            auth_token=auth_token,
+        )
+        cache.invalidate(f"net:{network_id}:profile")
+        return resp

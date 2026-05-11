@@ -1150,6 +1150,74 @@ body {
 .plus-gate .plus-banner { margin-bottom: 0; }
 .plus-gate-detail { font-size: 0.82rem; color: var(--text-muted); max-width: 360px; }
 
+/* ── Create Profile Form ───────────────────── */
+.create-profile-form {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px; margin-bottom: 16px;
+  background: var(--bg-card); border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  animation: fadeIn 0.15s ease-out;
+}
+.create-profile-icon { font-size: 1.4rem; flex-shrink: 0; }
+.create-profile-input {
+  flex: 1; padding: 8px 12px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 0.9rem; font-weight: 500; outline: none;
+}
+.create-profile-input:focus { border-color: var(--accent); }
+.create-profile-input::placeholder { color: var(--text-dim); }
+
+/* ── Create Button ─────────────────────────── */
+.btn-create-profile {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 12px; font-size: 0.8rem; font-weight: 600;
+  background: rgba(110,160,255,0.12); color: var(--accent);
+  border: 1px solid rgba(110,160,255,0.25); border-radius: var(--radius-sm);
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-create-profile:hover { background: rgba(110,160,255,0.2); border-color: var(--accent); }
+.btn-create-profile.active { background: var(--bg-card); border-color: var(--accent); }
+.btn-create-label { }
+
+/* ── Inline Edit Name ──────────────────────── */
+.profile-detail-name.editable {
+  cursor: pointer; margin: 0; font-size: 1rem; font-weight: 600;
+  display: flex; align-items: center; gap: 6px;
+  padding: 2px 4px; border-radius: 4px;
+  transition: background 0.15s;
+}
+.profile-detail-name.editable:hover { background: var(--bg-card-hover); }
+.edit-hint {
+  font-size: 0.7rem; color: var(--text-dim);
+  opacity: 0; transition: opacity 0.15s;
+}
+.profile-detail-name.editable:hover .edit-hint { opacity: 1; }
+.inline-edit-input {
+  font-size: 1rem; font-weight: 600; padding: 2px 6px;
+  background: var(--bg-input); border: 1px solid var(--accent);
+  border-radius: 4px; color: var(--text); outline: none;
+  width: 200px;
+}
+
+/* ── Delete Confirm ────────────────────────── */
+.profile-detail-header-actions {
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-icon-danger { color: var(--text-dim); transition: color 0.15s; }
+.btn-icon-danger:hover { color: var(--red); }
+.delete-confirm {
+  display: flex; align-items: center; gap: 6px;
+  animation: fadeIn 0.15s ease-out;
+}
+.delete-confirm-text {
+  font-size: 0.8rem; font-weight: 600; color: var(--red);
+}
+.btn-danger-solid {
+  background: var(--red); color: #fff;
+}
+.btn-danger-solid:hover:not(:disabled) { opacity: 0.85; }
+
 /* ── Settings Subtabs ───────────────────────── */
 .settings-subtabs {
   display: flex; gap: 2px; margin-bottom: 24px;

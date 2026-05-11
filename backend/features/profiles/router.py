@@ -14,6 +14,15 @@ async def list_profiles(network_id: str, client: EeroClient = Depends(get_client
     return await service.list_profiles(client, network_id)
 
 
+@router.post("/networks/{network_id}/profiles")
+async def create_profile(
+    network_id: str,
+    req: schemas.ProfileCreateRequest,
+    client: EeroClient = Depends(get_client),
+):
+    return await service.create_profile(client, network_id, req.name)
+
+
 @router.get("/networks/{network_id}/profiles/{profile_id}")
 async def get_profile(network_id: str, profile_id: str, client: EeroClient = Depends(get_client)):
     return await service.get_profile(client, network_id, profile_id)
@@ -90,3 +99,22 @@ async def set_devices(
     client: EeroClient = Depends(get_client),
 ):
     return await service.set_devices(client, network_id, profile_id, req.device_urls)
+
+
+@router.put("/networks/{network_id}/profiles/{profile_id}/rename")
+async def rename_profile(
+    network_id: str,
+    profile_id: str,
+    req: schemas.ProfileRenameRequest,
+    client: EeroClient = Depends(get_client),
+):
+    return await service.rename_profile(client, network_id, profile_id, req.name)
+
+
+@router.delete("/networks/{network_id}/profiles/{profile_id}")
+async def delete_profile(
+    network_id: str,
+    profile_id: str,
+    client: EeroClient = Depends(get_client),
+):
+    return await service.delete_profile(client, network_id, profile_id)
