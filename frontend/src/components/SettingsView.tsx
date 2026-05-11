@@ -123,7 +123,12 @@ export function DnsSettings({ networkId }: { networkId: string }) {
           <select
             className="dns-select"
             value={editing ? dnsMode : mode}
-            onChange={(e) => { setDnsMode(e.target.value); setEditing(true); }}
+            onChange={(e) => {
+              const val = e.target.value;
+              setDnsMode(val);
+              if (val === 'custom') setDnsServers([customIps[0] || '', customIps[1] || '']);
+              setEditing(true);
+            }}
             disabled={saving}
           >
             <option value="default">eero Default</option>
@@ -139,7 +144,7 @@ export function DnsSettings({ networkId }: { networkId: string }) {
           )}
         </div>
 
-        {editing && dnsMode === 'custom' && (
+        {((editing && dnsMode === 'custom') || (!editing && mode === 'custom')) && (
           <div className="dns-server-inputs">
             {['Primary', 'Secondary'].map((label, i) => (
               <div key={i} className="form-field">
@@ -147,25 +152,20 @@ export function DnsSettings({ networkId }: { networkId: string }) {
                 <input
                   className="dns-input" type="text"
                   placeholder={i === 0 ? '1.1.1.1 or 2606:4700:4700::1111' : '8.8.8.8'}
-                  value={dnsServers[i]}
-                  onChange={(e) => { const s = [...dnsServers]; s[i] = e.target.value; setDnsServers(s); }}
+                  value={editing ? dnsServers[i] : (customIps[i] || '')}
+                  onFocus={() => { if (!editing) { setDnsMode('custom'); setDnsServers([customIps[0] || '', customIps[1] || '']); setEditing(true); } }}
+                  onChange={(e) => { const s = [...dnsServers]; s[i] = e.target.value; setDnsServers(s); if (!editing) { setDnsMode('custom'); setEditing(true); } }}
                 />
               </div>
             ))}
-            <div className="dns-edit-actions">
-              <button className="btn-primary" onClick={handleSave} disabled={saving}>
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-              <button className="btn-cancel" onClick={() => setEditing(false)}>Cancel</button>
-            </div>
-          </div>
-        )}
-
-        {!editing && customIps.length > 0 && (
-          <div className="dns-server-list" style={{ marginTop: 8 }}>
-            {customIps.map((ip, i) => (
-              <span key={i} className="dns-server-chip">{ip}</span>
-            ))}
+            {editing && (
+              <div className="dns-edit-actions">
+                <button className="btn-primary" onClick={handleSave} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+                <button className="btn-cancel" onClick={() => setEditing(false)}>Cancel</button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -898,7 +898,12 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
             <select
               className="dns-select"
               value={dnsEditing ? dnsMode : dnsCurrentMode}
-              onChange={(e) => { setDnsMode(e.target.value); setDnsServers([customIps[0] || '', customIps[1] || '']); setDnsEditing(true); }}
+              onChange={(e) => {
+                const val = e.target.value;
+                setDnsMode(val);
+                if (val === 'custom') setDnsServers([customIps[0] || '', customIps[1] || '']);
+                setDnsEditing(true);
+              }}
               disabled={dnsSaving}
             >
               <option value="default">eero Default</option>
@@ -915,7 +920,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           </div>
         </div>
 
-        {dnsEditing && dnsMode === 'custom' && (
+        {((dnsEditing && dnsMode === 'custom') || (!dnsEditing && dnsCurrentMode === 'custom')) && (
           <div className="dns-server-inputs">
             {['Primary', 'Secondary'].map((label, i) => (
               <div key={i} className="form-field">
@@ -923,23 +928,18 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
                 <input
                   className="dns-input" type="text"
                   placeholder={i === 0 ? '1.1.1.1 or 2606:4700:4700::1111' : '8.8.8.8'}
-                  value={dnsServers[i]}
-                  onChange={(e) => { const s = [...dnsServers]; s[i] = e.target.value; setDnsServers(s); }}
+                  value={dnsEditing ? dnsServers[i] : (customIps[i] || '')}
+                  onFocus={() => { if (!dnsEditing) { setDnsMode('custom'); setDnsServers([customIps[0] || '', customIps[1] || '']); setDnsEditing(true); } }}
+                  onChange={(e) => { const s = [...dnsServers]; s[i] = e.target.value; setDnsServers(s); if (!dnsEditing) { setDnsMode('custom'); setDnsEditing(true); } }}
                 />
               </div>
             ))}
-            <div className="dns-edit-actions">
-              <button className="btn-primary" onClick={handleDnsSave} disabled={dnsSaving}>{dnsSaving ? 'Saving…' : 'Save'}</button>
-              <button className="btn-cancel" onClick={() => setDnsEditing(false)}>Cancel</button>
-            </div>
-          </div>
-        )}
-
-        {!dnsEditing && customIps.length > 0 && (
-          <div className="dns-server-list" style={{ marginTop: 8 }}>
-            {customIps.map((ip, i) => (
-              <span key={i} className="dns-server-chip">{ip}</span>
-            ))}
+            {dnsEditing && (
+              <div className="dns-edit-actions">
+                <button className="btn-primary" onClick={handleDnsSave} disabled={dnsSaving}>{dnsSaving ? 'Saving…' : 'Save'}</button>
+                <button className="btn-cancel" onClick={() => setDnsEditing(false)}>Cancel</button>
+              </div>
+            )}
           </div>
         )}
       </div>
