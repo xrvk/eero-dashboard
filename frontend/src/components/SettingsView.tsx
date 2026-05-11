@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import {
+  Radio, Key, ArrowUpCircle, AlertTriangle, CheckCircle, Shield, Info,
+  Globe, Gauge, Search, RotateCcw, Lightbulb, Home, X, Ban, Plus,
+} from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
 
@@ -195,7 +199,7 @@ export function PortForwardsSettings({ networkId }: { networkId: string }) {
         <div className="section-header-inline" style={{ marginBottom: 12 }}>
           <span className="results-counter">{(list as unknown[]).length} forward{(list as unknown[]).length !== 1 ? 's' : ''}</span>
           <button className="btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
-            {showForm ? '✕ Cancel' : '+ Add'}
+            {showForm ? <><X size={14} /> Cancel</> : <><Plus size={14} /> Add</>}
           </button>
         </div>
         <table className="device-table">
@@ -225,7 +229,7 @@ export function PortForwardsSettings({ networkId }: { networkId: string }) {
                   <td>
                     <button className={`btn-action btn-delete ${confirmDelete === fid ? 'confirming' : ''}`}
                       disabled={deleting === fid} onClick={() => handleDelete(String(f.url || ''))}
-                    >{confirmDelete === fid ? 'Confirm?' : '✕'}</button>
+                    >{confirmDelete === fid ? 'Confirm?' : <X size={14} />}</button>
                   </td>
                 </tr>
               );
@@ -283,7 +287,7 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
         <div className="section-header-inline" style={{ marginBottom: 12 }}>
           <span className="results-counter">{(list as unknown[]).length} reservation{(list as unknown[]).length !== 1 ? 's' : ''}</span>
           <button className="btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
-            {showForm ? '✕ Cancel' : '+ Add'}
+            {showForm ? <><X size={14} /> Cancel</> : <><Plus size={14} /> Add</>}
           </button>
         </div>
         <table className="device-table">
@@ -310,7 +314,7 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
                     <button className={`btn-action btn-delete ${confirmDelete === rid ? 'confirming' : ''}`}
                       disabled={deleting === rid}
                       onClick={() => handleDelete(String(r.url || ''))}
-                    >{confirmDelete === rid ? 'Confirm?' : '✕'}</button>
+                    >{confirmDelete === rid ? 'Confirm?' : <X size={14} />}</button>
                   </td>
                 </tr>
               );
@@ -505,7 +509,7 @@ export function BlacklistSettings({ networkId }: { networkId: string }) {
                         disabled={removing === did}
                         onClick={() => handleRemove(did)}
                       >
-                        {confirmRemove === did ? 'Confirm?' : '✕'}
+                        {confirmRemove === did ? 'Confirm?' : <X size={14} />}
                       </button>
                     </td>
                   </tr>
@@ -515,7 +519,7 @@ export function BlacklistSettings({ networkId }: { networkId: string }) {
           </table>
         ) : (
           <div className="empty-state">
-            <p className="empty-icon">🚫</p>
+            <p className="empty-icon"><Ban size={40} /></p>
             <p className="empty-text">No blacklisted devices</p>
           </div>
         )}
@@ -658,6 +662,11 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
     } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
     finally { setDnsSaving(false); }
   };
+  const startDnsEdit = () => {
+    setDnsMode(dnsCurrentMode);
+    setDnsServers([customIps[0] || '', customIps[1] || '']);
+    setDnsEditing(true);
+  };
   const handleCachingToggle = async () => {
     setDnsSaving(true);
     try { await api.setDnsCaching(networkId, !dnsCaching); await refetchDns(); }
@@ -694,7 +703,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
       <div className="general-cards">
         <div className="general-card">
           <div className="general-card-header">
-            <span className="general-card-icon">📡</span>
+            <span className="general-card-icon"><Radio size={20} /></span>
             <h3>Network</h3>
             {!renaming && <button className="btn-icon-sm" onClick={() => { setNewName(networkName); setRenaming(true); }} title="Edit network name"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>}
           </div>
@@ -704,7 +713,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
                 onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setRenaming(false); }}
                 autoFocus />
               <button className="btn-primary btn-sm" onClick={handleRename} disabled={saving}>{saving ? '…' : '✓'}</button>
-              <button className="btn-cancel btn-sm" onClick={() => setRenaming(false)}>✕</button>
+              <button className="btn-cancel btn-sm" onClick={() => setRenaming(false)}><X size={14} /></button>
             </div>
           ) : (
             <span className="general-card-value">{networkName || '—'}</span>
@@ -718,7 +727,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
 
         <div className="general-card">
           <div className="general-card-header">
-            <span className="general-card-icon">🔑</span>
+            <span className="general-card-icon"><Key size={20} /></span>
             <h3>Wi-Fi Password</h3>
           </div>
           <div className="general-password">
@@ -746,7 +755,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
 
         <div className="general-card">
           <div className="general-card-header">
-            <span className="general-card-icon">⬆️</span>
+            <span className="general-card-icon"><ArrowUpCircle size={20} /></span>
             <h3>Firmware</h3>
           </div>
           {updates.target_firmware ? (
@@ -756,7 +765,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
                 <div className="general-detail">
                   <span>Status</span>
                   <span className={updates.update_required ? 'text-yellow' : 'text-green'}>
-                    {updates.update_required ? '⚠️ Update available' : '✅ Up to date'}
+                    {updates.update_required ? <><AlertTriangle size={14} /> Update available</> : <><CheckCircle size={14} /> Up to date</>}
                   </span>
                 </div>
               </div>
@@ -769,7 +778,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
 
       {/* Security & Connectivity */}
       <div className="general-section">
-        <h3>🔒 Security & Connectivity</h3>
+        <h3><Shield size={16} /> Security & Connectivity</h3>
         <div className="toggle-list">
           {securityToggles.map((t) => {
             const val = (security as Record<string, unknown>)[t.key];
@@ -836,7 +845,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
                   <span
                     className="thread-info-badge"
                     data-tip={[thread.name && `Network: ${thread.name}`, thread.channel && `Channel: ${thread.channel}`].filter(Boolean).join(' · ')}
-                  >ℹ️</span>
+                  ><Info size={14} /></span>
                 )}
               </span>
               <span className="toggle-desc">IoT mesh networking protocol</span>
@@ -852,7 +861,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
 
       {/* DNS */}
       <div className="general-section">
-        <h3>🌐 DNS</h3>
+        <h3><Globe size={16} /> DNS</h3>
         <div className="toggle-row">
           <div className="toggle-info">
             <span className="toggle-name">DNS Caching</span>
@@ -863,76 +872,72 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
             <span className="toggle-slider" />
           </label>
         </div>
-        <div style={{ marginTop: 12 }}>
-          <label className="drawer-label">DNS Provider</label>
-          <div className="dns-provider-row">
-            <select
-              className="dns-select"
-              value={dnsEditing ? dnsMode : dnsCurrentMode}
-              onChange={(e) => {
-                const val = e.target.value;
-                setDnsMode(val);
-                if (val === 'custom') setDnsServers([customIps[0] || '', customIps[1] || '']);
-                setDnsEditing(true);
-              }}
-              disabled={dnsSaving}
-            >
-              <option value="default">eero Default</option>
-              <option value="cloudflare">Cloudflare (1.1.1.1)</option>
-              <option value="google">Google (8.8.8.8)</option>
-              <option value="opendns">OpenDNS (208.67.222.222)</option>
-              <option value="custom">Custom</option>
-            </select>
-            {dnsEditing && dnsMode !== 'custom' && (
-              <button className="btn-primary btn-sm" onClick={handleDnsSave} disabled={dnsSaving}>
-                {dnsSaving ? '…' : 'Apply'}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* QoS / SQM */}
-      <div className="general-section">
-        <h3>🚀 QoS (Smart Queue Management)</h3>
-        <div className="toggle-row">
-          <div className="toggle-info">
-            <span className="toggle-name">SQM</span>
-            <span className="toggle-desc">Reduce bufferbloat for gaming, video calls, streaming</span>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={sqmEnabled} disabled={sqmSaving} onChange={handleSqmToggle} />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-
-        {((dnsEditing && dnsMode === 'custom') || (!dnsEditing && dnsCurrentMode === 'custom')) && (
-          <div className="dns-server-inputs">
-            {['Primary', 'Secondary'].map((label, i) => (
-              <div key={i} className="form-field">
-                <label>{label} {i === 1 && '(optional)'}</label>
-                <input
-                  className="dns-input" type="text"
-                  placeholder={i === 0 ? '1.1.1.1 or 2606:4700:4700::1111' : '8.8.8.8'}
-                  value={dnsEditing ? dnsServers[i] : (customIps[i] || '')}
-                  onFocus={() => { if (!dnsEditing) { setDnsMode('custom'); setDnsServers([customIps[0] || '', customIps[1] || '']); setDnsEditing(true); } }}
-                  onChange={(e) => { const s = [...dnsServers]; s[i] = e.target.value; setDnsServers(s); if (!dnsEditing) { setDnsMode('custom'); setDnsEditing(true); } }}
-                />
-              </div>
-            ))}
-            {dnsEditing && (
-              <div className="dns-edit-actions">
-                <button className="btn-primary" onClick={handleDnsSave} disabled={dnsSaving}>{dnsSaving ? 'Saving…' : 'Save'}</button>
-                <button className="btn-cancel" onClick={() => setDnsEditing(false)}>Cancel</button>
+        {dnsEditing ? (
+          <div style={{ marginTop: 12 }}>
+            <label className="drawer-label">DNS Provider</label>
+            <div className="dns-provider-row">
+              <select
+                className="dns-select"
+                value={dnsMode}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDnsMode(val);
+                  if (val === 'custom') setDnsServers([customIps[0] || '', customIps[1] || '']);
+                }}
+                onKeyDown={(e) => { if (e.key === 'Escape') setDnsEditing(false); }}
+                disabled={dnsSaving}
+              >
+                <option value="default">eero Default</option>
+                <option value="cloudflare">Cloudflare (1.1.1.1)</option>
+                <option value="google">Google (8.8.8.8)</option>
+                <option value="opendns">OpenDNS (208.67.222.222)</option>
+                <option value="custom">Custom</option>
+              </select>
+              {dnsMode !== 'custom' && (
+                <button className="btn-primary btn-sm" onClick={handleDnsSave} disabled={dnsSaving}>
+                  {dnsSaving ? '…' : 'Apply'}
+                </button>
+              )}
+            </div>
+            {((dnsEditing && dnsMode === 'custom') || (!dnsEditing && dnsCurrentMode === 'custom')) && (
+              <div className="dns-server-inputs">
+                {['Primary', 'Secondary'].map((label, i) => (
+                  <div key={i} className="form-field">
+                    <label>{label} {i === 1 && '(optional)'}</label>
+                    <input
+                      className="dns-input" type="text"
+                      placeholder={i === 0 ? '1.1.1.1 or 2606:4700:4700::1111' : '8.8.8.8'}
+                      value={dnsServers[i]}
+                      onChange={(e) => { const s = [...dnsServers]; s[i] = e.target.value; setDnsServers(s); }}
+                      onKeyDown={(e) => { if (e.key === 'Escape') setDnsEditing(false); }}
+                    />
+                  </div>
+                ))}
+                <div className="dns-edit-actions">
+                  <button className="btn-primary" onClick={handleDnsSave} disabled={dnsSaving}>{dnsSaving ? 'Saving…' : 'Save'}</button>
+                  <button className="btn-cancel" onClick={() => setDnsEditing(false)}>Cancel</button>
+                </div>
               </div>
             )}
+          </div>
+        ) : (
+          <div className="general-info-grid" style={{ marginTop: 12 }}>
+            <div className="general-detail">
+              <span>DNS Servers</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span className="mono" style={{ fontWeight: 500, color: 'var(--text)' }}>{customIps.length > 0 ? customIps.join(', ') : 'eero Default'}</span>
+                <button className="btn-icon-sm" onClick={startDnsEdit} title="Edit DNS">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
       {/* QoS / SQM */}
       <div className="general-section">
-        <h3>🚀 QoS (Smart Queue Management)</h3>
+        <h3><Gauge size={16} /> QoS (Smart Queue Management)</h3>
         <div className="toggle-row">
           <div className="toggle-info">
             <span className="toggle-name">SQM</span>
@@ -949,11 +954,11 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
               <div className="sqm-edit-form">
                 <div className="form-field">
                   <label>Upload (Mbps)</label>
-                  <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)} placeholder="e.g. 50" min="1" />
+                  <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setSqmEditMode(false); }} placeholder="e.g. 50" min="1" />
                 </div>
                 <div className="form-field">
                   <label>Download (Mbps)</label>
-                  <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)} placeholder="e.g. 500" min="1" />
+                  <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setSqmEditMode(false); }} placeholder="e.g. 500" min="1" />
                 </div>
                 <div className="dns-edit-actions">
                   <button className="btn-primary" onClick={handleSqmSave} disabled={sqmSaving}>{sqmSaving ? 'Saving…' : 'Save'}</button>
@@ -981,7 +986,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
       {/* Actions */}
       <div className="general-actions-row">
         <div className="general-section">
-          <h3>🔍 Diagnostics</h3>
+          <h3><Search size={16} /> Diagnostics</h3>
           <p className="toggle-desc">Check connectivity, DNS, and internet access.</p>
           <button className="btn-primary" onClick={handleRunDiagnostics} disabled={diagRunning} style={{ marginTop: 8 }}>
             {diagRunning ? <><div className="spinner" /> Running…</> : 'Run Diagnostics'}
@@ -990,11 +995,11 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
         </div>
 
         <div className="general-section">
-          <h3>🔄 Network Reboot</h3>
+          <h3><RotateCcw size={16} /> Network Reboot</h3>
           <p className="toggle-desc">Reboot all nodes. Network offline for ~2 min.</p>
           {confirmReboot ? (
             <div className="confirm-inline" style={{ marginTop: 8 }}>
-              <span>⚠️ Are you sure?</span>
+              <span><AlertTriangle size={14} /> Are you sure?</span>
               <button className="btn-confirm btn-danger" onClick={handleRebootNetwork} disabled={rebooting}>{rebooting ? 'Rebooting…' : 'Confirm'}</button>
               <button className="btn-cancel" onClick={() => setConfirmReboot(false)}>Cancel</button>
             </div>
@@ -1024,7 +1029,7 @@ function NodeControlsSection({ networkId }: { networkId: string }) {
 
   return (
     <div className="general-section">
-      <h3>💡 Node Controls</h3>
+      <h3><Lightbulb size={16} /> Node Controls</h3>
       <p className="toggle-desc">Manage LED and nightlight settings for each node.</p>
       <div className="node-controls-list">
         {eeros.map((node, i) => {
@@ -1092,7 +1097,7 @@ function NodeControlCard({ networkId, eeroId, node, index }: {
   return (
     <div className="node-control-card">
       <div className="node-control-header">
-        <span className="node-control-icon">{node.gateway ? '🏠' : '📡'}</span>
+        <span className="node-control-icon">{node.gateway ? <Home size={18} /> : <Radio size={18} />}</span>
         <div className="node-control-info">
           <span className="node-control-name">{node.location || `Node ${index + 1}`}</span>
           <span className="node-control-model">{node.model || 'eero'}</span>

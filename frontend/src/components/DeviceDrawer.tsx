@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useFetch } from '../hooks/useFetch';
+import { X, Wifi, Cable, Radio, User, Zap } from 'lucide-react';
 import * as api from '../api';
 
 function CopyableValue({ value }: { value: string | undefined }) {
@@ -153,7 +154,7 @@ export default function DeviceDrawer({ networkId, device: d, onClose, onRefresh 
       <div className="drawer-panel" onClick={(e) => e.stopPropagation()}>
         <div className="drawer-header">
           <h2>Device Detail</h2>
-          <button className="btn-close" onClick={onClose}>✕</button>
+          <button className="btn-close" onClick={onClose}><X size={18} /></button>
         </div>
 
         <div className="drawer-body">
@@ -196,7 +197,7 @@ export default function DeviceDrawer({ networkId, device: d, onClose, onRefresh 
             </div>
             <div className="drawer-field">
               <label className="drawer-label">Connection</label>
-              <span className="drawer-value">{d.wireless ? '📶 Wireless' : '🔌 Wired'}</span>
+              <span className="drawer-value">{d.wireless ? <><Wifi size={14} /> Wireless</> : <><Cable size={14} /> Wired</>}</span>
             </div>
             <div className="drawer-field">
               <label className="drawer-label">IP Address</label>
@@ -222,14 +223,14 @@ export default function DeviceDrawer({ networkId, device: d, onClose, onRefresh 
               <div className="drawer-field">
                 <label className="drawer-label">Connected To</label>
                 <span className="drawer-value">
-                  📡 {(source.display_name as string) || (source.location as string) || 'Unknown node'}
+                  <Radio size={14} /> {(source.display_name as string) || (source.location as string) || 'Unknown node'}
                 </span>
               </div>
             )}
             {d.profile && (
               <div className="drawer-field">
                 <label className="drawer-label">Profile</label>
-                <span className="drawer-value">👤 {d.profile.name || 'Default'}</span>
+                <span className="drawer-value"><User size={14} /> {d.profile.name || 'Default'}</span>
               </div>
             )}
           </div>
@@ -285,7 +286,7 @@ export default function DeviceDrawer({ networkId, device: d, onClose, onRefresh 
               <p className="drawer-desc">Give this device priority bandwidth for better performance.</p>
               {isPrioritized ? (
                 <div className="priority-active">
-                  <span className="priority-badge">⚡ Priority Active</span>
+                  <span className="priority-badge"><Zap size={14} /> Priority Active</span>
                   <button
                     className="btn-cancel btn-sm"
                     onClick={() => handlePriority(false)}

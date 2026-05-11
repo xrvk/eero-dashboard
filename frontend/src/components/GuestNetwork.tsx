@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Users } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
 
@@ -74,11 +75,13 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
               <div className="form-field">
                 <label>Network Name (SSID)</label>
                 <input type="text" value={guestName} onChange={(e) => setGuestName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false); }}
                   placeholder="Guest Network" />
               </div>
               <div className="form-field">
                 <label>Password</label>
                 <input type="text" value={guestPassword} onChange={(e) => setGuestPassword(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false); }}
                   placeholder="Enter password" />
               </div>
               <div className="dns-edit-actions">
@@ -111,7 +114,7 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
 
       {!enabled && (
         <div className="empty-state" style={{ marginTop: 20 }}>
-          <p className="empty-icon">👥</p>
+          <p className="empty-icon"><Users size={40} /></p>
           <p className="empty-text">Guest network is disabled</p>
           <p className="empty-hint">Enable it to let guests connect without sharing your main password</p>
         </div>

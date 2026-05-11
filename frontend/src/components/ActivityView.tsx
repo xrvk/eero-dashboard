@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useFetch } from '../hooks/useFetch';
+import { ArrowDown, ArrowUp, Home, Radio, Info } from 'lucide-react';
 import * as api from '../api';
 import SpeedHistory from './SpeedHistory';
 
@@ -111,13 +112,13 @@ export default function ActivityView({ networkId, onNodeClick }: ActivityViewPro
         {lastSpeed && lastSpeed.down && (
           <div className="speed-result">
             <div className="speed-stat">
-              <span className="speed-dir">↓</span>
+              <span className="speed-dir"><ArrowDown size={16} /></span>
               <span className="speed-value">{(lastSpeed.down as { value: number }).value.toFixed(0)}</span>
               <span className="speed-unit">{(lastSpeed.down as { units: string }).units}</span>
             </div>
             {lastSpeed.up && (
               <div className="speed-stat">
-                <span className="speed-dir">↑</span>
+                <span className="speed-dir"><ArrowUp size={16} /></span>
                 <span className="speed-value">{(lastSpeed.up as { value: number }).value.toFixed(0)}</span>
                 <span className="speed-unit">{(lastSpeed.up as { units: string }).units}</span>
               </div>
@@ -202,7 +203,7 @@ export default function ActivityView({ networkId, onNodeClick }: ActivityViewPro
                 style={{ cursor: onNodeClick ? 'pointer' : undefined }}
               >
                 <div className="node-status-dot" />
-                <div className="node-icon">{node.gateway ? '🏠' : '📡'}</div>
+                <div className="node-icon">{node.gateway ? <Home size={20} /> : <Radio size={20} />}</div>
                 <div className="node-info">
                   <span className="node-location">{node.location || `Node ${i + 1}`}</span>
                   <span className="node-model">{node.model || 'eero'}</span>
@@ -240,7 +241,7 @@ export default function ActivityView({ networkId, onNodeClick }: ActivityViewPro
       </div>
 
       <p className="empty-text" style={{ marginTop: 16 }}>
-        ℹ️ Bandwidth history and per-device usage require eero Plus.
+        <Info size={14} /> Bandwidth history and per-device usage require eero Plus.
       </p>
     </div>
   );

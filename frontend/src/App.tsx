@@ -1,4 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useState, useRef } from 'react';
+import { Moon, Sun, SunMoon } from 'lucide-react';
 
 import * as api from './api';
 import LoginForm from './components/LoginForm';
@@ -165,18 +166,18 @@ function AppMain() {
           <div className="header-actions">
             <div className="theme-dropdown">
               <button className="btn-header-icon" onClick={() => setThemeMenuOpen(!themeMenuOpen)} title="Theme">
-                {theme === 'dark' ? '🌙' : theme === 'light' ? '☀️' : '🌗'}
+                {theme === 'dark' ? <Moon size={18} /> : theme === 'light' ? <Sun size={18} /> : <SunMoon size={18} />}
               </button>
               {themeMenuOpen && (
                 <div className="theme-menu" onClick={() => setThemeMenuOpen(false)}>
                   <button className={`theme-option ${theme === 'light' ? 'active' : ''}`} onClick={() => setTheme('light')}>
-                    ☀️ Light
+                    <Sun size={14} /> Light
                   </button>
                   <button className={`theme-option ${theme === 'dark' ? 'active' : ''}`} onClick={() => setTheme('dark')}>
-                    🌙 Dark
+                    <Moon size={14} /> Dark
                   </button>
                   <button className={`theme-option ${theme === 'auto' ? 'active' : ''}`} onClick={() => setTheme('auto')}>
-                    🌗 Auto
+                    <SunMoon size={14} /> Auto
                   </button>
                 </div>
               )}
