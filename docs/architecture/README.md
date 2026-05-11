@@ -29,9 +29,9 @@ eero Dashboard is a self-hosted web app for managing eero mesh networks. It cons
 │      eero Cloud API (upstream)      │
 └─────────────────────────────────────┘
 
-Persistence (Docker volume):
-  .eero_session        → auth cookie
-  data/speed_history.json → speed test results
+Persistence (Docker volume → backend/data/):
+  data/.eero_session       → auth cookie
+  data/speed_history.json  → speed test results
 ```
 
 ## Directory structure
@@ -50,7 +50,7 @@ eero-dashboard/
 │   │   ├── networks/            # Network info, eeros, profiles, settings
 │   │   └── network_ops/         # Prefetch, DNS, activity, diagnostics
 │   ├── tests/
-│   └── data/                    # Persisted speed history
+│   └── data/                    # Persisted speed history + auth session
 ├── frontend/
 │   ├── src/
 │   │   ├── App.tsx              # Root: auth gate → sidebar + content
