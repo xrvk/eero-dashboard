@@ -662,6 +662,11 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
     } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
     finally { setDnsSaving(false); }
   };
+  const startDnsEdit = () => {
+    setDnsMode(dnsCurrentMode);
+    setDnsServers([customIps[0] || '', customIps[1] || '']);
+    setDnsEditing(true);
+  };
   const handleCachingToggle = async () => {
     setDnsSaving(true);
     try { await api.setDnsCaching(networkId, !dnsCaching); await refetchDns(); }
