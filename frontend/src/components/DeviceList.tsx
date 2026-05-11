@@ -9,6 +9,7 @@ import { useFetch } from '../hooks/useFetch';
 import type { Device } from '../api';
 import { devicesClient } from '../features/devices/client';
 import DeviceDrawer from './DeviceDrawer';
+import type { SignalFilter } from '../features/app/types';
 
 function extractId(url?: string) {
   if (!url) return '';
@@ -101,12 +102,28 @@ function sortDevices(devices: Device[], col: SortCol, dir: SortDir): Device[] {
   return dir === 'desc' ? sorted.reverse() : sorted;
 }
 
+function matchesSignalTier(d: Device, tier: SignalFilter): boolean {
+  if (tier === 'all') return true;
+  if (!d.wireless) return false;
+  const bars = getConn(d)?.score_bars;
+  if (bars == null) return false;
+  switch (tier) {
+    case 'excellent': return bars >= 5;
+    case 'good': return bars === 4;
+    case 'fair': return bars === 3;
+    case 'poor': return bars <= 2;
+    default: return true;
+  }
+}
+
 interface DeviceListProps {
   networkId: string;
   onNavigate?: (tab: string) => void;
+  signalFilter?: SignalFilter;
+  onClearSignalFilter?: () => void;
 }
 
-export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
+export default function DeviceList({ networkId, onNavigate, signalFilter = 'all', onClearSignalFilter }: DeviceListProps) {
   const { data, loading, error, refetch } = useFetch(
     () => devicesClient.list(networkId),
     [networkId],
@@ -184,6 +201,10 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
         return true;
       });
     }
+    // Signal quality filter
+    if (signalFilter && signalFilter !== 'all') {
+      result = result.filter(d => matchesSignalTier(d, signalFilter));
+    }
     // Search filter
     if (!search.trim()) return result;
     const q = search.toLowerCase().trim();
@@ -194,7 +215,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
       const manufacturer = (d.manufacturer || '').toLowerCase();
       return name.includes(q) || ip.includes(q) || mac.includes(q) || manufacturer.includes(q);
     });
-  }, [allDevices, search, statusFilter, bandFilter]);
+  }, [allDevices, search, statusFilter, bandFilter, signalFilter]);
 
   const groups = useMemo(() => {
     const result: { label: string; devices: Device[] }[] = [];
@@ -350,6 +371,16 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
             {search && <> · "{search}"</>}
           </span>
         </div>
+        {signalFilter && signalFilter !== 'all' && (
+          <div className="toolbar-row signal-filter-row">
+            <span className="signal-filter-chip">
+              📶 Showing {signalFilter} signal devices
+              {onClearSignalFilter && (
+                <button className="signal-filter-clear" onClick={onClearSignalFilter} title="Clear signal filter">×</button>
+              )}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Grouped device sections */}

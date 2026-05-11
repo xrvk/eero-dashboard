@@ -5,9 +5,11 @@ import * as api from './api';
 import LoginForm from './components/LoginForm';
 import NodeDrawer from './components/NodeDrawer';
 import { useFetch } from './hooks/useFetch';
+import { useHashRoute } from './hooks/useHashRoute';
 import AppContent from './features/app/AppContent';
 import AppSidebar from './features/app/AppSidebar';
 import type { AppTab } from './features/app/types';
+import type { SignalFilter } from './features/app/types';
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -45,7 +47,15 @@ function AppMain() {
   const [checking, setChecking] = useState(true);
   const [networks, setNetworks] = useState<api.Network[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
-  const [tab, setTab] = useState<AppTab>('devices');
+  const { tab, params, setRoute } = useHashRoute();
+  const setTab = useCallback((t: AppTab) => setRoute(t), [setRoute]);
+  const signalFilter = (params.get('signal') as SignalFilter) || 'all';
+  const handleSignalClick = useCallback((tier: SignalFilter) => {
+    setRoute('devices', { signal: tier });
+  }, [setRoute]);
+  const handleClearSignalFilter = useCallback(() => {
+    setRoute('devices');
+  }, [setRoute]);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light' | 'auto'>(() => (localStorage.getItem('theme') as 'dark' | 'light' | 'auto') || 'dark');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -186,7 +196,15 @@ function AppMain() {
           </div>
         </header>
 
-        <AppContent selectedNetwork={selectedNetwork} tab={tab} setTab={setTab} onNodeClick={handleNodeClick} />
+        <AppContent
+          selectedNetwork={selectedNetwork}
+          tab={tab}
+          setTab={setTab}
+          signalFilter={signalFilter}
+          onClearSignalFilter={handleClearSignalFilter}
+          onSignalClick={handleSignalClick}
+          onNodeClick={handleNodeClick}
+        />
       </main>
 
       {nodeDrawer && selectedNetwork && (
