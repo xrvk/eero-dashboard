@@ -1134,6 +1134,22 @@ body {
 }
 .empty-subtext { font-size: 0.8rem; color: var(--text-dim); }
 
+/* ── eero Plus Banner / Gate ───────────────── */
+.plus-banner {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px; margin-bottom: 14px;
+  background: rgba(110,160,255,0.08); border: 1px solid rgba(110,160,255,0.2);
+  border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--accent);
+}
+.plus-banner-icon { font-size: 0.9rem; }
+.plus-banner-text strong { font-weight: 700; }
+.plus-gate {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px; padding: 24px 16px; text-align: center;
+}
+.plus-gate .plus-banner { margin-bottom: 0; }
+.plus-gate-detail { font-size: 0.82rem; color: var(--text-muted); max-width: 360px; }
+
 /* ── Settings Subtabs ───────────────────────── */
 .settings-subtabs {
   display: flex; gap: 2px; margin-bottom: 24px;

@@ -332,7 +332,7 @@ function DevicesTab({
 
 function ScheduleTab({ networkId, profileId }: { networkId: string; profileId: string }) {
   const cacheKey = `/networks/${networkId}/profiles/${profileId}/schedule`;
-  const { data: scheduleData, loading, refetch } = useFetch(
+  const { data: scheduleData, loading, error, refetch } = useFetch(
     () => api.getProfileSchedule(networkId, profileId),
     [networkId, profileId],
     {},
@@ -383,10 +383,21 @@ function ScheduleTab({ networkId, profileId }: { networkId: string; profileId: s
 
   if (loading) return <div className="schedule-loading"><div className="spinner" /> Loading schedule…</div>;
 
+  if (error) {
+    return (
+      <div className="plus-gate">
+        <EeroPlusBanner />
+        <p className="plus-gate-detail">Schedule and bedtime controls failed to load. This feature may require an active eero Plus subscription.</p>
+      </div>
+    );
+  }
+
   const hasSchedule = scheduleData && typeof scheduleData === 'object' && Object.keys(scheduleData).length > 0;
 
   return (
     <div className="schedule-section">
+      <EeroPlusBanner />
+
       {hasSchedule && (
         <div className="schedule-current">
           <span className="schedule-active-badge">Schedule active</span>
@@ -443,7 +454,7 @@ function ScheduleTab({ networkId, profileId }: { networkId: string; profileId: s
 
 function BlockedAppsTab({ networkId, profileId }: { networkId: string; profileId: string }) {
   const cacheKey = `/networks/${networkId}/profiles/${profileId}/blocked-apps`;
-  const { data: blockedData, loading, refetch } = useFetch(
+  const { data: blockedData, loading, error, refetch } = useFetch(
     () => api.getBlockedApps(networkId, profileId),
     [networkId, profileId],
     {},
@@ -486,6 +497,15 @@ function BlockedAppsTab({ networkId, profileId }: { networkId: string; profileId
     return <div className="schedule-loading"><div className="spinner" /> Loading blocked apps…</div>;
   }
 
+  if (error) {
+    return (
+      <div className="plus-gate">
+        <EeroPlusBanner />
+        <p className="plus-gate-detail">Blocked apps failed to load. This feature may require an active eero Plus subscription.</p>
+      </div>
+    );
+  }
+
   const knownApps = [
     'YouTube', 'Netflix', 'TikTok', 'Instagram', 'Snapchat',
     'Facebook', 'Twitter', 'Reddit', 'Discord', 'Twitch',
@@ -497,6 +517,7 @@ function BlockedAppsTab({ networkId, profileId }: { networkId: string; profileId
 
   return (
     <div className="blocked-apps-section">
+      <EeroPlusBanner />
       <div className="blocked-apps-list">
         {allApps.map(app => (
           <label key={app} className={`blocked-app-item ${selected.has(app) ? 'blocked' : ''}`}>
@@ -598,6 +619,17 @@ function DevicePicker({ networkId, profileId, currentDeviceUrls, allDevices, onS
           {saving ? 'Saving…' : 'Save'}
         </button>
       </div>
+    </div>
+  );
+}
+
+/* ── eero Plus Banner ──────────────────────────────────── */
+
+function EeroPlusBanner() {
+  return (
+    <div className="plus-banner">
+      <span className="plus-banner-icon">✦</span>
+      <span className="plus-banner-text">Requires <strong>eero Plus</strong></span>
     </div>
   );
 }
