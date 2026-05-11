@@ -121,8 +121,8 @@ Thin wrapper that re-exports device API functions under a `devicesClient` object
 | `LoginForm` | `LoginForm.tsx` | Email/phone → verification code 2FA flow |
 | `DeviceList` | `DeviceList.tsx` | Device grid/list with filtering, sorting, grouping by node |
 | `DeviceDrawer` | `DeviceDrawer.tsx` | Slide-out device detail panel (priority, DHCP reservation) |
+| `NodeDrawer` | `NodeDrawer.tsx` | Slide-out node detail panel (LED, firmware, connectivity) |
 | `ActivityView` | `ActivityView.tsx` | Speed test trigger + network health monitoring |
-| `EeroNodes` | `EeroNodes.tsx` | eero node status cards with mesh quality indicators |
 | `ProfileManager` | `ProfileManager.tsx` | Parental controls: pause, bedtime, content filters, scheduling |
 | `SettingsView` | `SettingsView.tsx` | Multi-section: security, DNS, SQM, port forwards, DHCP, blacklist |
 | `GuestNetwork` | `GuestNetwork.tsx` | Guest network enable/disable + credentials |
@@ -134,7 +134,11 @@ Thin wrapper that re-exports device API functions under a `devicesClient` object
 
 - **Plain CSS** — `index.css` (global), `App.css` (layout)
 - **Theme:** Dark / light / auto via `data-theme` attribute on `<html>`
-- **CSS variables** for colors: `--bg-card`, `--text`, `--accent`, `--border`, etc.
+- **CSS variables** for colors, shadows, and gradients: `--bg-card`, `--text`, `--accent`, `--shadow-card`, `--gradient-card`, etc.
+- **Typography:** DM Sans (body), JetBrains Mono (monospace values)
+- **Icons:** Lucide React (`lucide-react`) — all icons are SVG components with `currentColor`
+- **Atmosphere:** Radial gradient overlays on body/login, gradient card surfaces, glow shadows on hover
+- **Animations:** Staggered card reveal, tab slide-fade, hover lift transforms
 - **Layout:** CSS Grid (sidebar + main) and Flexbox
 - **Charts:** Recharts library
 
@@ -148,6 +152,7 @@ Thin wrapper that re-exports device API functions under a `devicesClient` object
 | Vitest | 4.x | Unit tests (jsdom environment) |
 | React | 19.x | UI framework |
 | Recharts | 3.8 | Speed history charting |
+| Lucide React | 1.x | SVG icon components |
 
 ### Scripts
 

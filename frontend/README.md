@@ -35,4 +35,7 @@ API proxy target: `http://localhost:8420`
 
 - Prefer feature-specific API modules for new work.
 - Keep `src/api.ts` as a compatibility export layer while incrementally splitting APIs.
+- Use Lucide React (`lucide-react`) for all icons — see `.github/copilot-design-instructions.md` for the full icon reference.
+- Use `'JetBrains Mono'` for monospace values (IPs, MACs, speeds).
+- All inline edit forms must support Escape key to cancel.
 - Add tests near behavior-rich UI components and mocked API boundaries.
