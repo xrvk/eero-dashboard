@@ -1211,7 +1211,7 @@ body {
 }
 .btn-close:hover { color: var(--text); }
 .drawer-body { padding: 20px 24px; flex: 1; }
-.drawer-section { margin-bottom: 24px; }
+.drawer-section { margin-top: 8px; margin-bottom: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
 .drawer-section h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted); }
 .drawer-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
 .drawer-value { font-size: 0.9rem; }
