@@ -63,7 +63,7 @@ export function DnsSettings({ networkId }: { networkId: string }) {
   );
   const [editing, setEditing] = useState(false);
   const [dnsMode, setDnsMode] = useState('');
-  const [customServers, setCustomServers] = useState('');
+  const [dnsServers, setDnsServers] = useState(['', '']);
   const [saving, setSaving] = useState(false);
 
   if (loading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
@@ -76,7 +76,7 @@ export function DnsSettings({ networkId }: { networkId: string }) {
 
   const startEditing = () => {
     setDnsMode(mode);
-    setCustomServers(customIps.join(', '));
+    setDnsServers([customIps[0] || '', customIps[1] || '']);
     setEditing(true);
   };
 
@@ -84,7 +84,7 @@ export function DnsSettings({ networkId }: { networkId: string }) {
     setSaving(true);
     try {
       const servers = dnsMode === 'custom'
-        ? customServers.split(/[,\s]+/).map(s => s.trim()).filter(Boolean)
+        ? dnsServers.map(s => s.trim()).filter(Boolean)
         : undefined;
       await api.setDnsMode(networkId, dnsMode, servers);
       await refetch();
@@ -128,34 +128,39 @@ export function DnsSettings({ networkId }: { networkId: string }) {
         {editing ? (
           <div className="dns-edit-form">
             <div className="dns-mode-select">
-              <label className={`dns-mode-option ${dnsMode === 'default' ? 'selected' : ''}`}>
-                <input type="radio" name="dns-mode" value="default" checked={dnsMode === 'default'}
-                  onChange={() => setDnsMode('default')} />
-                <div>
-                  <span className="dns-mode-label">Default</span>
-                  <span className="dns-mode-desc">Use eero's DNS servers</span>
-                </div>
-              </label>
-              <label className={`dns-mode-option ${dnsMode === 'custom' ? 'selected' : ''}`}>
-                <input type="radio" name="dns-mode" value="custom" checked={dnsMode === 'custom'}
-                  onChange={() => setDnsMode('custom')} />
-                <div>
-                  <span className="dns-mode-label">Custom</span>
-                  <span className="dns-mode-desc">Use your own DNS servers</span>
-                </div>
-              </label>
+              {([
+                { value: 'default', label: 'Default', desc: "Use eero's DNS" },
+                { value: 'cloudflare', label: 'Cloudflare', desc: '1.1.1.1 / 1.0.0.1' },
+                { value: 'google', label: 'Google', desc: '8.8.8.8 / 8.8.4.4' },
+                { value: 'opendns', label: 'OpenDNS', desc: '208.67.222.222 / 208.67.220.220' },
+                { value: 'custom', label: 'Custom', desc: 'Use your own DNS servers' },
+              ] as const).map((opt) => (
+                <label key={opt.value} className={`dns-mode-option ${dnsMode === opt.value ? 'selected' : ''}`}>
+                  <input type="radio" name="dns-mode" value={opt.value} checked={dnsMode === opt.value}
+                    onChange={() => setDnsMode(opt.value)} />
+                  <div>
+                    <span className="dns-mode-label">{opt.label}</span>
+                    <span className="dns-mode-desc">{opt.desc}</span>
+                  </div>
+                </label>
+              ))}
             </div>
 
             {dnsMode === 'custom' && (
-              <div style={{ marginTop: 12 }}>
-                <label className="dns-input-label">DNS Server IPs (comma separated)</label>
-                <input
-                  className="dns-input"
-                  type="text"
-                  placeholder="192.168.86.5, 1.1.1.1"
-                  value={customServers}
-                  onChange={(e) => setCustomServers(e.target.value)}
-                />
+              <div className="dns-server-inputs">
+                {['Primary', 'Secondary'].map((label, i) => (
+                  <div key={i} className="form-field">
+                    <label>{label} DNS {i === 0 ? '(required)' : '(optional)'}</label>
+                    <input
+                      className="dns-input"
+                      type="text"
+                      placeholder={i === 0 ? '1.1.1.1' : '8.8.8.8'}
+                      value={dnsServers[i]}
+                      onChange={(e) => { const s = [...dnsServers]; s[i] = e.target.value; setDnsServers(s); }}
+                    />
+                  </div>
+                ))}
+                <p className="toggle-desc">Supports both IPv4 and IPv6 addresses (e.g. 2606:4700:4700::1111)</p>
               </div>
             )}
 
@@ -600,7 +605,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const [secSaving, setSecSaving] = useState(false);
   const [dnsEditing, setDnsEditing] = useState(false);
   const [dnsMode, setDnsMode] = useState('');
-  const [customServers, setCustomServers] = useState('');
+  const [dnsServers, setDnsServers] = useState(['', '']);
   const [dnsSaving, setDnsSaving] = useState(false);
   const [sqmSaving, setSqmSaving] = useState(false);
   const [sqmEditMode, setSqmEditMode] = useState(false);
@@ -687,13 +692,13 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   // DNS handlers
   const startDnsEdit = () => {
     setDnsMode(dnsCurrentMode);
-    setCustomServers(customIps.join(', '));
+    setDnsServers([customIps[0] || '', customIps[1] || '']);
     setDnsEditing(true);
   };
   const handleDnsSave = async () => {
     setDnsSaving(true);
     try {
-      const servers = dnsMode === 'custom' ? customServers.split(/[,\s]+/).map(s => s.trim()).filter(Boolean) : undefined;
+      const servers = dnsMode === 'custom' ? dnsServers.map(s => s.trim()).filter(Boolean) : undefined;
       await api.setDnsMode(networkId, dnsMode, servers);
       await refetchDns();
       setDnsEditing(false);
@@ -908,19 +913,34 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
         {dnsEditing ? (
           <div className="dns-edit-form" style={{ marginTop: 16 }}>
             <div className="dns-mode-select">
-              <label className={`dns-mode-option ${dnsMode === 'default' ? 'selected' : ''}`}>
-                <input type="radio" name="dns-mode" value="default" checked={dnsMode === 'default'} onChange={() => setDnsMode('default')} />
-                <div><span className="dns-mode-label">Default</span><span className="dns-mode-desc">Use eero's DNS</span></div>
-              </label>
-              <label className={`dns-mode-option ${dnsMode === 'custom' ? 'selected' : ''}`}>
-                <input type="radio" name="dns-mode" value="custom" checked={dnsMode === 'custom'} onChange={() => setDnsMode('custom')} />
-                <div><span className="dns-mode-label">Custom</span><span className="dns-mode-desc">Use your own DNS</span></div>
-              </label>
+              {([
+                { value: 'default', label: 'Default', desc: "Use eero's DNS" },
+                { value: 'cloudflare', label: 'Cloudflare', desc: '1.1.1.1 / 1.0.0.1' },
+                { value: 'google', label: 'Google', desc: '8.8.8.8 / 8.8.4.4' },
+                { value: 'opendns', label: 'OpenDNS', desc: '208.67.222.222 / 208.67.220.220' },
+                { value: 'custom', label: 'Custom', desc: 'Enter your own servers' },
+              ] as const).map((opt) => (
+                <label key={opt.value} className={`dns-mode-option ${dnsMode === opt.value ? 'selected' : ''}`}>
+                  <input type="radio" name="dns-mode-general" value={opt.value} checked={dnsMode === opt.value}
+                    onChange={() => setDnsMode(opt.value)} />
+                  <div><span className="dns-mode-label">{opt.label}</span><span className="dns-mode-desc">{opt.desc}</span></div>
+                </label>
+              ))}
             </div>
             {dnsMode === 'custom' && (
-              <div style={{ marginTop: 12 }}>
-                <label className="dns-input-label">DNS Server IPs (comma separated)</label>
-                <input className="dns-input" type="text" placeholder="192.168.86.5, 1.1.1.1" value={customServers} onChange={(e) => setCustomServers(e.target.value)} />
+              <div className="dns-server-inputs">
+                {['Primary', 'Secondary'].map((label, i) => (
+                  <div key={i} className="form-field">
+                    <label>{label} DNS {i === 0 ? '(required)' : '(optional)'}</label>
+                    <input
+                      className="dns-input" type="text"
+                      placeholder={i === 0 ? '1.1.1.1' : '8.8.8.8'}
+                      value={dnsServers[i]}
+                      onChange={(e) => { const s = [...dnsServers]; s[i] = e.target.value; setDnsServers(s); }}
+                    />
+                  </div>
+                ))}
+                <p className="toggle-desc">Supports both IPv4 and IPv6 addresses (e.g. 2606:4700:4700::1111)</p>
               </div>
             )}
             <div className="dns-edit-actions">

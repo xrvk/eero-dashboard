@@ -1357,6 +1357,7 @@ body {
 }
 .dns-input:focus { border-color: var(--accent); }
 .dns-edit-actions { display: flex; gap: 8px; margin-top: 16px; }
+.dns-server-inputs { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 
 /* ── Rename Input ───────────────────────────── */
 .rename-input {
