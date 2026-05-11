@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
@@ -68,23 +68,12 @@ export default function SpeedHistory({ networkId, refreshKey }: SpeedHistoryProp
   const [range, setRange] = useState<Range>('30d');
   const [view, setView] = useState<ViewMode>('chart');
 
-  const isPreview = import.meta.env.DEV && networkId === 'preview';
-
   const { data } = useFetch(
-    () => isPreview ? Promise.resolve({ history: [], retention_days: 365 }) : api.getSpeedHistory(networkId),
+    () => api.getSpeedHistory(networkId),
     [networkId, refreshKey]
   );
 
-  // In dev mode with preview networkId, load mock data
-  const [mockData, setMockData] = useState<api.SpeedHistoryEntry[] | null>(null);
-  useEffect(() => {
-    if (isPreview && !mockData) {
-      import('../mockSpeedData.dev')
-        .then((m) => setMockData(m.MOCK_SPEED_HISTORY))
-        .catch((e) => console.warn('Mock data not found:', e));
-    }
-  }, [isPreview, mockData]);
-  const allHistory = isPreview ? (mockData ?? []) : (data?.history ?? []);
+  const allHistory = data?.history ?? [];
 
   const filtered = useMemo(() => {
     const days = RANGE_DAYS[range];
