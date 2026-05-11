@@ -5,7 +5,7 @@ services:
     ports:
       - "8420:8420"
     volumes:
-      - eero-data:/app/data
+      - eero-data:/app/backend/data
     environment:
       - SPEED_HISTORY_DAYS=365
     restart: unless-stopped
