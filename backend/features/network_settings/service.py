@@ -24,8 +24,8 @@ async def set_network_name(client: EeroClient, network_id: str, name: str):
 
 async def set_guest_network(client: EeroClient, network_id: str, enabled: bool, name: str | None, password: str | None):
     with translate_errors(code="set_guest_failed", message="Failed to set guest network"):
-        resp = await client.set_guest_network(
-            enabled, name=name, password=password, network_id=network_id
+        resp = await facade.set_guest_network(
+            client, network_id, enabled, name=name, password=password,
         )
         cache.invalidate_network(network_id)
         cache.clear_upstream("network", network_id=network_id)
@@ -38,6 +38,8 @@ async def get_sqm(client: EeroClient, network_id: str):
             resp = await client.get_sqm_settings(network_id=network_id)
             data = resp.get("data", resp)
             sqm = data.get("sqm", data) if isinstance(data, dict) else data
+            if isinstance(sqm, bool):
+                return {"enabled": sqm}
             return sqm
     return await cache.cached(keys.sqm(network_id), _fetch)
 
@@ -46,6 +48,8 @@ async def set_sqm_enabled(client: EeroClient, network_id: str, enabled: bool):
     with translate_errors(code="set_sqm_failed", message="Failed to set SQM enabled"):
         resp = await client.set_sqm_enabled(enabled, network_id=network_id)
         cache.invalidate(keys.sqm(network_id))
+        cache.invalidate(keys.network(network_id))
+        cache.invalidate(keys.settings(network_id))
         cache.clear_upstream("network", network_id=network_id)
         return resp.get("data", resp)
 
@@ -56,6 +60,8 @@ async def configure_sqm(client: EeroClient, network_id: str, enabled: bool, uplo
             enabled, upload_mbps=upload_mbps, download_mbps=download_mbps, network_id=network_id
         )
         cache.invalidate(keys.sqm(network_id))
+        cache.invalidate(keys.network(network_id))
+        cache.invalidate(keys.settings(network_id))
         cache.clear_upstream("network", network_id=network_id)
         return resp.get("data", resp)
 
@@ -64,6 +70,8 @@ async def set_sqm_auto(client: EeroClient, network_id: str):
     with translate_errors(code="set_sqm_auto_failed", message="Failed to set SQM auto"):
         resp = await client.set_sqm_auto(network_id=network_id)
         cache.invalidate(keys.sqm(network_id))
+        cache.invalidate(keys.network(network_id))
+        cache.invalidate(keys.settings(network_id))
         cache.clear_upstream("network", network_id=network_id)
         return resp.get("data", resp)
 

@@ -59,7 +59,8 @@ async def prefetch(client: EeroClient, network_id: str):
     async def _sqm():
         resp = await client.get_sqm_settings(network_id=network_id)
         data = resp.get("data", resp)
-        return data.get("sqm", data) if isinstance(data, dict) else data
+        sqm = data.get("sqm", data) if isinstance(data, dict) else data
+        return {"enabled": sqm} if isinstance(sqm, bool) else sqm
 
     async def _forwards():
         resp = await client.get_forwards(network_id)

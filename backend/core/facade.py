@@ -32,6 +32,24 @@ async def delete_profile(client: EeroClient, network_id: str, profile_id: str) -
     )
 
 
+async def set_guest_network(
+    client: EeroClient, network_id: str,
+    enabled: bool, name: str | None = None, password: str | None = None,
+) -> dict:
+    """Work around eero-api using wrong URL (guest_network vs guestnetwork)."""
+    auth_token = await client._api.networks._auth_api.get_auth_token()
+    payload: dict = {"enabled": enabled}
+    if name is not None:
+        payload["name"] = name
+    if password is not None:
+        payload["password"] = password
+    return await client._api.networks.put(
+        f"networks/{network_id}/guestnetwork",
+        auth_token=auth_token,
+        json=payload,
+    )
+
+
 async def add_to_blacklist(client: EeroClient, network_id: str, device_id: str) -> dict:
     return await client._api.blacklist.add_to_blacklist(network_id, device_id)
 
