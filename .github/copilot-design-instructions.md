@@ -7,7 +7,7 @@
 
 ## Core Identity
 
-The eero Dashboard uses a **minimal, data-dense, dark-first** design with emoji-based iconography, no external icon libraries, and a restrained color palette. The aesthetic is functional and calm — closer to a macOS system preference panel than a flashy SaaS dashboard.
+The eero Dashboard uses a **minimal, data-dense, dark-first** design with emoji-based decorative iconography, Lucide React for action icons, and a restrained color palette. The aesthetic is functional and calm — closer to a macOS system preference panel than a flashy SaaS dashboard.
 
 ---
 
@@ -17,19 +17,25 @@ The eero Dashboard uses a **minimal, data-dense, dark-first** design with emoji-
 
 | Token              | Dark Value   | Light Value  | Usage                        |
 |-------------------|-------------|-------------|------------------------------|
-| `--bg`            | `#0f1117`   | `#f5f6fa`   | Page background              |
-| `--bg-card`       | `#1a1d27`   | `#ffffff`   | Card/panel backgrounds       |
-| `--bg-card-hover` | `#22263a`   | `#f0f1f5`   | Hover state on cards/rows    |
-| `--bg-input`      | `#14161e`   | `#f5f6fa`   | Input field backgrounds      |
-| `--border`        | `#2a2e3d`   | `#e0e2ea`   | All borders                  |
-| `--text`          | `#e4e6ef`   | `#1a1d27`   | Primary text                 |
-| `--text-muted`    | `#a0a4b0`   | `#6b7280`   | Secondary/label text         |
-| `--text-dim`      | `#7a7f8d`   | `#9ca3af`   | Tertiary/placeholder text    |
-| `--accent`        | `#6ea0ff`   | `#3b7dff`   | Primary actions, links, focus |
-| `--accent-hover`  | `#8bb5ff`   | `#5b93ff`   | Accent hover state           |
-| `--green`         | `#34d399`   | `#0d9668`   | Online, success, healthy     |
-| `--yellow`        | `#fbbf24`   | `#d97706`   | Warning, caution             |
-| `--red`           | `#f87171`   | `#dc2626`   | Offline, error, danger       |
+| `--bg`            | `#0c0e14`   | `#f2f4f8`   | Page background              |
+| `--bg-card`       | `#151821`   | `#ffffff`   | Card/panel backgrounds       |
+| `--bg-card-hover` | `#1e2230`   | `#f0f2f6`   | Hover state on cards/rows    |
+| `--bg-input`      | `#111319`   | `#e9ecf2`   | Input field backgrounds      |
+| `--border`        | `#252938`   | `#d4d8e3`   | All borders                  |
+| `--text`          | `#eaecf5`   | `#181b26`   | Primary text                 |
+| `--text-muted`    | `#9ca0b0`   | `#555a6e`   | Secondary/label text         |
+| `--text-dim`      | `#6b7084`   | `#868ca0`   | Tertiary/placeholder text    |
+| `--accent`        | `#5b93ff`   | `#3574e8`   | Primary actions, links, focus |
+| `--accent-hover`  | `#7aabff`   | `#2460d0`   | Accent hover state           |
+| `--accent-glow`   | `rgba(91,147,255,0.15)` | `rgba(53,116,232,0.1)` | Focus/selection glow |
+| `--green`         | `#2dd4a0`   | `#0a8c5e`   | Online, success, healthy     |
+| `--green-glow`    | `rgba(45,212,160,0.12)` | `rgba(10,140,94,0.08)` | Online status glow |
+| `--yellow`        | `#f5b731`   | `#c07a00`   | Warning, caution             |
+| `--red`           | `#f06464`   | `#cc2222`   | Offline, error, danger       |
+| `--shadow-card`   | `0 1px 3px rgba(0,0,0,0.3), …` | `0 1px 3px rgba(0,0,0,0.06), …` | Card elevation |
+| `--shadow-elevated` | `0 8px 32px rgba(0,0,0,0.5), …` | `0 8px 32px rgba(0,0,0,0.12), …` | Modal/drawer elevation |
+| `--gradient-subtle` | (accent→green, 4%→2%) | (accent→green, 3%→2%) | Subtle page gradient |
+| `--gradient-card` | (white 2%→transparent) | (white 60%→transparent) | Card surface sheen |
 
 ### Semantic Color Rules
 - **Green** → Online, connected, success, healthy, toggle-on
@@ -43,7 +49,7 @@ The eero Dashboard uses a **minimal, data-dense, dark-first** design with emoji-
 ## Typography
 
 ```css
-font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 ```
 
 | Element          | Size      | Weight | Notes                              |
@@ -54,7 +60,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 | Body text        | `0.85rem` | 400    |                                    |
 | Table headers    | `0.75rem` | 500    | `text-transform: uppercase; letter-spacing: 0.05em` |
 | Labels / meta    | `0.75–0.8rem` | 400 | `color: var(--text-muted)`        |
-| Monospace values | `0.8rem`  | 400    | `font-family: 'SF Mono', monospace` — IPs, MACs, speeds |
+| Monospace values | `0.8rem`  | 400    | `font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace` — IPs, MACs, speeds |
 | Hero numbers     | `2.8rem`  | 800    | Speed test results (responsive: `1.5rem` mobile) |
 | Empty state icon | `2.5rem`  | —      | Emoji in `.empty-icon`             |
 
@@ -82,7 +88,7 @@ Always apply: `-webkit-font-smoothing: antialiased;`
 
 | Token          | Value  | Usage                     |
 |---------------|--------|---------------------------|
-| `--radius`    | `12px` | Cards, panels, dialogs    |
+| `--radius`    | `14px` | Cards, panels, dialogs    |
 | `--radius-sm` | `8px`  | Buttons, inputs, badges   |
 | `22px`        | —      | Toggle switches (pill)    |
 | `50%`         | —      | Status dots, circular elements |
@@ -99,7 +105,7 @@ border-radius: var(--radius);
 padding: 18px;
 ```
 - Hover: `background: var(--bg-card-hover); border-color: var(--accent);`
-- Hover shadow: `0 4px 16px rgba(110,160,255,0.08)`
+- Hover shadow: `var(--shadow-card)` or `var(--shadow-elevated)` for raised cards
 - Error variant: red border, red text
 - Full-width variant via `.full-width` class
 
@@ -111,7 +117,7 @@ padding: 18px;
 .data-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
 .data-table tr:hover td { background: var(--bg-card-hover); }
 ```
-- Monospace cells: `font-family: 'SF Mono', monospace; font-size: 0.8rem`
+- Monospace cells: `font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace; font-size: 0.8rem`
 - Offline rows: `opacity: 0.45`
 - Sortable headers: cursor pointer, `↕ / ↑ / ↓` indicators, hover color accent
 
@@ -147,7 +153,7 @@ font-size: 0.8rem;
 ```
 - Focus: `border-color: var(--accent)`
 - Placeholder: `color: var(--text-dim)`
-- Monospace inputs (IPs, MACs): add `font-family: 'SF Mono', monospace`
+- Monospace inputs (IPs, MACs): add `font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace`
 
 ### Empty States
 ```css
@@ -171,15 +177,15 @@ animation: slideUp 0.25s ease-out
 ## Emoji Icon System
 
 ### Principles
-1. **Inline SVG for action icons.** All interactive button icons use `18×18` (or `16×16` small) inline SVGs with `stroke="currentColor"`, `strokeWidth="2"`, `fill="none"`, and round caps/joins.
+1. **Lucide React for action icons.** All interactive button icons use Lucide React SVG components (`lucide-react`) with `currentColor` — typically rendered at `18×18` (or `16×16` small).
 2. **Emoji for decorative/categorical icons.** Device types, section headers, navigation, connection badges, and empty states still use emoji.
 3. **Plain text for menu items.** Context menu actions (Rename, Reserve IP, Pause, Block) use text-only — no emoji or icon prefix.
-4. **Size tiers:** SVG action icons: `18×18` (standard), `16×16` (compact/toolbar), `14×14` (inline). Emoji decorative: `1.1–1.3rem` (card icons), `2.5rem` (empty states).
-5. **Wrapping:** SVG icon buttons use `.btn-icon-sm` class. Card-level emoji use `<span className="general-card-icon">`.
+4. **Size tiers:** Lucide action icons: `18×18` (standard), `16×16` (compact/toolbar), `14×14` (inline). Emoji decorative: `1.1–1.3rem` (card icons), `2.5rem` (empty states).
+5. **Wrapping:** Lucide icon buttons use `.btn-icon-sm` class. Card-level emoji use `<span className="general-card-icon">`.
 
-### SVG Icon Reference (action buttons)
+### SVG Icon Reference (action buttons via Lucide React)
 
-All icons follow the Feather icon convention: `viewBox="0 0 24 24"`, `fill="none"`, `stroke="currentColor"`, `strokeWidth="2"`, `strokeLinecap="round"`, `strokeLinejoin="round"`.
+All icons come from Lucide React (`lucide-react` package). Import by name and render as components with `size`, `strokeWidth`, and `className` props. Lucide follows the Feather icon convention: `viewBox="0 0 24 24"`, `fill="none"`, `stroke="currentColor"`, `strokeWidth="2"`, `strokeLinecap="round"`, `strokeLinejoin="round"`.
 
 | Icon | SVG Key Elements | Usage |
 |------|-----------------|-------|
@@ -238,11 +244,11 @@ All icons follow the Feather icon convention: `viewBox="0 0 24 24"`, `fill="none
 | 💚 | Health tab | sidebar nav |
 
 ### Rules for Icons
-1. **Action buttons** → always use inline SVG with `stroke="currentColor"` (never emoji).
+1. **Action buttons** → use Lucide React icon components with `currentColor` (never emoji).
 2. **Menu/text buttons** → plain text only, no emoji or icon prefix.
 3. **Decorative/categorical** → emoji is fine (device types, section headers, navigation, connection badges, empty states).
 4. Check the SVG Icon Reference above before creating new icons — reuse existing ones.
-5. New SVG icons must match the Feather convention (`viewBox="0 0 24 24"`, stroke-based, round caps).
+5. New icons should come from the Lucide React library; only use inline SVG if Lucide doesn't have the icon.
 6. Test in both dark and light themes — `currentColor` handles this automatically.
 
 ---
@@ -328,10 +334,10 @@ grid-template-columns: 1fr 1fr; gap: 16px;
 
 ### DO ✅
 - Use CSS variables for all colors — never hardcode hex values
-- Use inline SVGs (`18×18`, `stroke="currentColor"`) for all action button icons
+- Use Lucide React icon components (`lucide-react`) for all action button icons
 - Use plain text for context menu items (no emoji prefix)
-- Keep cards at `border-radius: var(--radius)` (12px)
-- Use monospace font for technical values (IPs, MACs, speeds, versions)
+- Keep cards at `border-radius: var(--radius)` (14px)
+- Use monospace font for technical values (IPs, MACs, speeds, versions) — `'JetBrains Mono', 'SF Mono', ui-monospace, monospace`
 - Test both dark and light themes
 - Use `transition: 0.15s` on interactive elements
 - Use `.toggle-row` pattern for boolean settings
@@ -340,11 +346,11 @@ grid-template-columns: 1fr 1fr; gap: 16px;
 - Maintain consistent spacing (8px base grid)
 
 ### DON'T ❌
-- Don't use emoji for action buttons — use inline SVGs instead
-- Don't install icon libraries (Font Awesome, Heroicons, Lucide, etc.) — use inline SVG
+- Don't use emoji for action buttons — use Lucide React icons instead
+- Don't install additional icon libraries beyond Lucide React — use Lucide or inline SVG
 - Don't use raw color hex values — always use `var(--token)`
 - Don't add new CSS variables without documenting them here
-- Don't use `border-radius` values outside the established scale (8px, 12px, 22px, 50%)
+- Don't use `border-radius` values outside the established scale (8px, 14px, 22px, 50%)
 - Don't use font sizes outside the established scale
 - Don't add animations longer than 0.3s
 - Don't use emoji not listed in the Canonical Dictionary for decorative purposes without adding it first

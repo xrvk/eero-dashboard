@@ -1,6 +1,6 @@
 # Architecture Overview
 
-> Last updated: May 2026
+> Last updated: May 2025
 
 eero Dashboard is a self-hosted web app for managing eero mesh networks. It consists of a **FastAPI backend** that proxies the unofficial eero cloud API and a **React frontend** that renders the dashboard UI.
 
@@ -19,7 +19,8 @@ eero Dashboard is a self-hosted web app for managing eero mesh networks. It cons
 │   FastAPI + Uvicorn (port 8420)     │
 │  core/  ─ client, cache, errors     │
 │  features/ ─ auth, devices,         │
-│              networks, network_ops  │
+│              networks, network_ops, │
+│              profiles               │
 │  main.py ─ remaining endpoints      │
 └──────────────┬──────────────────────┘
                │
@@ -47,8 +48,9 @@ eero-dashboard/
 │   ├── features/
 │   │   ├── auth/                # Login / verify / logout
 │   │   ├── devices/             # Device CRUD, pause, block, priority
-│   │   ├── networks/            # Network info, eeros, profiles, settings
-│   │   └── network_ops/         # Prefetch, DNS, activity, diagnostics
+│   │   ├── networks/            # Network info, eeros, settings
+│   │   ├── network_ops/         # Prefetch, DNS, activity, diagnostics
+│   │   └── profiles/            # Profile CRUD, pause, bedtime, schedule, content filters
 │   ├── tests/
 │   └── data/                    # Persisted speed history + auth session
 ├── frontend/

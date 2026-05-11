@@ -98,6 +98,7 @@ When a bug appears: write a test first, then fix it. This grows a regression sui
 - `backend/features/devices` — devices routes/services/schemas
 - `backend/features/networks` — network read routes/services
 - `backend/features/network_ops` — prefetch, dns, activity, diagnostics routes/services
+- `backend/features/profiles` — profile CRUD, pause, bedtime, schedule, content filter routes/services
 - `frontend/src/features/app` — shell/sidebar/content tabs
 - `frontend/src/components` — domain UI modules
 - `frontend/src/api/*` — API client + typed endpoint wrappers
