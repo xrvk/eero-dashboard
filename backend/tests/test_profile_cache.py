@@ -36,6 +36,8 @@ def make_mock_client():
     client._api.profiles.post = AsyncMock(return_value={"data": {"name": "new"}})
     client._api.profiles.put = AsyncMock(return_value={"data": {"name": "renamed"}})
     client._api.profiles.delete = AsyncMock(return_value={"meta": {"code": 200}})
+    # Upstream eero-api client cache
+    client._cache = {"profiles": {}}
     return client
 
 
