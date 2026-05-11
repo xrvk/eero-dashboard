@@ -63,7 +63,7 @@ export function DnsSettings({ networkId }: { networkId: string }) {
   );
   const [editing, setEditing] = useState(false);
   const [dnsMode, setDnsMode] = useState('');
-  const [customServers, setCustomServers] = useState('');
+  const [dnsServers, setDnsServers] = useState(['', '']);
   const [saving, setSaving] = useState(false);
 
   if (loading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
@@ -74,17 +74,12 @@ export function DnsSettings({ networkId }: { networkId: string }) {
   const customIps = (dns?.custom as { ips?: string[] })?.ips ?? [];
   const caching = dns?.caching as boolean | undefined;
 
-  const startEditing = () => {
-    setDnsMode(mode);
-    setCustomServers(customIps.join(', '));
-    setEditing(true);
-  };
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const servers = dnsMode === 'custom'
-        ? customServers.split(/[,\s]+/).map(s => s.trim()).filter(Boolean)
+        ? dnsServers.map(s => s.trim()).filter(Boolean)
         : undefined;
       await api.setDnsMode(networkId, dnsMode, servers);
       await refetch();
@@ -118,66 +113,53 @@ export function DnsSettings({ networkId }: { networkId: string }) {
       </div>
 
       <div className="settings-card">
-        <div className="section-header-inline">
-          <h3>DNS Servers</h3>
-          {!editing && (
-            <button className="btn-text" onClick={startEditing}>✏️ Edit</button>
+        <h3>DNS Provider</h3>
+        <div className="dns-provider-row">
+          <select
+            className="dns-select"
+            value={editing ? dnsMode : mode}
+            onChange={(e) => {
+              const val = e.target.value;
+              setDnsMode(val);
+              if (val === 'custom') setDnsServers([customIps[0] || '', customIps[1] || '']);
+              setEditing(true);
+            }}
+            disabled={saving}
+          >
+            <option value="default">eero Default</option>
+            <option value="cloudflare">Cloudflare (1.1.1.1)</option>
+            <option value="google">Google (8.8.8.8)</option>
+            <option value="opendns">OpenDNS (208.67.222.222)</option>
+            <option value="custom">Custom</option>
+          </select>
+          {editing && dnsMode !== 'custom' && (
+            <button className="btn-primary btn-sm" onClick={handleSave} disabled={saving}>
+              {saving ? '…' : 'Apply'}
+            </button>
           )}
         </div>
 
-        {editing ? (
-          <div className="dns-edit-form">
-            <div className="dns-mode-select">
-              <label className={`dns-mode-option ${dnsMode === 'default' ? 'selected' : ''}`}>
-                <input type="radio" name="dns-mode" value="default" checked={dnsMode === 'default'}
-                  onChange={() => setDnsMode('default')} />
-                <div>
-                  <span className="dns-mode-label">Default</span>
-                  <span className="dns-mode-desc">Use eero's DNS servers</span>
-                </div>
-              </label>
-              <label className={`dns-mode-option ${dnsMode === 'custom' ? 'selected' : ''}`}>
-                <input type="radio" name="dns-mode" value="custom" checked={dnsMode === 'custom'}
-                  onChange={() => setDnsMode('custom')} />
-                <div>
-                  <span className="dns-mode-label">Custom</span>
-                  <span className="dns-mode-desc">Use your own DNS servers</span>
-                </div>
-              </label>
-            </div>
-
-            {dnsMode === 'custom' && (
-              <div style={{ marginTop: 12 }}>
-                <label className="dns-input-label">DNS Server IPs (comma separated)</label>
+        {((editing && dnsMode === 'custom') || (!editing && mode === 'custom')) && (
+          <div className="dns-server-inputs">
+            {['Primary', 'Secondary'].map((label, i) => (
+              <div key={i} className="form-field">
+                <label>{label} {i === 1 && '(optional)'}</label>
                 <input
-                  className="dns-input"
-                  type="text"
-                  placeholder="192.168.86.5, 1.1.1.1"
-                  value={customServers}
-                  onChange={(e) => setCustomServers(e.target.value)}
+                  className="dns-input" type="text"
+                  placeholder={i === 0 ? '1.1.1.1 or 2606:4700:4700::1111' : '8.8.8.8'}
+                  value={editing ? dnsServers[i] : (customIps[i] || '')}
+                  onFocus={() => { if (!editing) { setDnsMode('custom'); setDnsServers([customIps[0] || '', customIps[1] || '']); setEditing(true); } }}
+                  onChange={(e) => { const s = [...dnsServers]; s[i] = e.target.value; setDnsServers(s); if (!editing) { setDnsMode('custom'); setEditing(true); } }}
                 />
               </div>
-            )}
-
-            <div className="dns-edit-actions">
-              <button className="btn-primary" onClick={handleSave} disabled={saving}>
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-              <button className="btn-cancel" onClick={() => setEditing(false)}>Cancel</button>
-            </div>
-          </div>
-        ) : (
-          <div>
-            {customIps.length > 0 ? (
-              <div className="dns-servers">
-                <div className="dns-server-list">
-                  {customIps.map((ip, i) => (
-                    <span key={i} className="dns-server-chip">{ip}</span>
-                  ))}
-                </div>
+            ))}
+            {editing && (
+              <div className="dns-edit-actions">
+                <button className="btn-primary" onClick={handleSave} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+                <button className="btn-cancel" onClick={() => setEditing(false)}>Cancel</button>
               </div>
-            ) : (
-              <span className="dns-value" style={{ color: 'var(--text-muted)' }}>Using eero default DNS</span>
             )}
           </div>
         )}
@@ -600,7 +582,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const [secSaving, setSecSaving] = useState(false);
   const [dnsEditing, setDnsEditing] = useState(false);
   const [dnsMode, setDnsMode] = useState('');
-  const [customServers, setCustomServers] = useState('');
+  const [dnsServers, setDnsServers] = useState(['', '']);
   const [dnsSaving, setDnsSaving] = useState(false);
   const [sqmSaving, setSqmSaving] = useState(false);
   const [sqmEditMode, setSqmEditMode] = useState(false);
@@ -685,15 +667,10 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   };
 
   // DNS handlers
-  const startDnsEdit = () => {
-    setDnsMode(dnsCurrentMode);
-    setCustomServers(customIps.join(', '));
-    setDnsEditing(true);
-  };
   const handleDnsSave = async () => {
     setDnsSaving(true);
     try {
-      const servers = dnsMode === 'custom' ? customServers.split(/[,\s]+/).map(s => s.trim()).filter(Boolean) : undefined;
+      const servers = dnsMode === 'custom' ? dnsServers.map(s => s.trim()).filter(Boolean) : undefined;
       await api.setDnsMode(networkId, dnsMode, servers);
       await refetchDns();
       setDnsEditing(false);
@@ -809,7 +786,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
         </div>
       </div>
 
-      {/* Security */}
+      {/* Security & Connectivity */}
       <div className="general-section">
         <h3>🔒 Security & Connectivity</h3>
         <div className="toggle-list">
@@ -830,6 +807,65 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
               </div>
             );
           })}
+          <div className="toggle-row">
+            <div className="toggle-info">
+              <span className="toggle-name">SQM</span>
+              <span className="toggle-desc">Reduce bufferbloat for gaming, video calls, streaming</span>
+            </div>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={sqmEnabled} disabled={sqmSaving} onChange={handleSqmToggle} />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+          {sqmEnabled && (
+            <div style={{ paddingLeft: 4 }}>
+              {sqmEditMode ? (
+                <div className="sqm-edit-form">
+                  <div className="form-field">
+                    <label>Upload (Mbps)</label>
+                    <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)} placeholder="e.g. 50" min="1" />
+                  </div>
+                  <div className="form-field">
+                    <label>Download (Mbps)</label>
+                    <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)} placeholder="e.g. 500" min="1" />
+                  </div>
+                  <div className="dns-edit-actions">
+                    <button className="btn-primary" onClick={handleSqmSave} disabled={sqmSaving}>{sqmSaving ? 'Saving…' : 'Save'}</button>
+                    <button className="btn-cancel" onClick={() => setSqmEditMode(false)}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="general-card-details">
+                  <div className="general-detail"><span>Mode</span><span>{sqmMode}</span></div>
+                  {currentUpload != null && <div className="general-detail"><span>Upload</span><span>{currentUpload} Mbps</span></div>}
+                  {currentDownload != null && <div className="general-detail"><span>Download</span><span>{currentDownload} Mbps</span></div>}
+                  <div className="sqm-mode-buttons" style={{ marginTop: 8 }}>
+                    <button className="btn-primary btn-sm" onClick={handleSqmAuto} disabled={sqmSaving}>Auto Optimize</button>
+                    <button className="btn-text" onClick={() => { setUploadMbps(currentUpload ? String(currentUpload) : ''); setDownloadMbps(currentDownload ? String(currentDownload) : ''); setSqmEditMode(true); }}>✏️ Manual</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="toggle-row">
+            <div className="toggle-info">
+              <span className="toggle-name">
+                Thread
+                {(!!thread.name || !!thread.channel) && (
+                  <span
+                    className="thread-info-badge"
+                    data-tip={[thread.name && `Network: ${thread.name}`, thread.channel && `Channel: ${thread.channel}`].filter(Boolean).join(' · ')}
+                  >ℹ️</span>
+                )}
+              </span>
+              <span className="toggle-desc">IoT mesh networking protocol</span>
+            </div>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={!!(security as Record<string, unknown>).thread} disabled={secSaving}
+                onChange={() => handleSecurityToggle('thread', !(security as Record<string, unknown>).thread)} />
+              <span className="toggle-slider" />
+            </label>
+          </div>
         </div>
       </div>
 
@@ -846,105 +882,60 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
             <span className="toggle-slider" />
           </label>
         </div>
-        {dnsEditing ? (
-          <div className="dns-edit-form" style={{ marginTop: 16 }}>
-            <div className="dns-mode-select">
-              <label className={`dns-mode-option ${dnsMode === 'default' ? 'selected' : ''}`}>
-                <input type="radio" name="dns-mode" value="default" checked={dnsMode === 'default'} onChange={() => setDnsMode('default')} />
-                <div><span className="dns-mode-label">Default</span><span className="dns-mode-desc">Use eero's DNS</span></div>
-              </label>
-              <label className={`dns-mode-option ${dnsMode === 'custom' ? 'selected' : ''}`}>
-                <input type="radio" name="dns-mode" value="custom" checked={dnsMode === 'custom'} onChange={() => setDnsMode('custom')} />
-                <div><span className="dns-mode-label">Custom</span><span className="dns-mode-desc">Use your own DNS</span></div>
-              </label>
-            </div>
-            {dnsMode === 'custom' && (
-              <div style={{ marginTop: 12 }}>
-                <label className="dns-input-label">DNS Server IPs (comma separated)</label>
-                <input className="dns-input" type="text" placeholder="192.168.86.5, 1.1.1.1" value={customServers} onChange={(e) => setCustomServers(e.target.value)} />
-              </div>
+        <div style={{ marginTop: 12 }}>
+          <label className="drawer-label">DNS Provider</label>
+          <div className="dns-provider-row">
+            <select
+              className="dns-select"
+              value={dnsEditing ? dnsMode : dnsCurrentMode}
+              onChange={(e) => {
+                const val = e.target.value;
+                setDnsMode(val);
+                if (val === 'custom') setDnsServers([customIps[0] || '', customIps[1] || '']);
+                setDnsEditing(true);
+              }}
+              disabled={dnsSaving}
+            >
+              <option value="default">eero Default</option>
+              <option value="cloudflare">Cloudflare (1.1.1.1)</option>
+              <option value="google">Google (8.8.8.8)</option>
+              <option value="opendns">OpenDNS (208.67.222.222)</option>
+              <option value="custom">Custom</option>
+            </select>
+            {dnsEditing && dnsMode !== 'custom' && (
+              <button className="btn-primary btn-sm" onClick={handleDnsSave} disabled={dnsSaving}>
+                {dnsSaving ? '…' : 'Apply'}
+              </button>
             )}
-            <div className="dns-edit-actions">
-              <button className="btn-primary" onClick={handleDnsSave} disabled={dnsSaving}>{dnsSaving ? 'Saving…' : 'Save'}</button>
-              <button className="btn-cancel" onClick={() => setDnsEditing(false)}>Cancel</button>
-            </div>
           </div>
-        ) : (
-          <div className="general-info-grid" style={{ marginTop: 12 }}>
-            <div className="general-detail">
-              <span>DNS Servers</span>
-              <span>{customIps.length > 0 ? customIps.join(', ') : 'eero Default'} <button className="btn-text" onClick={startDnsEdit}>✏️</button></span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* QoS / SQM */}
-      <div className="general-section">
-        <h3>🚀 QoS (Smart Queue Management)</h3>
-        <div className="toggle-row">
-          <div className="toggle-info">
-            <span className="toggle-name">SQM</span>
-            <span className="toggle-desc">Reduce bufferbloat for gaming, video calls, streaming</span>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={sqmEnabled} disabled={sqmSaving} onChange={handleSqmToggle} />
-            <span className="toggle-slider" />
-          </label>
         </div>
-        {sqmEnabled && (
-          <div style={{ marginTop: 12 }}>
-            {sqmEditMode ? (
-              <div className="sqm-edit-form">
-                <div className="form-field">
-                  <label>Upload (Mbps)</label>
-                  <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)} placeholder="e.g. 50" min="1" />
-                </div>
-                <div className="form-field">
-                  <label>Download (Mbps)</label>
-                  <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)} placeholder="e.g. 500" min="1" />
-                </div>
-                <div className="dns-edit-actions">
-                  <button className="btn-primary" onClick={handleSqmSave} disabled={sqmSaving}>{sqmSaving ? 'Saving…' : 'Save'}</button>
-                  <button className="btn-cancel" onClick={() => setSqmEditMode(false)}>Cancel</button>
-                </div>
+
+        {((dnsEditing && dnsMode === 'custom') || (!dnsEditing && dnsCurrentMode === 'custom')) && (
+          <div className="dns-server-inputs">
+            {['Primary', 'Secondary'].map((label, i) => (
+              <div key={i} className="form-field">
+                <label>{label} {i === 1 && '(optional)'}</label>
+                <input
+                  className="dns-input" type="text"
+                  placeholder={i === 0 ? '1.1.1.1 or 2606:4700:4700::1111' : '8.8.8.8'}
+                  value={dnsEditing ? dnsServers[i] : (customIps[i] || '')}
+                  onFocus={() => { if (!dnsEditing) { setDnsMode('custom'); setDnsServers([customIps[0] || '', customIps[1] || '']); setDnsEditing(true); } }}
+                  onChange={(e) => { const s = [...dnsServers]; s[i] = e.target.value; setDnsServers(s); if (!dnsEditing) { setDnsMode('custom'); setDnsEditing(true); } }}
+                />
               </div>
-            ) : (
-              <div className="general-card-details">
-                <div className="general-detail"><span>Mode</span><span>{sqmMode}</span></div>
-                {currentUpload != null && <div className="general-detail"><span>Upload</span><span>{currentUpload} Mbps</span></div>}
-                {currentDownload != null && <div className="general-detail"><span>Download</span><span>{currentDownload} Mbps</span></div>}
-                <div className="sqm-mode-buttons" style={{ marginTop: 8 }}>
-                  <button className="btn-primary btn-sm" onClick={handleSqmAuto} disabled={sqmSaving}>Auto Optimize</button>
-                  <button className="btn-text" onClick={() => { setUploadMbps(currentUpload ? String(currentUpload) : ''); setDownloadMbps(currentDownload ? String(currentDownload) : ''); setSqmEditMode(true); }}>✏️ Manual</button>
-                </div>
+            ))}
+            {dnsEditing && (
+              <div className="dns-edit-actions">
+                <button className="btn-primary" onClick={handleDnsSave} disabled={dnsSaving}>{dnsSaving ? 'Saving…' : 'Save'}</button>
+                <button className="btn-cancel" onClick={() => setDnsEditing(false)}>Cancel</button>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Thread */}
-      <div className="general-section">
-        <h3>🧵 Thread</h3>
-        <div className="toggle-row">
-          <div className="toggle-info">
-            <span className="toggle-name">Thread</span>
-            <span className="toggle-desc">IoT mesh networking protocol</span>
-          </div>
-          <label className="toggle-switch">
-            <input type="checkbox" checked={!!(security as Record<string, unknown>).thread} disabled={secSaving}
-              onChange={() => handleSecurityToggle('thread', !(security as Record<string, unknown>).thread)} />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-        {(!!thread.name || !!thread.channel) && (
-          <div className="general-info-grid" style={{ marginTop: 12 }}>
-            {!!thread.name && <div className="general-detail"><span>Network</span><span className="mono">{String(thread.name)}</span></div>}
-            {!!thread.channel && <div className="general-detail"><span>Channel</span><span>{String(thread.channel)}</span></div>}
-          </div>
-        )}
-      </div>
+      {/* Node Controls */}
+      <NodeControlsSection networkId={networkId} />
 
       {/* Actions */}
       <div className="general-actions-row">
@@ -971,6 +962,155 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Node Controls (LED & Nightlight per node) ───────────
+
+function extractId(url?: string) {
+  if (!url) return '';
+  return url.replace(/\/$/, '').split('/').pop() || '';
+}
+
+function NodeControlsSection({ networkId }: { networkId: string }) {
+  const { data: eeroData } = useFetch(
+    () => api.getEeros(networkId), [networkId], {}, `/networks/${networkId}/eeros`
+  );
+  const eeros = eeroData?.eeros ?? [];
+
+  if (eeros.length === 0) return null;
+
+  return (
+    <div className="general-section">
+      <h3>💡 Node Controls</h3>
+      <p className="toggle-desc">Manage LED and nightlight settings for each node.</p>
+      <div className="node-controls-list">
+        {eeros.map((node, i) => {
+          const eeroId = extractId(node.url);
+          return (
+            <NodeControlCard key={node.serial || i} networkId={networkId} eeroId={eeroId} node={node} index={i} />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function NodeControlCard({ networkId, eeroId, node, index }: {
+  networkId: string; eeroId: string; node: api.EeroNode; index: number;
+}) {
+  const { data: ledData, refetch: refetchLed } = useFetch(
+    () => api.getLedStatus(networkId, eeroId), [networkId, eeroId]
+  );
+  const { data: nightlightData, refetch: refetchNightlight } = useFetch(
+    () => api.getNightlight(networkId, eeroId), [networkId, eeroId]
+  );
+  const [saving, setSaving] = useState(false);
+
+  const led = (ledData as Record<string, unknown>) || {};
+  const ledOn = !!led.led_on;
+  const brightness = (led.brightness as number) ?? 100;
+
+  const nlRaw = (nightlightData as Record<string, unknown>) || {};
+  const nightlight = (nlRaw.nightlight as Record<string, unknown>) || null;
+
+  const handleLedToggle = async () => {
+    setSaving(true);
+    try { await api.setLed(networkId, eeroId, !ledOn); await refetchLed(); }
+    catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  const handleBrightness = async (value: number) => {
+    setSaving(true);
+    try { await api.setLedBrightness(networkId, eeroId, value); await refetchLed(); }
+    catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  const handleNightlightToggle = async () => {
+    if (!nightlight) return;
+    setSaving(true);
+    try {
+      await api.setNightlight(networkId, eeroId, { enabled: !(nightlight.enabled as boolean) });
+      await refetchNightlight();
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  const handleNightlightBrightness = async (value: number) => {
+    setSaving(true);
+    try {
+      await api.setNightlight(networkId, eeroId, { brightness: value });
+      await refetchNightlight();
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div className="node-control-card">
+      <div className="node-control-header">
+        <span className="node-control-icon">{node.gateway ? '🏠' : '📡'}</span>
+        <div className="node-control-info">
+          <span className="node-control-name">{node.location || `Node ${index + 1}`}</span>
+          <span className="node-control-model">{node.model || 'eero'}</span>
+        </div>
+      </div>
+
+      <div className="toggle-row">
+        <div className="toggle-info">
+          <span className="toggle-name">LED Light</span>
+          <span className="toggle-desc">Status LED on this node</span>
+        </div>
+        <label className="toggle-switch">
+          <input type="checkbox" checked={ledOn} disabled={saving} onChange={handleLedToggle} />
+          <span className="toggle-slider" />
+        </label>
+      </div>
+
+      {ledOn && (
+        <div className="brightness-control">
+          <label className="toggle-desc">LED Brightness</label>
+          <div className="brightness-row">
+            <input
+              type="range" min="0" max="100" value={brightness}
+              onChange={(e) => handleBrightness(Number(e.target.value))}
+              disabled={saving} className="brightness-slider"
+            />
+            <span className="brightness-value">{brightness}%</span>
+          </div>
+        </div>
+      )}
+
+      {nightlight && (
+        <>
+          <div className="toggle-row" style={{ marginTop: 12 }}>
+            <div className="toggle-info">
+              <span className="toggle-name">Nightlight</span>
+              <span className="toggle-desc">Ambient light on this node</span>
+            </div>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={!!(nightlight.enabled)} disabled={saving} onChange={handleNightlightToggle} />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+          {nightlight.enabled && (
+            <div className="brightness-control">
+              <label className="toggle-desc">Nightlight Brightness</label>
+              <div className="brightness-row">
+                <input
+                  type="range" min="0" max="100"
+                  value={(nightlight.brightness as number) ?? 100}
+                  onChange={(e) => handleNightlightBrightness(Number(e.target.value))}
+                  disabled={saving} className="brightness-slider"
+                />
+                <span className="brightness-value">{(nightlight.brightness as number) ?? 100}%</span>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

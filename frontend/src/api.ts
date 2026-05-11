@@ -93,17 +93,35 @@ export interface EeroNode {
   url?: string;
   serial?: string;
   model?: string;
+  model_number?: string;
   location?: string;
   status?: string;
   connected_clients_count?: number;
   mesh_quality_bars?: number;
   gateway?: boolean;
   ip_address?: string;
+  mac_address?: string;
+  os_version?: string;
+  ethernet?: boolean;
+  last_reboot?: string;
+  update_available?: boolean;
+  hardware_rev?: string;
+  nightlight?: {
+    enabled?: boolean;
+    brightness?: number;
+    schedule?: { enabled?: boolean; on?: string; off?: string };
+    ambient_light_enabled?: boolean;
+  };
+  led_on?: boolean;
+  led_brightness?: number;
   [key: string]: unknown;
 }
 
 export const getEeros = (networkId: string) =>
   request<{ eeros: EeroNode[] }>(`/networks/${networkId}/eeros`);
+
+export const getEero = (networkId: string, eeroId: string) =>
+  request<EeroNode>(`/networks/${networkId}/eeros/${eeroId}`);
 
 // Profiles
 export interface Profile {

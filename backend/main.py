@@ -339,11 +339,23 @@ async def delete_reservation(network_id: str, reservation_id: str):
 # ── Reboot Node ──────────────────────────────────────────────────────────────
 
 
+@app.get("/api/networks/{network_id}/eeros/{eero_id}")
+async def get_eero_detail(network_id: str, eero_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_eero(eero_id, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/networks/{network_id}/eeros/{eero_id}/reboot")
 async def reboot_eero(network_id: str, eero_id: str):
     client = await get_client()
     try:
         resp = await client.reboot_eero(eero_id, network_id=network_id)
+        cache.invalidate(f"net:{network_id}:eeros")
+        cache.clear_upstream("eeros", network_id=network_id)
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -440,6 +452,7 @@ async def set_led(network_id: str, eero_id: str, req: LedRequest):
     client = await get_client()
     try:
         resp = await client.set_led(eero_id, req.enabled, network_id=network_id)
+        cache.clear_upstream("eeros", network_id=network_id)
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -450,6 +463,7 @@ async def set_led_brightness(network_id: str, eero_id: str, req: LedBrightnessRe
     client = await get_client()
     try:
         resp = await client.set_led_brightness(eero_id, req.brightness, network_id=network_id)
+        cache.clear_upstream("eeros", network_id=network_id)
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -484,6 +498,7 @@ async def set_nightlight(network_id: str, eero_id: str, req: NightlightRequest):
             if val is not None:
                 kwargs[field] = val
         resp = await client.set_nightlight(eero_id, network_id=network_id, **kwargs)
+        cache.clear_upstream("eeros", network_id=network_id)
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

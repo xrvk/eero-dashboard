@@ -855,7 +855,10 @@ body {
 .sidebar-node {
   display: flex; align-items: center; gap: 10px;
   padding: 7px 12px; font-size: 0.8rem;
+  cursor: pointer; border-radius: var(--radius-sm);
+  transition: background 0.15s;
 }
+.sidebar-node:hover { background: var(--bg-card-hover); }
 .sidebar-node-dot {
   width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
 }
@@ -1354,6 +1357,20 @@ body {
 }
 .dns-input:focus { border-color: var(--accent); }
 .dns-edit-actions { display: flex; gap: 8px; margin-top: 16px; }
+.dns-server-inputs { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.dns-provider-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.dns-select {
+  flex: 1; max-width: 280px; padding: 8px 12px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 0.85rem; outline: none; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M3 5l3 3 3-3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  padding-right: 30px;
+}
+.dns-select:focus { border-color: var(--accent); }
+.dns-select option { background: var(--bg-card); color: var(--text); }
 
 /* ── Rename Input ───────────────────────────── */
 .rename-input {
@@ -1488,6 +1505,38 @@ body {
 .reserve-ip-form { display: flex; flex-direction: column; gap: 6px; }
 .drawer-hint { font-size: 0.75rem; color: var(--text-muted); }
 
+/* ── Node Drawer ──────────────────────────── */
+.node-drawer-title { display: flex; align-items: center; gap: 12px; }
+.node-drawer-icon { font-size: 1.8rem; flex-shrink: 0; }
+.node-drawer-title h2 { margin: 0; }
+.node-drawer-subtitle { font-size: 0.8rem; color: var(--text-muted); }
+.node-drawer-loading {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text-muted); font-size: 0.85rem; padding: 12px 0;
+}
+.text-green { color: var(--green); }
+.text-yellow { color: var(--yellow); }
+.text-red { color: var(--red); }
+.firmware-tag {
+  font-family: 'SF Mono', monospace; font-size: 0.82rem;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 8px;
+}
+.backhaul-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.85rem; padding: 2px 8px;
+  border-radius: 4px; background: var(--bg);
+  border: 1px solid var(--border);
+}
+.backhaul-badge.wired { border-color: var(--green); color: var(--green); }
+.update-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.82rem; padding: 4px 10px;
+  border-radius: 4px; background: rgba(250,204,21,0.1);
+  border: 1px solid rgba(250,204,21,0.3); color: var(--yellow);
+}
+.drawer-field-full { grid-column: 1 / -1; }
+
 /* ── Node Controls ─────────────────────────── */
 .node-controls {
   background: var(--bg); border: 1px solid var(--border);
@@ -1506,6 +1555,39 @@ body {
   border-radius: 50%; background: var(--accent); cursor: pointer;
 }
 .brightness-value { font-size: 0.8rem; color: var(--text-muted); min-width: 36px; text-align: right; }
+
+/* Node Controls in Settings */
+.node-controls-list { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.node-control-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 16px;
+}
+.node-control-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+}
+.node-control-icon { font-size: 1.4rem; }
+.node-control-info { display: flex; flex-direction: column; }
+.node-control-name { font-weight: 600; font-size: 0.9rem; }
+.node-control-model { font-size: 0.75rem; color: var(--text-muted); }
+
+/* Thread info tooltip badge */
+.thread-info-badge {
+  display: inline-flex; align-items: center; margin-left: 6px;
+  cursor: help; font-size: 0.75rem; opacity: 0.7;
+  transition: opacity 0.15s; position: relative;
+}
+.thread-info-badge:hover { opacity: 1; }
+.thread-info-badge:hover::after {
+  content: attr(data-tip);
+  position: absolute; left: 50%; bottom: 100%;
+  transform: translateX(-50%); margin-bottom: 6px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 10px;
+  font-size: 0.75rem; white-space: nowrap;
+  color: var(--text); box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 10; pointer-events: none;
+}
 
 /* ── Guest Network ─────────────────────────── */
 .guest-network { max-width: 600px; }

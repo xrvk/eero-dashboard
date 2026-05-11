@@ -2,6 +2,7 @@ import { Suspense, lazy, useCallback, useEffect, useState, useRef } from 'react'
 
 import * as api from './api';
 import LoginForm from './components/LoginForm';
+import NodeDrawer from './components/NodeDrawer';
 import { useFetch } from './hooks/useFetch';
 import AppContent from './features/app/AppContent';
 import AppSidebar from './features/app/AppSidebar';
@@ -48,6 +49,7 @@ function AppMain() {
   const [theme, setTheme] = useState<'dark' | 'light' | 'auto'>(() => (localStorage.getItem('theme') as 'dark' | 'light' | 'auto') || 'dark');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const [nodeDrawer, setNodeDrawer] = useState<{ node: api.EeroNode } | null>(null);
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return;
@@ -111,6 +113,10 @@ function AppMain() {
     setSelectedNetwork(null);
   };
 
+  const handleNodeClick = useCallback((_eeroId: string, node: api.EeroNode) => {
+    setNodeDrawer({ node });
+  }, []);
+
   if (checking) return <div className="app-loading"><div className="spinner" /></div>;
   if (!auth?.authenticated) return <LoginForm onAuthenticated={checkAuth} />;
 
@@ -128,6 +134,7 @@ function AppMain() {
           networkDetail={networkDetail}
           auth={auth}
           onNavClick={closeSidebar}
+          onNodeClick={handleNodeClick}
         />
       </div>
 
@@ -178,8 +185,16 @@ function AppMain() {
           </div>
         </header>
 
-        <AppContent selectedNetwork={selectedNetwork} tab={tab} setTab={setTab} />
+        <AppContent selectedNetwork={selectedNetwork} tab={tab} setTab={setTab} onNodeClick={handleNodeClick} />
       </main>
+
+      {nodeDrawer && selectedNetwork && (
+        <NodeDrawer
+          networkId={selectedNetwork}
+          node={nodeDrawer.node}
+          onClose={() => setNodeDrawer(null)}
+        />
+      )}
     </div>
   );
 }

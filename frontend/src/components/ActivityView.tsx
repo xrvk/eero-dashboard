@@ -5,6 +5,7 @@ import SpeedHistory from './SpeedHistory';
 
 interface ActivityViewProps {
   networkId: string;
+  onNodeClick?: (eeroId: string, node: api.EeroNode) => void;
 }
 
 interface ConnectedDevice extends api.Device {
@@ -24,7 +25,7 @@ function extractId(url?: string) {
   return url.replace(/\/$/, '').split('/').pop() || '';
 }
 
-export default function ActivityView({ networkId }: ActivityViewProps) {
+export default function ActivityView({ networkId, onNodeClick }: ActivityViewProps) {
   const { data: devData, loading: devLoading } = useFetch(
     () => api.getDevices(networkId),
     [networkId]
@@ -197,6 +198,8 @@ export default function ActivityView({ networkId }: ActivityViewProps) {
               <div
                 key={node.serial || i}
                 className={`node-card ${node.status === 'green' ? 'healthy' : node.status === 'yellow' ? 'warning' : 'error'}`}
+                onClick={() => onNodeClick?.(eeroId, node)}
+                style={{ cursor: onNodeClick ? 'pointer' : undefined }}
               >
                 <div className="node-status-dot" />
                 <div className="node-icon">{node.gateway ? '🏠' : '📡'}</div>
