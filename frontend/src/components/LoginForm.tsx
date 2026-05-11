@@ -58,14 +58,16 @@ export default function LoginForm({ onAuthenticated }: LoginFormProps) {
         {error && <div className="error-banner">{error}</div>}
 
         {step === 'email' ? (
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleLogin} autoComplete="on">
             <label htmlFor="identifier">Email or Phone</label>
             <input
               id="identifier"
+              name="identifier"
               type="text"
               placeholder="you@example.com or +1 555-0123"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
+              autoComplete="username"
               required
               autoFocus
             />
@@ -74,16 +76,22 @@ export default function LoginForm({ onAuthenticated }: LoginFormProps) {
             </button>
           </form>
         ) : (
-          <form onSubmit={handleVerify}>
+          <form onSubmit={handleVerify} autoComplete="on">
             {message && <p className="info-text">{message}</p>}
             <label htmlFor="code">Verification Code</label>
             <input
               id="code"
+              name="one-time-code"
               type="text"
               inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
               placeholder="123456"
               value={code}
-              onChange={(e) => setCode(e.target.value)}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '');
+                setCode(digits);
+              }}
               required
               autoFocus
               autoComplete="one-time-code"
