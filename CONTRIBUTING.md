@@ -3,7 +3,6 @@
 ## Quick start
 
 ```bash
-cd /tmp/workspace/xrvk/eero-dashboard
 npm run bootstrap
 ```
 
@@ -12,14 +11,14 @@ npm run bootstrap
 Backend:
 
 ```bash
-cd /tmp/workspace/xrvk/eero-dashboard/backend
+cd backend
 python main.py
 ```
 
 Frontend:
 
 ```bash
-cd /tmp/workspace/xrvk/eero-dashboard/frontend
+cd frontend
 npm run dev
 ```
 
@@ -29,6 +28,60 @@ From repo root:
 
 - `npm run test` — frontend tests + backend smoke tests
 - `npm run validate` — frontend lint/typecheck/build/test + backend compile/test
+- `npm run test:watch` — vitest in watch mode for fast local feedback
+
+## Development workflow
+
+### Watch mode
+
+While coding, run tests in watch mode for instant feedback:
+
+```bash
+npm run test:watch
+```
+
+### Pre-commit
+
+The Husky pre-commit hook runs `npm run validate` automatically. To skip for WIP commits:
+
+```bash
+git commit --no-verify -m "wip"
+```
+
+### Branching & merging
+
+```
+main (always deployable)
+ └── feature-branch (commit often, stay messy)
+     → squash-merge back → delete branch
+```
+
+- Branch off `main`, merge back fast — avoid long-lived branches that drift
+- Use squash-merge so `main` stays clean with one commit per logical change
+- Use `git diff --stat` before merging as a quick self-review
+
+### Tagging milestones
+
+Tag known-good states so you can jump back:
+
+```bash
+git tag v0.1-auth-working
+git tag v0.2-dashboard-mvp
+```
+
+### Testing philosophy
+
+Write tests for things that have bitten you, not for everything.
+
+| Layer | Priority | Why |
+|---|---|---|
+| Unit tests (core logic) | ✅ Always | Cheap, fast, highest value |
+| Type checking (`tsc`) | ✅ Always | Catches tons of bugs for free |
+| Build step (`vite build`) | ✅ Always | Free regression safety net |
+| Component tests | 🟡 Sometimes | Only for complex interactive components |
+| E2E tests | ❌ Skip early | Slow, brittle, overkill for solo dev |
+
+When a bug appears: write a test first, then fix it. This grows a regression suite around the things that actually break.
 
 ## Architecture map
 
@@ -53,6 +106,6 @@ From repo root:
 
 ## Docs to update with behavior changes
 
-- `/tmp/workspace/xrvk/eero-dashboard/README.md`
-- `/tmp/workspace/xrvk/eero-dashboard/docs/API_REFERENCE.md`
-- Relevant ADR in `/tmp/workspace/xrvk/eero-dashboard/docs/adr/`
+- `README.md`
+- `docs/API_REFERENCE.md`
+- Relevant ADR in `docs/adr/`
