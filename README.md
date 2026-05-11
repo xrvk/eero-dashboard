@@ -75,13 +75,16 @@ docker compose up -d --build
 ### Synology NAS (Container Manager)
 
 1. Create a folder: **File Station → docker → eero-dashboard**
-2. Place the `docker-compose.yml` from Option A above into that folder
-3. Open **Container Manager → Project → Create**
-4. Set **Project name** to `eero-dashboard`
-5. Set **Path** to `/docker/eero-dashboard`
-6. It will auto-detect the compose file — click **Next → Done**
+2. Create a `data` subfolder inside it for persistent storage
+3. Place the `docker-compose.yml` from Option A above into the `eero-dashboard` folder
+4. Open **Container Manager → Project → Create**
+5. Set **Project name** to `eero-dashboard`
+6. Set **Path** to `/docker/eero-dashboard`
+7. It will auto-detect the compose file — click **Next → Done**
 
 The dashboard will be available at `http://<NAS-IP>:8420`.
+
+Speed history and eero session data are stored in `docker/eero-dashboard/data/`, visible in File Station.
 
 ### Common commands
 
@@ -91,7 +94,7 @@ To stop:
 docker compose down
 ```
 
-> Speed history and session data are persisted in a Docker volume (`eero-data`). Your data survives container rebuilds.
+> Speed history and session data are persisted in the `data/` directory (bind-mounted via Docker). Your data survives container rebuilds and image updates.
 
 ### Local Development
 

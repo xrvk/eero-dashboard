@@ -8,13 +8,13 @@ Global singleton pattern. One `EeroClient` instance per app lifetime.
 
 | Function | Purpose |
 |----------|---------|
-| `ensure_client()` | Lazy-init client, persists auth to `.eero_session` cookie file |
+| `ensure_client()` | Lazy-init client, persists auth to `data/.eero_session` cookie file |
 | `get_client()` | Returns authenticated client or raises 401 |
 | `is_authenticated()` | Quick flag check (no network call) |
 | `reset_client()` | Close → reinitialize (called after logout) |
 | `lifespan()` | FastAPI lifespan context: init on startup, close on shutdown |
 
-The client uses the `eero-api` library (`EeroClient` class) which wraps the unofficial eero cloud REST API. Auth state is stored in a cookie file, not in memory, so it survives restarts.
+The client uses the `eero-api` library (`EeroClient` class) which wraps the unofficial eero cloud REST API. Auth state is stored in a cookie file (`data/.eero_session`), not in memory, so it survives restarts and container rebuilds when the `data/` directory is volume-mounted.
 
 ### `core/cache.py` — In-memory TTL cache
 
