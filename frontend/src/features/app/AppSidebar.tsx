@@ -11,6 +11,7 @@ interface AppSidebarProps {
   networkDetail: api.Network | null;
   auth: api.AuthStatus;
   onNavClick?: () => void;
+  onNodeClick?: (eeroId: string, node: api.EeroNode) => void;
 }
 
 function getNetworkId(n: api.Network): string {
@@ -29,6 +30,7 @@ export default function AppSidebar({
   networkDetail,
   auth,
   onNavClick,
+  onNodeClick,
 }: AppSidebarProps) {
   const handleTab = (t: AppTab) => {
     setTab(t);
@@ -84,17 +86,25 @@ export default function AppSidebar({
       {eeros.length > 0 && (
         <div className="sidebar-nodes">
           <span className="sidebar-section-label">Nodes</span>
-          {eeros.map((node: api.EeroNode, i: number) => (
-            <div key={node.serial || i} className="sidebar-node">
-              <span className={`sidebar-node-dot status-dot-${node.status}`} />
-              <div className="sidebar-node-info">
-                <span className="sidebar-node-name">{node.location || node.model || `Node ${i + 1}`}</span>
-                <span className="sidebar-node-meta">
-                  {node.model}{node.connected_clients_count != null ? ` · ${node.connected_clients_count}` : ''}
-                </span>
+          {eeros.map((node: api.EeroNode, i: number) => {
+            const eeroId = node.url ? node.url.replace(/\/$/, '').split('/').pop() || '' : '';
+            return (
+              <div
+                key={node.serial || i}
+                className="sidebar-node"
+                onClick={() => onNodeClick?.(eeroId, node)}
+                title="View node details"
+              >
+                <span className={`sidebar-node-dot status-dot-${node.status}`} />
+                <div className="sidebar-node-info">
+                  <span className="sidebar-node-name">{node.location || node.model || `Node ${i + 1}`}</span>
+                  <span className="sidebar-node-meta">
+                    {node.model}{node.connected_clients_count != null ? ` · ${node.connected_clients_count}` : ''}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

@@ -339,6 +339,16 @@ async def delete_reservation(network_id: str, reservation_id: str):
 # ── Reboot Node ──────────────────────────────────────────────────────────────
 
 
+@app.get("/api/networks/{network_id}/eeros/{eero_id}")
+async def get_eero_detail(network_id: str, eero_id: str):
+    client = await get_client()
+    try:
+        resp = await client.get_eero(eero_id, network_id=network_id)
+        return resp.get("data", resp)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/networks/{network_id}/eeros/{eero_id}/reboot")
 async def reboot_eero(network_id: str, eero_id: str):
     client = await get_client()

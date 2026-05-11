@@ -946,6 +946,9 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
         )}
       </div>
 
+      {/* Node Controls */}
+      <NodeControlsSection networkId={networkId} />
+
       {/* Actions */}
       <div className="general-actions-row">
         <div className="general-section">
@@ -971,6 +974,155 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Node Controls (LED & Nightlight per node) ───────────
+
+function extractId(url?: string) {
+  if (!url) return '';
+  return url.replace(/\/$/, '').split('/').pop() || '';
+}
+
+function NodeControlsSection({ networkId }: { networkId: string }) {
+  const { data: eeroData } = useFetch(
+    () => api.getEeros(networkId), [networkId], {}, `/networks/${networkId}/eeros`
+  );
+  const eeros = eeroData?.eeros ?? [];
+
+  if (eeros.length === 0) return null;
+
+  return (
+    <div className="general-section">
+      <h3>💡 Node Controls</h3>
+      <p className="toggle-desc">Manage LED and nightlight settings for each node.</p>
+      <div className="node-controls-list">
+        {eeros.map((node, i) => {
+          const eeroId = extractId(node.url);
+          return (
+            <NodeControlCard key={node.serial || i} networkId={networkId} eeroId={eeroId} node={node} index={i} />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function NodeControlCard({ networkId, eeroId, node, index }: {
+  networkId: string; eeroId: string; node: api.EeroNode; index: number;
+}) {
+  const { data: ledData, refetch: refetchLed } = useFetch(
+    () => api.getLedStatus(networkId, eeroId), [networkId, eeroId]
+  );
+  const { data: nightlightData, refetch: refetchNightlight } = useFetch(
+    () => api.getNightlight(networkId, eeroId), [networkId, eeroId]
+  );
+  const [saving, setSaving] = useState(false);
+
+  const led = (ledData as Record<string, unknown>) || {};
+  const ledOn = !!led.led_on;
+  const brightness = (led.brightness as number) ?? 100;
+
+  const nlRaw = (nightlightData as Record<string, unknown>) || {};
+  const nightlight = (nlRaw.nightlight as Record<string, unknown>) || null;
+
+  const handleLedToggle = async () => {
+    setSaving(true);
+    try { await api.setLed(networkId, eeroId, !ledOn); await refetchLed(); }
+    catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  const handleBrightness = async (value: number) => {
+    setSaving(true);
+    try { await api.setLedBrightness(networkId, eeroId, value); await refetchLed(); }
+    catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  const handleNightlightToggle = async () => {
+    if (!nightlight) return;
+    setSaving(true);
+    try {
+      await api.setNightlight(networkId, eeroId, { enabled: !(nightlight.enabled as boolean) });
+      await refetchNightlight();
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  const handleNightlightBrightness = async (value: number) => {
+    setSaving(true);
+    try {
+      await api.setNightlight(networkId, eeroId, { brightness: value });
+      await refetchNightlight();
+    } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div className="node-control-card">
+      <div className="node-control-header">
+        <span className="node-control-icon">{node.gateway ? '🏠' : '📡'}</span>
+        <div className="node-control-info">
+          <span className="node-control-name">{node.location || `Node ${index + 1}`}</span>
+          <span className="node-control-model">{node.model || 'eero'}</span>
+        </div>
+      </div>
+
+      <div className="toggle-row">
+        <div className="toggle-info">
+          <span className="toggle-name">LED Light</span>
+          <span className="toggle-desc">Status LED on this node</span>
+        </div>
+        <label className="toggle-switch">
+          <input type="checkbox" checked={ledOn} disabled={saving} onChange={handleLedToggle} />
+          <span className="toggle-slider" />
+        </label>
+      </div>
+
+      {ledOn && (
+        <div className="brightness-control">
+          <label className="toggle-desc">LED Brightness</label>
+          <div className="brightness-row">
+            <input
+              type="range" min="0" max="100" value={brightness}
+              onChange={(e) => handleBrightness(Number(e.target.value))}
+              disabled={saving} className="brightness-slider"
+            />
+            <span className="brightness-value">{brightness}%</span>
+          </div>
+        </div>
+      )}
+
+      {nightlight && (
+        <>
+          <div className="toggle-row" style={{ marginTop: 12 }}>
+            <div className="toggle-info">
+              <span className="toggle-name">Nightlight</span>
+              <span className="toggle-desc">Ambient light on this node</span>
+            </div>
+            <label className="toggle-switch">
+              <input type="checkbox" checked={!!(nightlight.enabled)} disabled={saving} onChange={handleNightlightToggle} />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+          {nightlight.enabled && (
+            <div className="brightness-control">
+              <label className="toggle-desc">Nightlight Brightness</label>
+              <div className="brightness-row">
+                <input
+                  type="range" min="0" max="100"
+                  value={(nightlight.brightness as number) ?? 100}
+                  onChange={(e) => handleNightlightBrightness(Number(e.target.value))}
+                  disabled={saving} className="brightness-slider"
+                />
+                <span className="brightness-value">{(nightlight.brightness as number) ?? 100}%</span>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
