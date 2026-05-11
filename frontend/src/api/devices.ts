@@ -31,20 +31,16 @@ export const blockDevice = (networkId: string, deviceId: string, blocked: boolea
     body: JSON.stringify({ blocked }),
   });
 
-export const renameDevice = (networkId: string, deviceId: string, nickname: string) =>
-  request(`/networks/${networkId}/devices/${deviceId}/rename`, {
-    method: 'POST',
-    body: JSON.stringify({ nickname }),
-  });
-
-export const getDevice = (networkId: string, deviceId: string) =>
-  request<Device>(`/networks/${networkId}/devices/${deviceId}`);
-
 export const setDeviceNickname = (networkId: string, deviceId: string, nickname: string) =>
   request(`/networks/${networkId}/devices/${deviceId}/nickname`, {
     method: 'POST',
     body: JSON.stringify({ nickname }),
   });
+
+export const renameDevice = setDeviceNickname;
+
+export const getDevice = (networkId: string, deviceId: string) =>
+  request<Device>(`/networks/${networkId}/devices/${deviceId}`);
 
 export const getDevicePriority = (networkId: string, deviceId: string) =>
   request<Record<string, unknown>>(`/networks/${networkId}/devices/${deviceId}/priority`);

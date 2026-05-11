@@ -1,7 +1,14 @@
 {
   "private": true,
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "bootstrap": "npm --prefix frontend install && python -m pip install -r backend/requirements.txt",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "npm --prefix frontend run test -- --watch=false",
+    "test:backend": "python -m unittest discover -s backend/tests",
+    "validate": "npm run validate:frontend && npm run validate:backend",
+    "validate:frontend": "npm --prefix frontend run lint && npm --prefix frontend run typecheck && npm --prefix frontend run build && npm --prefix frontend run test -- --watch=false",
+    "validate:backend": "python -m compileall backend && python -m unittest discover -s backend/tests"
   },
   "devDependencies": {
     "husky": "^9.1.7"

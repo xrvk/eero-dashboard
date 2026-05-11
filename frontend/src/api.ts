@@ -1,4 +1,7 @@
 import { request } from './api/client';
+
+// Compatibility exports:
+// prefer importing from feature API modules (e.g. ./api/devices) for new work.
 export {
   blockDevice,
   getDevice,

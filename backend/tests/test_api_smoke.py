@@ -28,6 +28,8 @@ class ApiSmokeTests(unittest.TestCase):
             }
         }
         self.client_mock.get_devices.return_value = {"data": [{"mac": "aa:bb", "display_name": "iPhone"}]}
+        self.client_mock.get_dns_settings.return_value = {"data": {"mode": "isp_default", "caching": True}}
+        self.client_mock.get_activity.return_value = {"data": {"summary": {"clients": 1}}}
         self.client_mock.get_account.return_value = {
             "name": "Test User",
             "email": {"value": "test@example.com"},
@@ -83,6 +85,15 @@ class ApiSmokeTests(unittest.TestCase):
         body = resp.json()
         self.assertEqual(body["name"], "Home")
         self.assertIn("speed", body)
+
+    def test_network_ops_endpoints_smoke(self):
+        dns_resp = self.http.get("/api/networks/1/dns")
+        self.assertEqual(dns_resp.status_code, 200)
+        self.assertEqual(dns_resp.json()["mode"], "isp_default")
+
+        activity_resp = self.http.get("/api/networks/1/activity")
+        self.assertEqual(activity_resp.status_code, 200)
+        self.assertEqual(activity_resp.json()["summary"]["clients"], 1)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,3 @@
-import asyncio
 import json
 import os
 import time
@@ -15,6 +14,7 @@ from core.client import get_client, is_authenticated, lifespan
 from core.errors import api_error_response
 from features.auth.router import router as auth_router
 from features.devices.router import router as devices_router
+from features.network_ops.router import router as network_ops_router
 from features.networks.router import router as networks_router
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -35,6 +35,7 @@ app.add_middleware(
 )
 app.include_router(auth_router)
 app.include_router(devices_router)
+app.include_router(network_ops_router)
 app.include_router(networks_router)
 
 
@@ -86,117 +87,6 @@ async def health():
         "authenticated": authenticated,
         "data_dir": data_dir_ok,
     }
-
-
-# ── Prefetch ─────────────────────────────────────────────────────────────────
-
-
-@app.post("/api/prefetch/{network_id}")
-async def prefetch(network_id: str):
-    """Warm the cache by fetching all main data in parallel."""
-    client = await get_client()
-    try:
-        results = await asyncio.gather(
-            client.get_network(network_id),
-            client.get_devices(network_id),
-            client.get_eeros(network_id),
-            client.get_profiles(network_id),
-            client.get_dns_settings(network_id),
-            client.get_security_settings(network_id),
-            client.get_updates(network_id=network_id),
-            client.get_thread(network_id=network_id),
-            client.get_blacklist(network_id=network_id),
-            return_exceptions=True,
-        )
-        ok = sum(1 for r in results if not isinstance(r, Exception))
-        return {"status": "ok", "cached": ok, "total": len(results)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ── DNS ───────────────────────────────────────────────────────────────────────
-
-
-@app.get("/api/networks/{network_id}/dns")
-async def get_dns(network_id: str):
-    client = await get_client()
-    try:
-        resp = await client.get_dns_settings(network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-class DnsModeRequest(BaseModel):
-    mode: str
-    custom_servers: list[str] | None = None
-
-
-class DnsCachingRequest(BaseModel):
-    enabled: bool
-
-
-@app.post("/api/networks/{network_id}/dns/mode")
-async def set_dns_mode(network_id: str, req: DnsModeRequest):
-    client = await get_client()
-    try:
-        resp = await client.set_dns_mode(req.mode, custom_servers=req.custom_servers, network_id=network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/networks/{network_id}/dns/caching")
-async def set_dns_caching(network_id: str, req: DnsCachingRequest):
-    client = await get_client()
-    try:
-        resp = await client.set_dns_caching(req.enabled, network_id=network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ── Activity ──────────────────────────────────────────────────────────────────
-
-
-@app.get("/api/networks/{network_id}/activity")
-async def get_activity(network_id: str):
-    client = await get_client()
-    try:
-        resp = await client.get_activity(network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/networks/{network_id}/activity/history")
-async def get_activity_history(network_id: str, period: str = "day"):
-    client = await get_client()
-    try:
-        resp = await client.get_activity_history(network_id, period=period)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/networks/{network_id}/activity/clients")
-async def get_activity_clients(network_id: str):
-    client = await get_client()
-    try:
-        resp = await client.get_activity_clients(network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/networks/{network_id}/activity/categories")
-async def get_activity_categories(network_id: str):
-    client = await get_client()
-    try:
-        resp = await client.get_activity_categories(network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ── Speed Test ────────────────────────────────────────────────────────────────
@@ -277,29 +167,6 @@ async def get_speed_history(network_id: str):
         return {"history": filtered, "retention_days": SPEED_HISTORY_DAYS}
     except (json.JSONDecodeError, OSError):
         return {"history": [], "retention_days": SPEED_HISTORY_DAYS}
-
-
-# ── Diagnostics ───────────────────────────────────────────────────────────────
-
-
-@app.get("/api/networks/{network_id}/diagnostics")
-async def get_diagnostics(network_id: str):
-    client = await get_client()
-    try:
-        resp = await client.get_diagnostics(network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/networks/{network_id}/diagnostics")
-async def run_diagnostics(network_id: str):
-    client = await get_client()
-    try:
-        resp = await client.run_diagnostics(network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ── Profile Actions ───────────────────────────────────────────────────────────
