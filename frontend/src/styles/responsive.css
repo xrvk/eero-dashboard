@@ -1,0 +1,120 @@
+/* Responsive */
+@media (max-width: 600px) {
+  .app-header { padding: 12px 16px; }
+  .app-main { padding: 16px; }
+  .overview-row { grid-template-columns: repeat(2, 1fr); }
+  .device-grid, .node-grid { grid-template-columns: 1fr; }
+}
+
+
+@media (max-width: 700px) {
+  .net-bar { flex-direction: column; gap: 12px; }
+  .net-bar-right { flex-wrap: wrap; }
+}
+
+
+@media (max-width: 600px) {
+  .activity-panels { grid-template-columns: 1fr; }
+}
+
+
+@media (max-width: 800px) {
+  .device-toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar-controls { justify-content: flex-end; }
+  .device-table { font-size: 0.75rem; }
+  .device-table thead th, .device-table tbody td { padding: 6px 6px; }
+  .td-name { max-width: 120px; }
+  .td-conn { white-space: nowrap; }
+}
+
+
+@media (max-width: 700px) {
+  .activity-summary { grid-template-columns: 1fr; }
+}
+
+
+@media (max-width: 768px) {
+  .hamburger-btn {
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; cursor: pointer;
+    width: 36px; height: 36px; padding: 0; flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .hamburger-icon {
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 5px; width: 22px; height: 22px;
+  }
+  .hamburger-icon span {
+    display: block; height: 2px; width: 100%;
+    background: var(--text); border-radius: 2px;
+    transition: transform 0.25s ease, opacity 0.2s ease;
+    transform-origin: center;
+  }
+  .hamburger-icon.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger-icon.open span:nth-child(2) { opacity: 0; }
+  .hamburger-icon.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .sidebar-drawer {
+    display: block;
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: 260px; z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+  .sidebar-drawer.open { transform: translateX(0); }
+  .sidebar-drawer .app-sidebar {
+    position: static; width: 100%; height: 100%;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed; inset: 0; z-index: 99;
+    background: rgba(0, 0, 0, 0.5);
+    animation: fade-in 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 10px; }
+
+  .app-main { margin-left: 0; }
+  .tab-content { padding: 16px; }
+}
+
+
+@media (max-width: 600px) {
+  .speed-value { font-size: 1.5rem; }
+  .speed-dir { font-size: 0.85rem; }
+  .speed-unit { font-size: 0.7rem; }
+  .speed-result { gap: 16px; }
+}
+
+
+/* ── Table mobile responsiveness ────────────── */
+@media (max-width: 900px) {
+  .device-table td:nth-child(4),
+  .device-table th:nth-child(4) { display: none; } /* hide MAC */
+  .device-table td:nth-child(8),
+  .device-table th:nth-child(8) { display: none; } /* hide Speed */
+}
+@media (max-width: 700px) {
+  .device-table td:nth-child(6),
+  .device-table th:nth-child(6),
+  .device-table td:nth-child(7),
+  .device-table th:nth-child(7) { display: none; } /* hide Signal + Band */
+}
+
+
+@media (max-width: 500px) {
+  .enode-f { min-width: 80px; }
+}
+
+
+@media (max-width: 800px) {
+  .toolbar-row { flex-wrap: wrap; }
+  .filter-group { flex-wrap: wrap; }
+}
+
+
+@media (max-width: 640px) { .general-actions-row { grid-template-columns: 1fr; } }
+

@@ -154,9 +154,18 @@ Thin wrapper that re-exports device API functions under a `devicesClient` object
 
 ## Styling
 
-- **Plain CSS** — `index.css` (global), `App.css` (layout)
+- **Plain CSS** — `index.css` is an import aggregator that loads split files from `styles/`:
+  - `styles/variables.css` — CSS custom properties (`:root`, `[data-theme]`, color-scheme media query)
+  - `styles/base.css` — Reset (`*`), `body`, and app-loading spinner
+  - `styles/layout.css` — App shell: sidebar, header, main content area, theme toggle, sidebar speed widget
+  - `styles/components.css` — All UI components: cards, buttons, toggles, forms, tables, tabs, badges, filters, etc.
+  - `styles/drawers.css` — Slide-out drawer panels (device drawer, node drawer)
+  - `styles/charts.css` — Speed history charts, tooltips, speed table
+  - `styles/animations.css` — `@keyframes` definitions and spinner
+  - `styles/responsive.css` — All `@media` breakpoint overrides
+- **`App.css`** — Additional layout styles
 - **Theme:** Dark / light / auto via `data-theme` attribute on `<html>`
-- **CSS variables** for colors, shadows, and gradients: `--bg-card`, `--text`, `--accent`, `--shadow-card`, `--gradient-card`, etc.
+- **CSS variables** for colors, shadows, and gradients: `--bg-card`, `--text`, `--accent`, etc.
 - **Typography:** DM Sans (body), JetBrains Mono (monospace values)
 - **Icons:** Lucide React (`lucide-react`) — all icons are SVG components with `currentColor`
 - **Atmosphere:** Radial gradient overlays on body/login, gradient card surfaces, glow shadows on hover
