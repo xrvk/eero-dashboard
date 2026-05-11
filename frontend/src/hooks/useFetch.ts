@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export function useFetch<T>(
   fetcher: () => Promise<T>,
@@ -7,20 +7,38 @@ export function useFetch<T>(
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fetcherRef = useRef(fetcher);
+  const prevDepsRef = useRef<unknown[] | null>(null);
 
-  const refetch = useCallback(() => {
+  useEffect(() => {
+    fetcherRef.current = fetcher;
+  }, [fetcher]);
+
+  const executeFetch = useCallback(() => {
     setLoading(true);
     setError(null);
-    fetcher()
+    fetcherRef.current()
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/use-memo, react-hooks/exhaustive-deps
-  }, deps);
+  }, [fetcherRef]);
+
+  const refetch = useCallback(() => {
+    executeFetch();
+  }, [executeFetch]);
 
   useEffect(() => {
-    refetch();
-  }, [refetch]);
+    const previous = prevDepsRef.current;
+    const depsChanged =
+      previous === null
+      || previous.length !== deps.length
+      || previous.some((value, index) => !Object.is(value, deps[index]));
+
+    if (depsChanged) {
+      prevDepsRef.current = [...deps];
+      executeFetch();
+    }
+  }, [deps, executeFetch]);
 
   return { data, loading, error, refetch };
 }

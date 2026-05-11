@@ -79,10 +79,8 @@ function AppMain() {
   }, [selectedNetwork]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void checkAuth();
-    }, 0);
-    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void checkAuth();
   }, [checkAuth]);
 
   useEffect(() => {
