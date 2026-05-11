@@ -28,7 +28,6 @@ export function SecuritySettings({ networkId }: { networkId: string }) {
     { key: 'band_steering', label: 'Band Steering', desc: 'Auto-assign devices to optimal band' },
     { key: 'upnp', label: 'UPnP', desc: 'Allow devices to open ports automatically' },
     { key: 'ipv6_upstream', label: 'IPv6', desc: 'Enable IPv6 networking', apiKey: 'ipv6' },
-    { key: 'thread', label: 'Thread', desc: 'IoT mesh networking protocol' },
   ];
 
   return (
@@ -641,7 +640,6 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
     { key: 'band_steering', label: 'Band Steering', desc: 'Auto-assign devices to optimal band' },
     { key: 'upnp', label: 'UPnP', desc: 'Allow devices to open ports automatically' },
     { key: 'ipv6_upstream', label: 'IPv6', desc: 'Enable IPv6 networking', apiKey: 'ipv6' },
-    { key: 'thread', label: 'Thread', desc: 'IoT mesh networking protocol' },
   ];
 
   const handleSecurityToggle = async (key: string, value: boolean, apiKey?: string) => {
@@ -917,16 +915,26 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
       </div>
 
       {/* Thread */}
-      {thread.enabled != null && (
-        <div className="general-section">
-          <h3>🧵 Thread</h3>
-          <div className="general-info-grid">
-            <div className="general-detail"><span>Status</span><span className={thread.enabled ? 'text-green' : 'text-muted'}>{thread.enabled ? '● Enabled' : '○ Disabled'}</span></div>
+      <div className="general-section">
+        <h3>🧵 Thread</h3>
+        <div className="toggle-row">
+          <div className="toggle-info">
+            <span className="toggle-name">Thread</span>
+            <span className="toggle-desc">IoT mesh networking protocol</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" checked={!!(security as Record<string, unknown>).thread} disabled={secSaving}
+              onChange={() => handleSecurityToggle('thread', !(security as Record<string, unknown>).thread)} />
+            <span className="toggle-slider" />
+          </label>
+        </div>
+        {(!!thread.name || !!thread.channel) && (
+          <div className="general-info-grid" style={{ marginTop: 12 }}>
             {!!thread.name && <div className="general-detail"><span>Network</span><span className="mono">{String(thread.name)}</span></div>}
             {!!thread.channel && <div className="general-detail"><span>Channel</span><span>{String(thread.channel)}</span></div>}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Actions */}
       <div className="general-actions-row">
