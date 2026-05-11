@@ -336,7 +336,7 @@ export default function DeviceDrawer({ networkId, device: d, onClose, onRefresh 
                     <input
                       type="text"
                       className="mono"
-                      placeholder="192.168.86.x"
+                      placeholder="192.168.x.x"
                       value={reserveIp}
                       onChange={(e) => setReserveIp(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') handleReserve(); }}

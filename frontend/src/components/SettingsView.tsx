@@ -208,7 +208,7 @@ export function PortForwardsSettings({ networkId }: { networkId: string }) {
                 <td><input type="number" placeholder="80" value={form.gateway_port} onChange={e => setForm({ ...form, gateway_port: e.target.value })} /></td>
                 <td><input type="number" placeholder="80" value={form.client_port} onChange={e => setForm({ ...form, client_port: e.target.value })} /></td>
                 <td><select value={form.protocol} onChange={e => setForm({ ...form, protocol: e.target.value })}><option value="tcp">TCP</option><option value="udp">UDP</option><option value="tcp_udp">Both</option></select></td>
-                <td><input placeholder="192.168.86.x" value={form.ip} onChange={e => setForm({ ...form, ip: e.target.value })} /></td>
+                <td><input placeholder="192.168.x.x" value={form.ip} onChange={e => setForm({ ...form, ip: e.target.value })} /></td>
                 <td><input placeholder="label" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></td>
                 <td><button className="btn-primary btn-sm" onClick={handleCreate} disabled={saving || !form.ip || !form.gateway_port}>{saving ? '…' : 'Add'}</button></td>
               </tr>
@@ -293,7 +293,7 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
           <tbody>
             {showForm && (
               <tr className="form-row">
-                <td><input placeholder="192.168.86.x" value={form.ip} onChange={e => setForm({ ...form, ip: e.target.value })} /></td>
+                <td><input placeholder="192.168.x.x" value={form.ip} onChange={e => setForm({ ...form, ip: e.target.value })} /></td>
                 <td><input placeholder="aa:bb:cc:dd:ee:ff" value={form.mac} onChange={e => setForm({ ...form, mac: e.target.value })} /></td>
                 <td><input placeholder="label" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></td>
                 <td><button className="btn-primary btn-sm" onClick={handleCreate} disabled={saving || !form.ip || !form.mac}>{saving ? '…' : 'Add'}</button></td>
