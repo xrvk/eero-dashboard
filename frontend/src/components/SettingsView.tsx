@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import {
+  Radio, Key, ArrowUpCircle, AlertTriangle, CheckCircle, Shield, Info,
+  Globe, Gauge, Search, RotateCcw, Lightbulb, Home, X, Ban, Plus,
+} from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
 
@@ -195,7 +199,7 @@ export function PortForwardsSettings({ networkId }: { networkId: string }) {
         <div className="section-header-inline" style={{ marginBottom: 12 }}>
           <span className="results-counter">{(list as unknown[]).length} forward{(list as unknown[]).length !== 1 ? 's' : ''}</span>
           <button className="btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
-            {showForm ? '✕ Cancel' : '+ Add'}
+            {showForm ? <><X size={14} /> Cancel</> : <><Plus size={14} /> Add</>}
           </button>
         </div>
         <table className="device-table">
@@ -225,7 +229,7 @@ export function PortForwardsSettings({ networkId }: { networkId: string }) {
                   <td>
                     <button className={`btn-action btn-delete ${confirmDelete === fid ? 'confirming' : ''}`}
                       disabled={deleting === fid} onClick={() => handleDelete(String(f.url || ''))}
-                    >{confirmDelete === fid ? 'Confirm?' : '✕'}</button>
+                    >{confirmDelete === fid ? 'Confirm?' : <X size={14} />}</button>
                   </td>
                 </tr>
               );
@@ -283,7 +287,7 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
         <div className="section-header-inline" style={{ marginBottom: 12 }}>
           <span className="results-counter">{(list as unknown[]).length} reservation{(list as unknown[]).length !== 1 ? 's' : ''}</span>
           <button className="btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
-            {showForm ? '✕ Cancel' : '+ Add'}
+            {showForm ? <><X size={14} /> Cancel</> : <><Plus size={14} /> Add</>}
           </button>
         </div>
         <table className="device-table">
@@ -310,7 +314,7 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
                     <button className={`btn-action btn-delete ${confirmDelete === rid ? 'confirming' : ''}`}
                       disabled={deleting === rid}
                       onClick={() => handleDelete(String(r.url || ''))}
-                    >{confirmDelete === rid ? 'Confirm?' : '✕'}</button>
+                    >{confirmDelete === rid ? 'Confirm?' : <X size={14} />}</button>
                   </td>
                 </tr>
               );
@@ -505,7 +509,7 @@ export function BlacklistSettings({ networkId }: { networkId: string }) {
                         disabled={removing === did}
                         onClick={() => handleRemove(did)}
                       >
-                        {confirmRemove === did ? 'Confirm?' : '✕'}
+                        {confirmRemove === did ? 'Confirm?' : <X size={14} />}
                       </button>
                     </td>
                   </tr>
@@ -515,7 +519,7 @@ export function BlacklistSettings({ networkId }: { networkId: string }) {
           </table>
         ) : (
           <div className="empty-state">
-            <p className="empty-icon">🚫</p>
+            <p className="empty-icon"><Ban size={40} /></p>
             <p className="empty-text">No blacklisted devices</p>
           </div>
         )}
@@ -694,7 +698,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
       <div className="general-cards">
         <div className="general-card">
           <div className="general-card-header">
-            <span className="general-card-icon">📡</span>
+            <span className="general-card-icon"><Radio size={20} /></span>
             <h3>Network</h3>
             {!renaming && <button className="btn-icon-sm" onClick={() => { setNewName(networkName); setRenaming(true); }} title="Edit network name"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>}
           </div>
@@ -704,7 +708,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
                 onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setRenaming(false); }}
                 autoFocus />
               <button className="btn-primary btn-sm" onClick={handleRename} disabled={saving}>{saving ? '…' : '✓'}</button>
-              <button className="btn-cancel btn-sm" onClick={() => setRenaming(false)}>✕</button>
+              <button className="btn-cancel btn-sm" onClick={() => setRenaming(false)}><X size={14} /></button>
             </div>
           ) : (
             <span className="general-card-value">{networkName || '—'}</span>
@@ -718,7 +722,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
 
         <div className="general-card">
           <div className="general-card-header">
-            <span className="general-card-icon">🔑</span>
+            <span className="general-card-icon"><Key size={20} /></span>
             <h3>Wi-Fi Password</h3>
           </div>
           <div className="general-password">
@@ -746,7 +750,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
 
         <div className="general-card">
           <div className="general-card-header">
-            <span className="general-card-icon">⬆️</span>
+            <span className="general-card-icon"><ArrowUpCircle size={20} /></span>
             <h3>Firmware</h3>
           </div>
           {updates.target_firmware ? (
@@ -756,7 +760,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
                 <div className="general-detail">
                   <span>Status</span>
                   <span className={updates.update_required ? 'text-yellow' : 'text-green'}>
-                    {updates.update_required ? '⚠️ Update available' : '✅ Up to date'}
+                    {updates.update_required ? <><AlertTriangle size={14} /> Update available</> : <><CheckCircle size={14} /> Up to date</>}
                   </span>
                 </div>
               </div>
@@ -769,7 +773,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
 
       {/* Security & Connectivity */}
       <div className="general-section">
-        <h3>🔒 Security & Connectivity</h3>
+        <h3><Shield size={16} /> Security & Connectivity</h3>
         <div className="toggle-list">
           {securityToggles.map((t) => {
             const val = (security as Record<string, unknown>)[t.key];
@@ -836,7 +840,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
                   <span
                     className="thread-info-badge"
                     data-tip={[thread.name && `Network: ${thread.name}`, thread.channel && `Channel: ${thread.channel}`].filter(Boolean).join(' · ')}
-                  >ℹ️</span>
+                  ><Info size={14} /></span>
                 )}
               </span>
               <span className="toggle-desc">IoT mesh networking protocol</span>
@@ -852,7 +856,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
 
       {/* DNS */}
       <div className="general-section">
-        <h3>🌐 DNS</h3>
+        <h3><Globe size={16} /> DNS</h3>
         <div className="toggle-row">
           <div className="toggle-info">
             <span className="toggle-name">DNS Caching</span>
@@ -894,7 +898,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
 
       {/* QoS / SQM */}
       <div className="general-section">
-        <h3>🚀 QoS (Smart Queue Management)</h3>
+        <h3><Gauge size={16} /> QoS (Smart Queue Management)</h3>
         <div className="toggle-row">
           <div className="toggle-info">
             <span className="toggle-name">SQM</span>
@@ -981,7 +985,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
       {/* Actions */}
       <div className="general-actions-row">
         <div className="general-section">
-          <h3>🔍 Diagnostics</h3>
+          <h3><Search size={16} /> Diagnostics</h3>
           <p className="toggle-desc">Check connectivity, DNS, and internet access.</p>
           <button className="btn-primary" onClick={handleRunDiagnostics} disabled={diagRunning} style={{ marginTop: 8 }}>
             {diagRunning ? <><div className="spinner" /> Running…</> : 'Run Diagnostics'}
@@ -990,11 +994,11 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
         </div>
 
         <div className="general-section">
-          <h3>🔄 Network Reboot</h3>
+          <h3><RotateCcw size={16} /> Network Reboot</h3>
           <p className="toggle-desc">Reboot all nodes. Network offline for ~2 min.</p>
           {confirmReboot ? (
             <div className="confirm-inline" style={{ marginTop: 8 }}>
-              <span>⚠️ Are you sure?</span>
+              <span><AlertTriangle size={14} /> Are you sure?</span>
               <button className="btn-confirm btn-danger" onClick={handleRebootNetwork} disabled={rebooting}>{rebooting ? 'Rebooting…' : 'Confirm'}</button>
               <button className="btn-cancel" onClick={() => setConfirmReboot(false)}>Cancel</button>
             </div>
@@ -1024,7 +1028,7 @@ function NodeControlsSection({ networkId }: { networkId: string }) {
 
   return (
     <div className="general-section">
-      <h3>💡 Node Controls</h3>
+      <h3><Lightbulb size={16} /> Node Controls</h3>
       <p className="toggle-desc">Manage LED and nightlight settings for each node.</p>
       <div className="node-controls-list">
         {eeros.map((node, i) => {
@@ -1092,7 +1096,7 @@ function NodeControlCard({ networkId, eeroId, node, index }: {
   return (
     <div className="node-control-card">
       <div className="node-control-header">
-        <span className="node-control-icon">{node.gateway ? '🏠' : '📡'}</span>
+        <span className="node-control-icon">{node.gateway ? <Home size={18} /> : <Radio size={18} />}</span>
         <div className="node-control-info">
           <span className="node-control-name">{node.location || `Node ${index + 1}`}</span>
           <span className="node-control-model">{node.model || 'eero'}</span>

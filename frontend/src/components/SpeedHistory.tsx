@@ -3,6 +3,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
 
@@ -41,7 +42,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
       <p className="speed-tooltip-date">{formatDate(label as string, true)}</p>
       {payload.map((p) => (
         <p key={p.dataKey} className="speed-tooltip-row" style={{ color: p.color }}>
-          <span className="speed-tooltip-label">{p.dataKey === 'down' ? '↓ Download' : '↑ Upload'}</span>
+          <span className="speed-tooltip-label">{p.dataKey === 'down' ? <><ArrowDown size={12} /> Download</> : <><ArrowUp size={12} /> Upload</>}</span>
           <span className="speed-tooltip-value">{formatSpeed(p.value)} Mbps</span>
         </p>
       ))}

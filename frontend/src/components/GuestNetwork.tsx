@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Users } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
 
@@ -111,7 +112,7 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
 
       {!enabled && (
         <div className="empty-state" style={{ marginTop: 20 }}>
-          <p className="empty-icon">👥</p>
+          <p className="empty-icon"><Users size={40} /></p>
           <p className="empty-text">Guest network is disabled</p>
           <p className="empty-hint">Enable it to let guests connect without sharing your main password</p>
         </div>
