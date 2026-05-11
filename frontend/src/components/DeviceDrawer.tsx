@@ -52,6 +52,52 @@ export default function DeviceDrawer({ networkId, device: d, onClose, onRefresh 
   );
   const [priorityLoading, setPriorityLoading] = useState(false);
 
+  // DHCP Reservation
+  const { data: reservationsData, refetch: refetchReservations } = useFetch(
+    () => api.getReservations(networkId), [networkId]
+  );
+  const [reserveLoading, setReserveLoading] = useState(false);
+  const [reserveIp, setReserveIp] = useState(d.ip || '');
+
+  const reservationsList = Array.isArray(reservationsData) ? reservationsData :
+    (reservationsData as Record<string, unknown>)?.reservations
+      ? (reservationsData as { reservations: Record<string, unknown>[] }).reservations : [];
+
+  const existingReservation = reservationsList.find(
+    (r: Record<string, unknown>) => String(r.mac).toLowerCase() === (d.mac || '').toLowerCase()
+  ) as Record<string, unknown> | undefined;
+
+  const handleReserve = async () => {
+    if (!d.mac || !reserveIp) return;
+    setReserveLoading(true);
+    try {
+      await api.createReservation(networkId, {
+        ip: reserveIp,
+        mac: d.mac,
+        description: d.display_name || d.hostname || '',
+      });
+      await refetchReservations();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to create reservation');
+    } finally {
+      setReserveLoading(false);
+    }
+  };
+
+  const handleDeleteReservation = async () => {
+    if (!existingReservation?.url) return;
+    const id = String(existingReservation.url).replace(/\/$/, '').split('/').pop() || '';
+    setReserveLoading(true);
+    try {
+      await api.deleteReservation(networkId, id);
+      await refetchReservations();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to remove reservation');
+    } finally {
+      setReserveLoading(false);
+    }
+  };
+
   const isPrioritized = !!(priorityData as Record<string, unknown>)?.prioritized;
 
   const handleRename = async () => {
@@ -238,6 +284,47 @@ export default function DeviceDrawer({ networkId, device: d, onClose, onRefresh 
                   <button className="btn-primary btn-sm" onClick={() => handlePriority(true)} disabled={priorityLoading}>
                     Until off
                   </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* DHCP IP Reservation */}
+          {d.mac && (
+            <div className="drawer-section">
+              <h3>DHCP Reservation</h3>
+              <p className="drawer-desc">Reserve a static IP for this device on the DHCP server.</p>
+              {existingReservation ? (
+                <div className="priority-active">
+                  <span className="priority-badge reservation-badge">📌 Reserved: <span className="mono">{String(existingReservation.ip)}</span></span>
+                  <button
+                    className="btn-cancel btn-sm"
+                    onClick={handleDeleteReservation}
+                    disabled={reserveLoading}
+                  >
+                    {reserveLoading ? '…' : 'Remove'}
+                  </button>
+                </div>
+              ) : (
+                <div className="reserve-ip-form">
+                  <div className="drawer-inline-edit">
+                    <input
+                      type="text"
+                      className="mono"
+                      placeholder="192.168.86.x"
+                      value={reserveIp}
+                      onChange={(e) => setReserveIp(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleReserve(); }}
+                    />
+                    <button
+                      className="btn-primary btn-sm"
+                      onClick={handleReserve}
+                      disabled={reserveLoading || !reserveIp}
+                    >
+                      {reserveLoading ? '…' : '📌 Reserve'}
+                    </button>
+                  </div>
+                  <span className="drawer-hint">MAC: {d.mac}</span>
                 </div>
               )}
             </div>

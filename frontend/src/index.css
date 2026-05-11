@@ -1211,7 +1211,7 @@ body {
 }
 .btn-close:hover { color: var(--text); }
 .drawer-body { padding: 20px 24px; flex: 1; }
-.drawer-section { margin-bottom: 24px; }
+.drawer-section { margin-top: 8px; margin-bottom: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
 .drawer-section h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted); }
 .drawer-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
 .drawer-value { font-size: 0.9rem; }
@@ -1238,6 +1238,13 @@ body {
   font-size: 0.85rem; font-weight: 600;
 }
 .priority-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* DHCP Reservation in drawer */
+.reservation-badge {
+  background: rgba(59,130,246,0.15); color: var(--accent);
+}
+.reserve-ip-form { display: flex; flex-direction: column; gap: 6px; }
+.drawer-hint { font-size: 0.75rem; color: var(--text-muted); }
 
 /* ── Node Controls ─────────────────────────── */
 .node-controls {
