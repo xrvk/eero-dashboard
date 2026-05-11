@@ -103,6 +103,8 @@ export interface EeroNode {
   mac_address?: string;
   os_version?: string;
   ethernet?: boolean;
+  wired?: boolean;
+  connection_type?: string;
   last_reboot?: string;
   update_available?: boolean;
   hardware_rev?: string;

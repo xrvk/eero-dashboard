@@ -9,7 +9,6 @@ backend/.eero_credentials
 backend/.eero_session
 backend/data/
 .DS_Store
-.github/copilot-instructions.md
 
 # ─── Solo Dev Vibecoding Notes ───────────────────────────────────────
 #

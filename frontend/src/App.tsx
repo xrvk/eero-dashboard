@@ -74,11 +74,15 @@ function AppMain() {
 
   const { data: networkDetail } = useFetch(
     () => selectedNetwork ? api.getNetwork(selectedNetwork) : Promise.resolve(null),
-    [selectedNetwork]
+    [selectedNetwork],
+    {},
+    selectedNetwork ? `/networks/${selectedNetwork}` : undefined,
   );
   const { data: eeroData } = useFetch(
     () => selectedNetwork ? api.getEeros(selectedNetwork) : Promise.resolve({ eeros: [] }),
-    [selectedNetwork]
+    [selectedNetwork],
+    {},
+    selectedNetwork ? `/networks/${selectedNetwork}/eeros` : undefined,
   );
 
   useEffect(() => {
