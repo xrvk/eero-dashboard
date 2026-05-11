@@ -125,9 +125,9 @@ export default function ActivityView({ networkId, onNodeClick }: ActivityViewPro
           </div>
         )}
         <button className="btn-primary" onClick={handleSpeedTest} disabled={speedRunning}>
-          {speedRunning ? <><div className="spinner" /> Running (~30s)…</> : '🚀 Run Speed Test'}
+          {speedRunning ? <><div className="spinner" /> Running (~30s)…</> : 'Run Speed Test'}
         </button>
-        {speedSuccess && <div className="speed-success">✅ Speed test complete</div>}
+        {speedSuccess && <div className="speed-success">Speed test complete</div>}
         {speedError && <div className="error-banner">{speedError}</div>}
         <SpeedHistory networkId={networkId} refreshKey={speedRefreshKey} />
       </div>
@@ -181,7 +181,7 @@ export default function ActivityView({ networkId, onNodeClick }: ActivityViewPro
         {confirmReboot && (
           <div className="confirm-overlay" onClick={() => setConfirmReboot(null)}>
             <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
-              <p>🔄 Reboot this node? It will be offline for ~1 minute.</p>
+              <p>Reboot this node? It will be offline for ~1 minute.</p>
               <div className="confirm-actions">
                 <button className="btn-confirm btn-danger" onClick={() => handleReboot(confirmReboot)}>
                   {rebooting ? 'Rebooting…' : 'Reboot'}
@@ -232,7 +232,7 @@ export default function ActivityView({ networkId, onNodeClick }: ActivityViewPro
                   disabled={rebooting === eeroId}
                   onClick={() => setConfirmReboot(eeroId)}
                   style={{ flexShrink: 0 }}
-                >🔄</button>
+                ><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
               </div>
             );
           })}

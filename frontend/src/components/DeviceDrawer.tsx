@@ -318,7 +318,7 @@ export default function DeviceDrawer({ networkId, device: d, onClose, onRefresh 
               <p className="drawer-desc">Reserve a static IP for this device on the DHCP server.</p>
               {existingReservation ? (
                 <div className="priority-active">
-                  <span className="priority-badge reservation-badge">📌 Reserved: <span className="mono">{String(existingReservation.ip)}</span></span>
+                  <span className="priority-badge reservation-badge">Reserved: <span className="mono">{String(existingReservation.ip)}</span></span>
                   <button
                     className="btn-cancel btn-sm"
                     onClick={handleDeleteReservation}
@@ -343,7 +343,7 @@ export default function DeviceDrawer({ networkId, device: d, onClose, onRefresh 
                       onClick={handleReserve}
                       disabled={reserveLoading || !reserveIp}
                     >
-                      {reserveLoading ? '…' : '📌 Reserve'}
+                      {reserveLoading ? '…' : 'Reserve'}
                     </button>
                   </div>
                   <span className="drawer-hint">MAC: {d.mac}</span>

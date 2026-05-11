@@ -171,10 +171,28 @@ animation: slideUp 0.25s ease-out
 ## Emoji Icon System
 
 ### Principles
-1. **No icon library.** Use Unicode emoji exclusively.
-2. **Semantic consistency.** Each emoji has one primary meaning (see table below).
-3. **Size tiers:** Inline (0.85–1rem), Standard (1.1–1.2rem), Card icon (1.3rem in `.general-card-icon`), Hero (2.5rem in empty states).
-4. **Wrapping:** Card-level icons use `<span className="general-card-icon">`. Section headers use emoji directly before h3 text.
+1. **Inline SVG for action icons.** All interactive button icons use `18×18` (or `16×16` small) inline SVGs with `stroke="currentColor"`, `strokeWidth="2"`, `fill="none"`, and round caps/joins.
+2. **Emoji for decorative/categorical icons.** Device types, section headers, navigation, connection badges, and empty states still use emoji.
+3. **Plain text for menu items.** Context menu actions (Rename, Reserve IP, Pause, Block) use text-only — no emoji or icon prefix.
+4. **Size tiers:** SVG action icons: `18×18` (standard), `16×16` (compact/toolbar), `14×14` (inline). Emoji decorative: `1.1–1.3rem` (card icons), `2.5rem` (empty states).
+5. **Wrapping:** SVG icon buttons use `.btn-icon-sm` class. Card-level emoji use `<span className="general-card-icon">`.
+
+### SVG Icon Reference (action buttons)
+
+All icons follow the Feather icon convention: `viewBox="0 0 24 24"`, `fill="none"`, `stroke="currentColor"`, `strokeWidth="2"`, `strokeLinecap="round"`, `strokeLinejoin="round"`.
+
+| Icon | SVG Key Elements | Usage |
+|------|-----------------|-------|
+| Eye (show) | `<path d="M1 12s4-8 11-8..."/><circle cx="12" cy="12" r="3"/>` | Show password `.btn-icon-sm` |
+| Eye-off (hide) | `<path .../><line x1="1" y1="1" x2="23" y2="23"/>` | Hide password `.btn-icon-sm` |
+| Copy | `<rect x="9" y="9".../><path d="M5 15H4..."/>` | Copy to clipboard `.btn-icon-sm` |
+| Check | `<polyline points="20 6 9 17 4 12"/>` | Copied/success confirmation |
+| Trash | `<polyline points="3 6 5 6 21 6"/><path d="M19 6v14..."/>` | Delete `.btn-icon` |
+| Refresh | `<polyline points="23 4 23 10 17 10"/><path d="M20.49 15..."/>` | Reboot `.btn-action` |
+| Search | `<circle cx="11" cy="11" r="8"/><line x1="21" y1="21".../>` | Search field `.search-icon` |
+| Chart | `<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>` | Chart view toggle |
+| Table/Grid | `<rect .../><line .../>` (grid lines) | Table view toggle |
+| Download | `<path d="M21 15v4..."/><polyline points="7 10 12 15 17 10"/>` | Export button |
 
 ### Canonical Emoji Dictionary
 
@@ -218,13 +236,13 @@ animation: slideUp 0.25s ease-out
 | 🌗 | Auto theme | theme switcher |
 | 💚 | Health tab | sidebar nav |
 
-### Rules for Adding New Emoji
-1. Check the dictionary above first — reuse existing emoji for the same concept.
-2. One emoji = one concept. Don't use 🔑 for anything other than passwords/credentials.
-3. Match the size tier to context (inline vs card icon vs empty state hero).
-4. Wrap card-level icons in `<span className="general-card-icon">`.
-5. Action buttons always use `.btn-text` class.
-6. Test in both dark and light themes — some emoji render differently.
+### Rules for Icons
+1. **Action buttons** → always use inline SVG with `stroke="currentColor"` (never emoji).
+2. **Menu/text buttons** → plain text only, no emoji or icon prefix.
+3. **Decorative/categorical** → emoji is fine (device types, section headers, navigation, connection badges, empty states).
+4. Check the SVG Icon Reference above before creating new icons — reuse existing ones.
+5. New SVG icons must match the Feather convention (`viewBox="0 0 24 24"`, stroke-based, round caps).
+6. Test in both dark and light themes — `currentColor` handles this automatically.
 
 ---
 
@@ -309,7 +327,8 @@ grid-template-columns: 1fr 1fr; gap: 16px;
 
 ### DO ✅
 - Use CSS variables for all colors — never hardcode hex values
-- Use emoji for icons — the app has no icon font/library dependency
+- Use inline SVGs (`18×18`, `stroke="currentColor"`) for all action button icons
+- Use plain text for context menu items (no emoji prefix)
 - Keep cards at `border-radius: var(--radius)` (12px)
 - Use monospace font for technical values (IPs, MACs, speeds, versions)
 - Test both dark and light themes
@@ -320,11 +339,12 @@ grid-template-columns: 1fr 1fr; gap: 16px;
 - Maintain consistent spacing (8px base grid)
 
 ### DON'T ❌
-- Don't install icon libraries (Font Awesome, Heroicons, Lucide, etc.)
+- Don't use emoji for action buttons — use inline SVGs instead
+- Don't install icon libraries (Font Awesome, Heroicons, Lucide, etc.) — use inline SVG
 - Don't use raw color hex values — always use `var(--token)`
 - Don't add new CSS variables without documenting them here
 - Don't use `border-radius` values outside the established scale (8px, 12px, 22px, 50%)
 - Don't use font sizes outside the established scale
 - Don't add animations longer than 0.3s
-- Don't use emoji not listed in the Canonical Dictionary without adding it first
+- Don't use emoji not listed in the Canonical Dictionary for decorative purposes without adding it first
 - Don't use different emoji for the same concept across components
