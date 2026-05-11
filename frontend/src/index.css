@@ -186,6 +186,7 @@ body {
   padding: 18px 28px; border-bottom: 1px solid var(--border);
   background: var(--bg); position: sticky; top: 0; z-index: 10;
 }
+.header-left { display: flex; align-items: center; gap: 10px; }
 .app-header h1 { font-size: 1.15rem; font-weight: 700; }
 .header-stats { display: flex; align-items: center; gap: 16px; }
 .header-status { font-size: 0.85rem; font-weight: 600; }
@@ -381,7 +382,7 @@ body {
 }
 .activity-panel {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 18px;
+  border-radius: var(--radius); padding: 18px; overflow: hidden;
 }
 .activity-panel.full-width { grid-column: 1 / -1; }
 .activity-panel h3 { font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted); }
@@ -481,7 +482,6 @@ body {
 
 @media (max-width: 600px) {
   .activity-panels { grid-template-columns: 1fr; }
-  .speed-result { gap: 20px; }
 }
 
 /* ── Device Toolbar ─────────────────────────── */
@@ -580,6 +580,8 @@ body {
   .toolbar-controls { justify-content: flex-end; }
   .device-table { font-size: 0.75rem; }
   .device-table thead th, .device-table tbody td { padding: 6px 6px; }
+  .td-name { max-width: 120px; }
+  .td-conn { white-space: nowrap; }
 }
 
 /* ── Card Menu (⋯ dropdown) ────────────────── */
@@ -775,20 +777,56 @@ body {
 .form-row input[type="number"] { -moz-appearance: textfield; }
 .form-row input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
 
-/* ── Sidebar responsive ─────────────────────── */
+/* ── Sidebar responsive — Hamburger drawer ──── */
+.hamburger-btn { display: none; }
+.sidebar-overlay { display: none; }
+.sidebar-drawer { display: contents; }
+
 @media (max-width: 768px) {
-  .app-sidebar {
-    width: 60px;
+  .hamburger-btn {
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; cursor: pointer;
+    width: 36px; height: 36px; padding: 0; flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
   }
-  .sidebar-logo span,
-  .sidebar-item span:not(.sidebar-icon),
-  .sidebar-section-label,
-  .sidebar-user,
-  .sidebar-speed,
-  .sidebar-net { display: none; }
-  .sidebar-item { justify-content: center; padding: 10px; }
-  .sidebar-icon { width: auto; }
-  .app-main { margin-left: 60px; }
+  .hamburger-icon {
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 5px; width: 22px; height: 22px;
+  }
+  .hamburger-icon span {
+    display: block; height: 2px; width: 100%;
+    background: var(--text); border-radius: 2px;
+    transition: transform 0.25s ease, opacity 0.2s ease;
+    transform-origin: center;
+  }
+  .hamburger-icon.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger-icon.open span:nth-child(2) { opacity: 0; }
+  .hamburger-icon.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .sidebar-drawer {
+    display: block;
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: 260px; z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+  .sidebar-drawer.open { transform: translateX(0); }
+  .sidebar-drawer .app-sidebar {
+    position: static; width: 100%; height: 100%;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed; inset: 0; z-index: 99;
+    background: rgba(0, 0, 0, 0.5);
+    animation: fade-in 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 10px; }
+
+  .app-main { margin-left: 0; }
   .tab-content { padding: 16px; }
 }
 
@@ -890,6 +928,12 @@ body {
 .speed-dir { font-size: 1.2rem; }
 .speed-unit { font-size: 0.9rem; }
 .speed-result { gap: 40px; padding: 16px 0; }
+@media (max-width: 600px) {
+  .speed-value { font-size: 1.5rem; }
+  .speed-dir { font-size: 0.85rem; }
+  .speed-unit { font-size: 0.7rem; }
+  .speed-result { gap: 16px; }
+}
 
 /* ── Bar charts taller with gradients ───────── */
 .band-bar-track { height: 12px; }
@@ -1457,7 +1501,7 @@ body {
   flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
 }
 .speed-history-header h4 { font-size: 0.85rem; font-weight: 600; margin: 0; }
-.speed-history-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.speed-history-actions { display: flex; align-items: center; gap: 8px; }
 
 /* Range picker pills */
 .speed-range-picker { display: flex; gap: 2px; background: var(--bg-input); border-radius: var(--radius-sm); padding: 2px; }

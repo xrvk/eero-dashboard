@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useState, useRef } from 'react';
 
 import * as api from './api';
 import LoginForm from './components/LoginForm';
@@ -6,6 +6,8 @@ import { useFetch } from './hooks/useFetch';
 import AppContent from './features/app/AppContent';
 import AppSidebar from './features/app/AppSidebar';
 import type { AppTab } from './features/app/types';
+
+const MOBILE_BREAKPOINT = 768;
 
 const SpeedHistory = lazy(() => import('./components/SpeedHistory'));
 
@@ -44,6 +46,18 @@ function AppMain() {
   const [tab, setTab] = useState<AppTab>('devices');
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light' | 'auto'>(() => (localStorage.getItem('theme') as 'dark' | 'light' | 'auto') || 'dark');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia(`(min-width: ${MOBILE_BREAKPOINT + 1}px)`);
+    const handler = () => { if (mq.matches) setSidebarOpen(false); };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 
   const { data: networkDetail } = useFetch(
     () => selectedNetwork ? api.getNetwork(selectedNetwork) : Promise.resolve(null),
@@ -102,29 +116,45 @@ function AppMain() {
 
   return (
     <div className="app">
-      <AppSidebar
-        tab={tab}
-        setTab={setTab}
-        eeros={eeroData?.eeros ?? []}
-        networks={networks}
-        selectedNetwork={selectedNetwork}
-        setSelectedNetwork={setSelectedNetwork}
-        networkDetail={networkDetail}
-        auth={auth}
-      />
+      {sidebarOpen && <div className="sidebar-overlay" onClick={closeSidebar} />}
+      <div ref={sidebarRef} className={`sidebar-drawer ${sidebarOpen ? 'open' : ''}`}>
+        <AppSidebar
+          tab={tab}
+          setTab={setTab}
+          eeros={eeroData?.eeros ?? []}
+          networks={networks}
+          selectedNetwork={selectedNetwork}
+          setSelectedNetwork={setSelectedNetwork}
+          networkDetail={networkDetail}
+          auth={auth}
+          onNavClick={closeSidebar}
+        />
+      </div>
 
       <main className="app-main">
         <header className="app-header">
-          <h1>{
-            tab === 'devices' ? 'Devices' :
-            tab === 'activity' ? 'Network Health' :
-            tab === 'profiles' ? 'Profiles' :
-            tab === 'settings-general' ? 'General' :
-            tab === 'settings-forwards' ? 'Port Forwards' :
-            tab === 'settings-reservations' ? 'DHCP Reservations' :
-            tab === 'settings-guest' ? 'Guest Network' :
-            'Blacklist'
-          }</h1>
+          <div className="header-left">
+            <button
+              className="hamburger-btn"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={sidebarOpen}
+            >
+              <span className={`hamburger-icon ${sidebarOpen ? 'open' : ''}`}>
+                <span /><span /><span />
+              </span>
+            </button>
+            <h1>{
+              tab === 'devices' ? 'Devices' :
+              tab === 'activity' ? 'Network Health' :
+              tab === 'profiles' ? 'Profiles' :
+              tab === 'settings-general' ? 'General' :
+              tab === 'settings-forwards' ? 'Port Forwards' :
+              tab === 'settings-reservations' ? 'DHCP Reservations' :
+              tab === 'settings-guest' ? 'Guest Network' :
+              'Blacklist'
+            }</h1>
+          </div>
           <div className="header-actions">
             <div className="theme-dropdown">
               <button className="btn-header-icon" onClick={() => setThemeMenuOpen(!themeMenuOpen)} title="Theme">
