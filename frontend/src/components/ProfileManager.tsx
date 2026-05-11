@@ -41,9 +41,12 @@ type ViewMode = 'cards' | 'list';
 type DetailTab = 'devices' | 'schedule' | 'blocked-apps';
 
 export default function ProfileManager({ networkId }: ProfileManagerProps) {
+  const profilesCacheKey = `/networks/${networkId}/profiles`;
   const { data, loading, error, refetch } = useFetch(
     () => api.getProfiles(networkId),
     [networkId],
+    {},
+    profilesCacheKey,
   );
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
@@ -468,8 +471,7 @@ function ScheduleTab({ networkId, profileId }: { networkId: string; profileId: s
   if (error) {
     return (
       <div className="plus-gate">
-        <EeroPlusBanner />
-        <p className="plus-gate-detail">Schedule and bedtime controls failed to load. This feature may require an active eero Plus subscription.</p>
+        <p className="plus-gate-detail">Schedule and bedtime controls failed to load.</p>
       </div>
     );
   }
@@ -478,8 +480,6 @@ function ScheduleTab({ networkId, profileId }: { networkId: string; profileId: s
 
   return (
     <div className="schedule-section">
-      <EeroPlusBanner />
-
       {hasSchedule && (
         <div className="schedule-current">
           <span className="schedule-active-badge">Schedule active</span>
