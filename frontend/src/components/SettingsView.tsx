@@ -859,11 +859,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           <div className="general-info-grid" style={{ marginTop: 12 }}>
             <div className="general-detail">
               <span>DNS Servers</span>
-              <span>{customIps.length > 0 ? customIps.join(', ') : 'eero Default'}</span>
-            </div>
-            <div className="general-detail">
-              <span></span>
-              <button className="btn-text" onClick={startDnsEdit}>Edit DNS Settings</button>
+              <span>{customIps.length > 0 ? customIps.join(', ') : 'eero Default'} <button className="btn-text" onClick={startDnsEdit}>✏️</button></span>
             </div>
           </div>
         )}
