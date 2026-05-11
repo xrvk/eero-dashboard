@@ -64,7 +64,7 @@ export default function DeviceDrawer({ networkId, device: d, onClose, onRefresh 
       ? (reservationsData as { reservations: Record<string, unknown>[] }).reservations : [];
 
   const existingReservation = reservationsList.find(
-    (r: Record<string, unknown>) => String(r.mac).toLowerCase() === (d.mac || '').toLowerCase()
+    (r) => String(r.mac).toLowerCase() === (d.mac || '').toLowerCase()
   ) as Record<string, unknown> | undefined;
 
   const handleReserve = async () => {

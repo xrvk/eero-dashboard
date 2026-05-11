@@ -73,11 +73,16 @@ export default function SpeedHistory({ networkId, refreshKey }: SpeedHistoryProp
     [networkId, refreshKey]
   );
 
-  const allHistory = data?.history ?? [];
+  const allHistory = useMemo(() => data?.history ?? [], [data?.history]);
 
   const filtered = useMemo(() => {
     const days = RANGE_DAYS[range];
-    const cutoff = Date.now() - days * 86400_000;
+    const latestTimestamp = allHistory.reduce((latest, entry) => {
+      const timestamp = new Date(entry.date).getTime();
+      return timestamp > latest ? timestamp : latest;
+    }, Number.NEGATIVE_INFINITY);
+    if (!Number.isFinite(latestTimestamp)) return [];
+    const cutoff = latestTimestamp - days * 86400_000;
     return [...allHistory]
       .filter((h) => new Date(h.date).getTime() > cutoff)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());

@@ -287,7 +287,7 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ ip: '', mac: '', description: '' });
   const [saving, setSaving] = useState(false);
-  const [_deleting, setDeleting] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const handleCreate = async () => {
@@ -346,6 +346,7 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
                   <td>{String(r.description ?? r.hostname ?? r.nickname ?? '—')}</td>
                   <td>
                     <button className={`btn-action btn-delete ${confirmDelete === rid ? 'confirming' : ''}`}
+                      disabled={deleting === rid}
                       onClick={() => handleDelete(String(r.url || ''))}
                     >{confirmDelete === rid ? 'Confirm?' : '✕'}</button>
                   </td>
@@ -565,28 +566,28 @@ export function BlacklistSettings({ networkId }: { networkId: string }) {
 
 export function GeneralSettings({ networkId }: { networkId: string }) {
   const { data: settingsData, loading: sLoading, error: sError } = useFetch(
-    () => api.getSettings(networkId), [networkId]
+    () => api.getSettings(networkId), [networkId], {}, `/networks/${networkId}/settings`
   );
   const { data: passwordData, loading: pLoading } = useFetch(
-    () => api.getPassword(networkId), [networkId]
+    () => api.getPassword(networkId), [networkId], {}, `/networks/${networkId}/password`
   );
   const { data: updatesData, loading: uLoading } = useFetch(
-    () => api.getUpdates(networkId), [networkId]
+    () => api.getUpdates(networkId), [networkId], {}, `/networks/${networkId}/updates`
   );
   const { data: threadData, loading: tLoading } = useFetch(
-    () => api.getThread(networkId), [networkId]
+    () => api.getThread(networkId), [networkId], {}, `/networks/${networkId}/thread`
   );
-  const { data: _routingData, loading: rLoading } = useFetch(
-    () => api.getRouting(networkId), [networkId]
+  const { loading: rLoading } = useFetch(
+    () => api.getRouting(networkId), [networkId], {}, `/networks/${networkId}/routing`
   );
   const { data: securityData, loading: secLoading, refetch: refetchSecurity } = useFetch(
-    () => api.getSecurity(networkId), [networkId]
+    () => api.getSecurity(networkId), [networkId], {}, `/networks/${networkId}/security`
   );
   const { data: dnsData, loading: dnsLoading, refetch: refetchDns } = useFetch(
-    () => api.getDns(networkId), [networkId]
+    () => api.getDns(networkId), [networkId], {}, `/networks/${networkId}/dns`
   );
   const { data: sqmData, loading: sqmLoading, refetch: refetchSqm } = useFetch(
-    () => api.getSqm(networkId), [networkId]
+    () => api.getSqm(networkId), [networkId], {}, `/networks/${networkId}/sqm`
   );
   const [renaming, setRenaming] = useState(false);
   const [newName, setNewName] = useState('');
@@ -607,20 +608,20 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const [uploadMbps, setUploadMbps] = useState('');
   const [downloadMbps, setDownloadMbps] = useState('');
 
-  const isLoading = sLoading || pLoading || uLoading || tLoading || rLoading || secLoading || dnsLoading || sqmLoading;
+  const isLoading = sLoading && pLoading && uLoading && tLoading && rLoading && secLoading && dnsLoading && sqmLoading;
   if (isLoading) return <div className="card loading-card"><div className="spinner" /> Loading…</div>;
   if (sError) return <div className="card error-card">Error: {sError}</div>;
 
-  const settings = settingsData as Record<string, unknown> || {};
+  const settings = (settingsData ?? {}) as api.NetworkSettingsSummary;
   const pw = passwordData as Record<string, unknown> || {};
   const password = String(pw.password || pw.key || '');
-  const networkName = String(settings.name || settings.ssid || '');
+  const networkName = String(settings.name || '');
   const updates = updatesData as Record<string, unknown> || {};
   const thread = threadData as Record<string, unknown> || {};
   const security = securityData || {} as Record<string, unknown>;
   const wanIp = String(settings.wan_ip || '');
   const gatewayIp = String(settings.gateway_ip || '');
-  const timezone = (settings.timezone as Record<string, unknown>)?.value as string || '';
+  const timezone = typeof settings.timezone === 'string' ? settings.timezone : (settings.timezone?.value || '');
 
   // DNS
   const dns = (dnsData as Record<string, unknown>)?.dns as Record<string, unknown> | undefined;
