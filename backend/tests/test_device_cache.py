@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from core import cache
+from core.cache import keys
 from features.devices import service
 
 
@@ -41,19 +42,19 @@ class TestDeviceCacheInvalidation(unittest.TestCase):
         self.client = make_mock_client()
 
     def _seed_caches(self):
-        cache.put(f"net:{NETWORK}:device:list", {"devices": [{"mac": "aa"}]})
-        cache.put(f"net:{NETWORK}:device:{DEVICE}", {"mac": "aa"})
-        cache.put(f"net:{NETWORK}:device:{DEVICE}:priority", {"prioritized": False})
+        cache.put(keys.device_list(NETWORK), {"devices": [{"mac": "aa"}]})
+        cache.put(keys.device(NETWORK, DEVICE), {"mac": "aa"})
+        cache.put(keys.device_sub(NETWORK, DEVICE, "priority"), {"prioritized": False})
 
     def _assert_list_invalidated(self):
         self.assertIsNone(
-            cache.get(f"net:{NETWORK}:device:list"),
+            cache.get(keys.device_list(NETWORK)),
             "Device list cache should be invalidated after write",
         )
 
     def _assert_detail_invalidated(self):
         self.assertIsNone(
-            cache.get(f"net:{NETWORK}:device:{DEVICE}"),
+            cache.get(keys.device(NETWORK, DEVICE)),
             "Device detail cache should be invalidated after write",
         )
 
@@ -80,15 +81,16 @@ class TestDeviceCacheInvalidation(unittest.TestCase):
         run(service.set_device_priority(self.client, NETWORK, DEVICE, True, None))
         self._assert_detail_invalidated()
         self._assert_list_invalidated()
-        self.assertIsNone(cache.get(f"net:{NETWORK}:device:{DEVICE}:priority"))
+        self.assertIsNone(cache.get(keys.device_sub(NETWORK, DEVICE, "priority")))
 
     def test_list_cache_key_starts_with_device_prefix(self):
-        """List cache key must be under 'net:{id}:device' prefix
+        """List cache key must be under the device prefix
         so broad invalidations clear it."""
-        key = f"net:{NETWORK}:device:list"
+        list_key = keys.device_list(NETWORK)
+        prefix = keys.device_prefix(NETWORK)
         self.assertTrue(
-            key.startswith(f"net:{NETWORK}:device"),
-            f"List cache key '{key}' must start with 'net:{NETWORK}:device'",
+            list_key.startswith(prefix),
+            f"List cache key '{list_key}' must start with '{prefix}'",
         )
 
 

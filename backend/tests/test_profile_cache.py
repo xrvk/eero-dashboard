@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from core import cache
+from core.cache import keys
 from features.profiles import service
 
 
@@ -51,20 +52,20 @@ class TestProfileCacheInvalidation(unittest.TestCase):
 
     def _seed_caches(self):
         """Populate all profile-related cache keys."""
-        cache.put(f"net:{NETWORK}:profile:list", {"profiles": [{"name": "A"}]})
-        cache.put(f"net:{NETWORK}:profile:{PROFILE}", {"name": "A"})
-        cache.put(f"net:{NETWORK}:profile:{PROFILE}:schedule", {"schedule": []})
-        cache.put(f"net:{NETWORK}:profile:{PROFILE}:blocked_apps", {"apps": []})
+        cache.put(keys.profile_list(NETWORK), {"profiles": [{"name": "A"}]})
+        cache.put(keys.profile(NETWORK, PROFILE), {"name": "A"})
+        cache.put(keys.profile_sub(NETWORK, PROFILE, "schedule"), {"schedule": []})
+        cache.put(keys.profile_sub(NETWORK, PROFILE, "blocked_apps"), {"apps": []})
 
     def _assert_list_invalidated(self):
         self.assertIsNone(
-            cache.get(f"net:{NETWORK}:profile:list"),
+            cache.get(keys.profile_list(NETWORK)),
             "Profile list cache should be invalidated after write",
         )
 
     def _assert_detail_invalidated(self):
         self.assertIsNone(
-            cache.get(f"net:{NETWORK}:profile:{PROFILE}"),
+            cache.get(keys.profile(NETWORK, PROFILE)),
             "Profile detail cache should be invalidated after write",
         )
 
@@ -78,25 +79,25 @@ class TestProfileCacheInvalidation(unittest.TestCase):
         self._seed_caches()
         run(service.set_blocked_apps(self.client, NETWORK, PROFILE, ["youtube"]))
         self._assert_detail_invalidated()
-        self.assertIsNone(cache.get(f"net:{NETWORK}:profile:{PROFILE}:blocked_apps"))
+        self.assertIsNone(cache.get(keys.profile_sub(NETWORK, PROFILE, "blocked_apps")))
 
     def test_set_bedtime_invalidates_detail(self):
         self._seed_caches()
         run(service.set_bedtime(self.client, NETWORK, PROFILE, "21:00", "07:00"))
         self._assert_detail_invalidated()
-        self.assertIsNone(cache.get(f"net:{NETWORK}:profile:{PROFILE}:schedule"))
+        self.assertIsNone(cache.get(keys.profile_sub(NETWORK, PROFILE, "schedule")))
 
     def test_set_schedule_invalidates_detail(self):
         self._seed_caches()
         run(service.set_schedule(self.client, NETWORK, PROFILE, [{"days": ["monday"]}]))
         self._assert_detail_invalidated()
-        self.assertIsNone(cache.get(f"net:{NETWORK}:profile:{PROFILE}:schedule"))
+        self.assertIsNone(cache.get(keys.profile_sub(NETWORK, PROFILE, "schedule")))
 
     def test_clear_schedule_invalidates_detail(self):
         self._seed_caches()
         run(service.clear_schedule(self.client, NETWORK, PROFILE))
         self._assert_detail_invalidated()
-        self.assertIsNone(cache.get(f"net:{NETWORK}:profile:{PROFILE}:schedule"))
+        self.assertIsNone(cache.get(keys.profile_sub(NETWORK, PROFILE, "schedule")))
 
     def test_set_devices_invalidates_list_and_detail(self):
         self._seed_caches()
@@ -122,13 +123,13 @@ class TestProfileCacheInvalidation(unittest.TestCase):
         self._assert_detail_invalidated()
 
     def test_list_cache_key_starts_with_profile_prefix(self):
-        """The list cache key must start with 'net:{id}:profile' so
-        broad invalidations (e.g. cache.invalidate('net:{id}:profile'))
-        clear it along with detail caches."""
-        key = f"net:{NETWORK}:profile:list"
+        """The list cache key must start with the profile prefix so
+        broad invalidations clear it along with detail caches."""
+        list_key = keys.profile_list(NETWORK)
+        prefix = keys.profile_prefix(NETWORK)
         self.assertTrue(
-            key.startswith(f"net:{NETWORK}:profile"),
-            f"List cache key '{key}' must start with 'net:{NETWORK}:profile'",
+            list_key.startswith(prefix),
+            f"List cache key '{list_key}' must start with '{prefix}'",
         )
 
 

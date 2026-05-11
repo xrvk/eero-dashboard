@@ -1,6 +1,7 @@
 from eero import EeroClient
 
 from core import cache
+from core.cache import keys
 from core.errors import translate_errors
 
 
@@ -20,7 +21,7 @@ async def list_profiles(client: EeroClient, network_id: str):
         with translate_errors(code="list_profiles_failed", message="Failed to fetch profiles"):
             resp = await client.get_profiles(network_id)
             return {"profiles": _extract_profiles(resp)}
-    return await cache.cached(f"net:{network_id}:profile:list", _fetch)
+    return await cache.cached(keys.profile_list(network_id), _fetch)
 
 
 async def get_profile(client: EeroClient, network_id: str, profile_id: str):
@@ -28,13 +29,13 @@ async def get_profile(client: EeroClient, network_id: str, profile_id: str):
         with translate_errors(code="get_profile_failed", message="Failed to fetch profile"):
             resp = await client.get_profile(profile_id, network_id)
             return _data(resp)
-    return await cache.cached(f"net:{network_id}:profile:{profile_id}", _fetch)
+    return await cache.cached(keys.profile(network_id, profile_id), _fetch)
 
 
 async def pause_profile(client: EeroClient, network_id: str, profile_id: str, paused: bool):
     with translate_errors(code="pause_profile_failed", message="Failed to update profile pause status"):
         resp = await client.pause_profile(profile_id, paused, network_id=network_id)
-        cache.invalidate(f"net:{network_id}:profile")
+        cache.invalidate(keys.profile_prefix(network_id))
         return _data(resp)
 
 
@@ -43,13 +44,13 @@ async def get_blocked_apps(client: EeroClient, network_id: str, profile_id: str)
         with translate_errors(code="get_blocked_apps_failed", message="Failed to fetch blocked apps"):
             resp = await client.get_blocked_applications(profile_id, network_id=network_id)
             return _data(resp)
-    return await cache.cached(f"net:{network_id}:profile:{profile_id}:blocked_apps", _fetch)
+    return await cache.cached(keys.profile_sub(network_id, profile_id, "blocked_apps"), _fetch)
 
 
 async def set_blocked_apps(client: EeroClient, network_id: str, profile_id: str, applications: list[str]):
     with translate_errors(code="set_blocked_apps_failed", message="Failed to update blocked apps"):
         resp = await client.set_blocked_applications(profile_id, applications, network_id=network_id)
-        cache.invalidate(f"net:{network_id}:profile:{profile_id}")
+        cache.invalidate(keys.profile(network_id, profile_id))
         return _data(resp)
 
 
@@ -65,7 +66,7 @@ async def set_bedtime(
         resp = await client.enable_bedtime(
             profile_id, start_time, end_time, days=days, network_id=network_id
         )
-        cache.invalidate(f"net:{network_id}:profile:{profile_id}")
+        cache.invalidate(keys.profile(network_id, profile_id))
         return _data(resp)
 
 
@@ -74,27 +75,27 @@ async def get_schedule(client: EeroClient, network_id: str, profile_id: str):
         with translate_errors(code="get_schedule_failed", message="Failed to fetch schedule"):
             resp = await client.get_profile_schedule(profile_id, network_id=network_id)
             return _data(resp)
-    return await cache.cached(f"net:{network_id}:profile:{profile_id}:schedule", _fetch)
+    return await cache.cached(keys.profile_sub(network_id, profile_id, "schedule"), _fetch)
 
 
 async def set_schedule(client: EeroClient, network_id: str, profile_id: str, time_blocks: list[dict]):
     with translate_errors(code="set_schedule_failed", message="Failed to set schedule"):
         resp = await client.set_profile_schedule(profile_id, time_blocks, network_id=network_id)
-        cache.invalidate(f"net:{network_id}:profile:{profile_id}")
+        cache.invalidate(keys.profile(network_id, profile_id))
         return _data(resp)
 
 
 async def clear_schedule(client: EeroClient, network_id: str, profile_id: str):
     with translate_errors(code="clear_schedule_failed", message="Failed to clear schedule"):
         resp = await client.clear_profile_schedule(profile_id, network_id=network_id)
-        cache.invalidate(f"net:{network_id}:profile:{profile_id}")
+        cache.invalidate(keys.profile(network_id, profile_id))
         return _data(resp)
 
 
 async def set_devices(client: EeroClient, network_id: str, profile_id: str, device_urls: list[str]):
     with translate_errors(code="set_devices_failed", message="Failed to update profile devices"):
         resp = await client.set_profile_devices(profile_id, device_urls, network_id=network_id)
-        cache.invalidate(f"net:{network_id}:profile")
+        cache.invalidate(keys.profile_prefix(network_id))
         return _data(resp)
 
 
@@ -106,7 +107,7 @@ async def create_profile(client: EeroClient, network_id: str, name: str):
             auth_token=auth_token,
             json={"name": name},
         )
-        cache.invalidate(f"net:{network_id}:profile")
+        cache.invalidate(keys.profile_prefix(network_id))
         return _data(resp)
 
 
@@ -118,7 +119,7 @@ async def rename_profile(client: EeroClient, network_id: str, profile_id: str, n
             auth_token=auth_token,
             json={"name": name},
         )
-        cache.invalidate(f"net:{network_id}:profile")
+        cache.invalidate(keys.profile_prefix(network_id))
         return _data(resp)
 
 
@@ -129,5 +130,5 @@ async def delete_profile(client: EeroClient, network_id: str, profile_id: str):
             f"networks/{network_id}/profiles/{profile_id}",
             auth_token=auth_token,
         )
-        cache.invalidate(f"net:{network_id}:profile")
+        cache.invalidate(keys.profile_prefix(network_id))
         return resp
