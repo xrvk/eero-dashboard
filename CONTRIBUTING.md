@@ -12,7 +12,8 @@ Backend:
 
 ```bash
 cd backend
-python main.py
+../.venv/bin/python main.py
+# or: source .venv/bin/activate && python main.py
 ```
 
 Frontend:
