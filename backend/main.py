@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import time
@@ -11,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from core.client import get_client, is_authenticated, lifespan
+from core import cache
 from core.errors import api_error_response
 from features.auth.router import router as auth_router
 from features.devices.router import router as devices_router
@@ -191,6 +193,7 @@ async def pause_profile(network_id: str, profile_id: str, req: ProfilePauseReque
     client = await get_client()
     try:
         resp = await client.pause_profile(profile_id, req.paused, network_id=network_id)
+        cache.invalidate(f"net:{network_id}:profiles")
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -258,6 +261,13 @@ async def set_profile_devices(network_id: str, profile_id: str, req: ProfileDevi
 @app.get("/api/networks/{network_id}/security")
 async def get_security(network_id: str):
     client = await get_client()
+    return await cache.cached(
+        f"net:{network_id}:security",
+        lambda: _fetch_security(client, network_id),
+    )
+
+
+async def _fetch_security(client, network_id):
     try:
         resp = await client.get_security_settings(network_id)
         return resp.get("data", resp)
@@ -289,6 +299,7 @@ async def update_security(network_id: str, req: SecurityUpdateRequest):
         if req.thread is not None:
             kwargs["thread"] = req.thread
         resp = await client.configure_security(network_id=network_id, **kwargs)
+        cache.invalidate_network(network_id)
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -300,6 +311,13 @@ async def update_security(network_id: str, req: SecurityUpdateRequest):
 @app.get("/api/networks/{network_id}/forwards")
 async def get_forwards(network_id: str):
     client = await get_client()
+    return await cache.cached(
+        f"net:{network_id}:forwards",
+        lambda: _fetch_forwards(client, network_id),
+    )
+
+
+async def _fetch_forwards(client, network_id):
     try:
         resp = await client.get_forwards(network_id)
         return resp.get("data", resp)
@@ -310,6 +328,13 @@ async def get_forwards(network_id: str):
 @app.get("/api/networks/{network_id}/reservations")
 async def get_reservations(network_id: str):
     client = await get_client()
+    return await cache.cached(
+        f"net:{network_id}:reservations",
+        lambda: _fetch_reservations(client, network_id),
+    )
+
+
+async def _fetch_reservations(client, network_id):
     try:
         resp = await client.get_reservations(network_id)
         return resp.get("data", resp)
@@ -338,6 +363,7 @@ async def create_forward(network_id: str, req: CreateForwardRequest):
             "description": req.description,
             "enabled": req.enabled,
         })
+        cache.invalidate(f"net:{network_id}:forwards")
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -348,6 +374,7 @@ async def delete_forward(network_id: str, forward_id: str):
     client = await get_client()
     try:
         resp = await client._api.forwards.delete_forward(network_id, forward_id)
+        cache.invalidate(f"net:{network_id}:forwards")
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -368,6 +395,7 @@ async def create_reservation(network_id: str, req: CreateReservationRequest):
             "mac": req.mac,
             "description": req.description,
         })
+        cache.invalidate(f"net:{network_id}:reservations")
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -378,6 +406,7 @@ async def delete_reservation(network_id: str, reservation_id: str):
     client = await get_client()
     try:
         resp = await client._api.reservations.delete_reservation(network_id, reservation_id)
+        cache.invalidate(f"net:{network_id}:reservations")
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -402,6 +431,13 @@ async def reboot_eero(network_id: str, eero_id: str):
 @app.get("/api/networks/{network_id}/password")
 async def get_password(network_id: str):
     client = await get_client()
+    return await cache.cached(
+        f"net:{network_id}:password",
+        lambda: _fetch_password(client, network_id),
+    )
+
+
+async def _fetch_password(client, network_id):
     try:
         resp = await client.get_network(network_id=network_id)
         data = resp.get("data", resp)
@@ -422,6 +458,7 @@ async def set_network_name(network_id: str, req: NetworkNameRequest):
     client = await get_client()
     try:
         resp = await client.set_network_name(req.name, network_id=network_id)
+        cache.invalidate_network(network_id)
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -443,6 +480,7 @@ async def set_guest_network(network_id: str, req: GuestNetworkRequest):
         resp = await client.set_guest_network(
             req.enabled, name=req.name, password=req.password, network_id=network_id
         )
+        cache.invalidate_network(network_id)
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -533,6 +571,13 @@ async def set_nightlight(network_id: str, eero_id: str, req: NightlightRequest):
 @app.get("/api/networks/{network_id}/sqm")
 async def get_sqm(network_id: str):
     client = await get_client()
+    return await cache.cached(
+        f"net:{network_id}:sqm",
+        lambda: _fetch_sqm(client, network_id),
+    )
+
+
+async def _fetch_sqm(client, network_id):
     try:
         resp = await client.get_sqm_settings(network_id=network_id)
         data = resp.get("data", resp)
@@ -557,6 +602,7 @@ async def set_sqm_enabled(network_id: str, req: SqmEnabledRequest):
     client = await get_client()
     try:
         resp = await client.set_sqm_enabled(req.enabled, network_id=network_id)
+        cache.invalidate(f"net:{network_id}:sqm")
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -569,6 +615,7 @@ async def configure_sqm(network_id: str, req: SqmConfigureRequest):
         resp = await client.configure_sqm(
             req.enabled, upload_mbps=req.upload_mbps, download_mbps=req.download_mbps, network_id=network_id
         )
+        cache.invalidate(f"net:{network_id}:sqm")
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -579,6 +626,7 @@ async def set_sqm_auto(network_id: str):
     client = await get_client()
     try:
         resp = await client.set_sqm_auto(network_id=network_id)
+        cache.invalidate(f"net:{network_id}:sqm")
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -681,6 +729,13 @@ async def clear_profile_schedule(network_id: str, profile_id: str):
 @app.get("/api/networks/{network_id}/updates")
 async def get_updates(network_id: str):
     client = await get_client()
+    return await cache.cached(
+        f"net:{network_id}:updates",
+        lambda: _fetch_updates(client, network_id),
+    )
+
+
+async def _fetch_updates(client, network_id):
     try:
         resp = await client.get_updates(network_id=network_id)
         data = resp.get("data", resp)
@@ -709,6 +764,13 @@ async def reboot_network(network_id: str):
 @app.get("/api/networks/{network_id}/thread")
 async def get_thread(network_id: str):
     client = await get_client()
+    return await cache.cached(
+        f"net:{network_id}:thread",
+        lambda: _fetch_thread(client, network_id),
+    )
+
+
+async def _fetch_thread(client, network_id):
     try:
         resp = await client.get_thread(network_id=network_id)
         return resp.get("data", resp)
@@ -719,6 +781,13 @@ async def get_thread(network_id: str):
 @app.get("/api/networks/{network_id}/routing")
 async def get_routing(network_id: str):
     client = await get_client()
+    return await cache.cached(
+        f"net:{network_id}:routing",
+        lambda: _fetch_routing(client, network_id),
+    )
+
+
+async def _fetch_routing(client, network_id):
     try:
         resp = await client.get_routing(network_id=network_id)
         return resp.get("data", resp)
@@ -732,6 +801,13 @@ async def get_routing(network_id: str):
 @app.get("/api/networks/{network_id}/blacklist")
 async def get_blacklist(network_id: str):
     client = await get_client()
+    return await cache.cached(
+        f"net:{network_id}:blacklist",
+        lambda: _fetch_blacklist(client, network_id),
+    )
+
+
+async def _fetch_blacklist(client, network_id):
     try:
         resp = await client.get_blacklist(network_id=network_id)
         return resp.get("data", resp)
@@ -744,6 +820,7 @@ async def add_to_blacklist(network_id: str, device_id: str):
     client = await get_client()
     try:
         resp = await client._api.blacklist.add_to_blacklist(network_id, device_id)
+        cache.invalidate(f"net:{network_id}:blacklist")
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -754,6 +831,7 @@ async def remove_from_blacklist(network_id: str, device_id: str):
     client = await get_client()
     try:
         resp = await client._api.blacklist.remove_from_blacklist(network_id, device_id)
+        cache.invalidate(f"net:{network_id}:blacklist")
         return resp.get("data", resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

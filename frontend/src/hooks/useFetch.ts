@@ -77,7 +77,10 @@ export function useFetch<T>(
       || previous.length !== deps.length
       || previous.some((value, index) => !Object.is(value, deps[index]));
 
-    if (depsChanged) {
+    // Re-fetch if a previous fetch was aborted (e.g. React StrictMode remount)
+    const wasAborted = abortRef.current?.signal.aborted ?? false;
+
+    if (depsChanged || wasAborted) {
       prevDepsRef.current = [...deps];
       void executeFetch();
     }
