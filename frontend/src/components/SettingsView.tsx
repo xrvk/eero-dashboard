@@ -879,6 +879,9 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
         )}
       </div>
 
+      {/* Node Controls */}
+      <NodeControlsSection networkId={networkId} />
+
       {/* QoS / SQM */}
       <div className="general-section">
         <h3>🚀 QoS (Smart Queue Management)</h3>
@@ -945,9 +948,6 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           </div>
         )}
       </div>
-
-      {/* Node Controls */}
-      <NodeControlsSection networkId={networkId} />
 
       {/* Actions */}
       <div className="general-actions-row">
