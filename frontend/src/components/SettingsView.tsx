@@ -74,11 +74,6 @@ export function DnsSettings({ networkId }: { networkId: string }) {
   const customIps = (dns?.custom as { ips?: string[] })?.ips ?? [];
   const caching = dns?.caching as boolean | undefined;
 
-  const startEditing = () => {
-    setDnsMode(mode);
-    setDnsServers([customIps[0] || '', customIps[1] || '']);
-    setEditing(true);
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -672,11 +667,6 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   };
 
   // DNS handlers
-  const startDnsEdit = () => {
-    setDnsMode(dnsCurrentMode);
-    setDnsServers([customIps[0] || '', customIps[1] || '']);
-    setDnsEditing(true);
-  };
   const handleDnsSave = async () => {
     setDnsSaving(true);
     try {
