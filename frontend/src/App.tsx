@@ -7,6 +7,7 @@ import ActivityView from './components/ActivityView';
 import ProfileManager from './components/ProfileManager';
 import { PortForwardsSettings, DhcpReservationsSettings, BlacklistSettings, GeneralSettings } from './components/SettingsView';
 import GuestNetwork from './components/GuestNetwork';
+import SpeedHistory from './components/SpeedHistory';
 
 function getNetworkId(n: api.Network): string {
   if (n.id != null) return String(n.id);
@@ -15,6 +16,26 @@ function getNetworkId(n: api.Network): string {
 }
 
 export default function App() {
+  // Dev-only preview: http://localhost:4174/?preview=speed
+  if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('preview') === 'speed') {
+    return (
+      <div className="app" style={{ display: 'flex', justifyContent: 'center' }}>
+        <main className="app-main" style={{ maxWidth: 900, width: '100%' }}>
+          <header className="app-header"><h1>Speed History Preview</h1></header>
+          <div className="tab-content">
+            <div className="activity-panel full-width">
+              <SpeedHistory networkId="preview" />
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  return <AppMain />;
+}
+
+function AppMain() {
   const [auth, setAuth] = useState<api.AuthStatus | null>(null);
   const [checking, setChecking] = useState(true);
   const [networks, setNetworks] = useState<api.Network[]>([]);
