@@ -262,7 +262,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
       {renameTarget && (
         <div className="confirm-overlay" onClick={() => setRenameTarget(null)}>
           <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
-            <p style={{ marginBottom: 12 }}>✏️ Rename device</p>
+            <p style={{ marginBottom: 12 }}>Rename device</p>
             <input
               className="rename-input"
               type="text"
@@ -509,7 +509,7 @@ function DeviceCard({ device: d, actionLoading, onAction, onRename, onReserve, o
                   className="card-menu-item"
                   onClick={() => { setMenuOpen(false); onRename(d.mac!, d.display_name || d.hostname || ''); }}
                 >
-                  ✏️ Rename
+                  Rename
                 </button>
                 <button
                   className="card-menu-item"
@@ -565,7 +565,7 @@ function TableRowMenu({ device: d, actionLoading, onAction, onRename, onReserve 
       {open && (
         <div className="card-menu">
           <button className="card-menu-item" onClick={() => { setOpen(false); onRename(d.mac!, d.display_name || d.hostname || ''); }}>
-            ✏️ Rename
+            Rename
           </button>
           <button className="card-menu-item" onClick={() => { setOpen(false); onReserve(); }}>
             📌 Reserve IP

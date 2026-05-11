@@ -179,7 +179,7 @@ export default function DeviceDrawer({ networkId, device: d, onClose, onRefresh 
             ) : (
               <div className="drawer-value-row">
                 <span className="drawer-value">{d.display_name || d.hostname || 'Unknown'}</span>
-                <button className="btn-text" onClick={() => setEditingName(true)}>✏️ Rename</button>
+                <button className="btn-text" onClick={() => setEditingName(true)}>Rename</button>
               </div>
             )}
           </div>

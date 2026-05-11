@@ -113,29 +113,10 @@ export function DnsSettings({ networkId }: { networkId: string }) {
       </div>
 
       <div className="settings-card">
-        <h3>DNS Provider</h3>
-        <div className="dns-provider-row">
-          <select
-            className="dns-select"
-            value={editing ? dnsMode : mode}
-            onChange={(e) => {
-              const val = e.target.value;
-              setDnsMode(val);
-              if (val === 'custom') setDnsServers([customIps[0] || '', customIps[1] || '']);
-              setEditing(true);
-            }}
-            disabled={saving}
-          >
-            <option value="default">eero Default</option>
-            <option value="cloudflare">Cloudflare (1.1.1.1)</option>
-            <option value="google">Google (8.8.8.8)</option>
-            <option value="opendns">OpenDNS (208.67.222.222)</option>
-            <option value="custom">Custom</option>
-          </select>
-          {editing && dnsMode !== 'custom' && (
-            <button className="btn-primary btn-sm" onClick={handleSave} disabled={saving}>
-              {saving ? '…' : 'Apply'}
-            </button>
+        <div className="section-header-inline">
+          <h3>DNS Servers</h3>
+          {!editing && (
+            <button className="btn-text" onClick={startEditing}>Edit</button>
           )}
         </div>
 
@@ -463,7 +444,7 @@ export function SqmSettings({ networkId }: { networkId: string }) {
                   Auto Optimize
                 </button>
                 <button className="btn-text" onClick={startManual}>
-                  ✏️ Set Manual Limits
+                  Set Manual Limits
                 </button>
               </div>
             )}
@@ -715,7 +696,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           <div className="general-card-header">
             <span className="general-card-icon">📡</span>
             <h3>Network</h3>
-            {!renaming && <button className="btn-text" onClick={() => { setNewName(networkName); setRenaming(true); }}>✏️</button>}
+            {!renaming && <button className="btn-text" onClick={() => { setNewName(networkName); setRenaming(true); }}>Edit</button>}
           </div>
           {renaming ? (
             <div className="drawer-inline-edit">
@@ -908,6 +889,28 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
               </button>
             )}
           </div>
+        ) : (
+          <div className="general-info-grid" style={{ marginTop: 12 }}>
+            <div className="general-detail">
+              <span>DNS Servers</span>
+              <span>{customIps.length > 0 ? customIps.join(', ') : 'eero Default'} <button className="btn-text" onClick={startDnsEdit}>Edit</button></span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* QoS / SQM */}
+      <div className="general-section">
+        <h3>🚀 QoS (Smart Queue Management)</h3>
+        <div className="toggle-row">
+          <div className="toggle-info">
+            <span className="toggle-name">SQM</span>
+            <span className="toggle-desc">Reduce bufferbloat for gaming, video calls, streaming</span>
+          </div>
+          <label className="toggle-switch">
+            <input type="checkbox" checked={sqmEnabled} disabled={sqmSaving} onChange={handleSqmToggle} />
+            <span className="toggle-slider" />
+          </label>
         </div>
 
         {((dnsEditing && dnsMode === 'custom') || (!dnsEditing && dnsCurrentMode === 'custom')) && (
@@ -923,11 +926,15 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
                   onChange={(e) => { const s = [...dnsServers]; s[i] = e.target.value; setDnsServers(s); if (!dnsEditing) { setDnsMode('custom'); setDnsEditing(true); } }}
                 />
               </div>
-            ))}
-            {dnsEditing && (
-              <div className="dns-edit-actions">
-                <button className="btn-primary" onClick={handleDnsSave} disabled={dnsSaving}>{dnsSaving ? 'Saving…' : 'Save'}</button>
-                <button className="btn-cancel" onClick={() => setDnsEditing(false)}>Cancel</button>
+            ) : (
+              <div className="general-card-details">
+                <div className="general-detail"><span>Mode</span><span>{sqmMode}</span></div>
+                {currentUpload != null && <div className="general-detail"><span>Upload</span><span>{currentUpload} Mbps</span></div>}
+                {currentDownload != null && <div className="general-detail"><span>Download</span><span>{currentDownload} Mbps</span></div>}
+                <div className="sqm-mode-buttons" style={{ marginTop: 8 }}>
+                  <button className="btn-primary btn-sm" onClick={handleSqmAuto} disabled={sqmSaving}>Auto Optimize</button>
+                  <button className="btn-text" onClick={() => { setUploadMbps(currentUpload ? String(currentUpload) : ''); setDownloadMbps(currentDownload ? String(currentDownload) : ''); setSqmEditMode(true); }}>Manual</button>
+                </div>
               </div>
             )}
           </div>

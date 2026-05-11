@@ -92,7 +92,7 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
             <div className="guest-info-card">
               <div className="section-header-inline">
                 <h3>Guest Credentials</h3>
-                <button className="btn-text" onClick={startEditing}>✏️ Edit</button>
+                <button className="btn-text" onClick={startEditing}>Edit</button>
               </div>
               <div className="dns-grid">
                 <div className="dns-item">

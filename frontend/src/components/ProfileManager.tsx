@@ -381,7 +381,7 @@ function DevicesTab({
           className="btn-text"
           onClick={() => setEditing(!editing)}
         >
-          {editing ? '✕ Cancel' : '✏️ Edit'}
+          {editing ? '✕ Cancel' : 'Edit'}
         </button>
       </div>
 
