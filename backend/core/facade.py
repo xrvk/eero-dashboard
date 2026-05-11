@@ -49,23 +49,19 @@ async def configure_security(
 
 
 async def set_sqm_enabled(client: EeroClient, network_id: str, enabled: bool) -> dict:
-    return await _put_settings(client, network_id, {"sqm": {"enabled": enabled}})
+    return await _put_settings(client, network_id, {"sqm": enabled})
 
 
 async def configure_sqm(
     client: EeroClient, network_id: str,
     enabled: bool, upload_mbps: int | None = None, download_mbps: int | None = None,
 ) -> dict:
-    sqm: dict = {"enabled": enabled}
-    if upload_mbps is not None:
-        sqm["upload_bandwidth_mbps"] = upload_mbps
-    if download_mbps is not None:
-        sqm["download_bandwidth_mbps"] = download_mbps
-    return await _put_settings(client, network_id, {"sqm": sqm})
+    # SQM toggle is a bare boolean on the settings endpoint
+    return await _put_settings(client, network_id, {"sqm": enabled})
 
 
 async def set_sqm_auto(client: EeroClient, network_id: str) -> dict:
-    return await _put_settings(client, network_id, {"sqm": {"enabled": True}})
+    return await _put_settings(client, network_id, {"sqm": True})
 
 
 async def set_dns_caching(client: EeroClient, network_id: str, enabled: bool) -> dict:
