@@ -1,3 +1,4 @@
+import { Smartphone, HeartPulse, User, Settings, ArrowDown, ArrowUp } from 'lucide-react';
 import * as api from '../../api';
 import type { AppTab } from './types';
 
@@ -50,19 +51,19 @@ export default function AppSidebar({
 
       <nav className="sidebar-nav">
         <button className={`sidebar-item ${tab === 'devices' ? 'active' : ''}`} onClick={() => handleTab('devices')}>
-          <span className="sidebar-icon">📱</span> Devices
+          <span className="sidebar-icon"><Smartphone size={18} /></span> Devices
         </button>
         <button className={`sidebar-item ${tab === 'activity' ? 'active' : ''}`} onClick={() => handleTab('activity')}>
-          <span className="sidebar-icon">💚</span> Health
+          <span className="sidebar-icon"><HeartPulse size={18} /></span> Health
         </button>
         <button className={`sidebar-item ${tab === 'profiles' ? 'active' : ''}`} onClick={() => handleTab('profiles')}>
-          <span className="sidebar-icon">👤</span> Profiles
+          <span className="sidebar-icon"><User size={18} /></span> Profiles
         </button>
         <button
           className={`sidebar-item sidebar-section-parent ${tab.startsWith('settings-') ? 'active' : ''}`}
           onClick={() => handleTab('settings-general')}
         >
-          <span className="sidebar-icon">⚙️</span> Settings
+          <span className="sidebar-icon"><Settings size={18} /></span> Settings
         </button>
         <div className="sidebar-sub-items">
           <button className={`sidebar-item sidebar-sub ${tab === 'settings-general' ? 'active' : ''}`} onClick={() => handleTab('settings-general')}>
@@ -132,13 +133,13 @@ export default function AppSidebar({
             <span className="sidebar-speed-label">Last Speed Test</span>
             <div className="sidebar-speed-gauges">
               <div className="sidebar-speed-gauge">
-                <span className="sidebar-speed-arrow down">↓</span>
+                <span className="sidebar-speed-arrow down"><ArrowDown size={12} /></span>
                 <span className="sidebar-speed-val">{(networkDetail.speed.down as { value: number }).value.toFixed(0)}</span>
                 <span className="sidebar-speed-unit">{(networkDetail.speed.down as { units: string }).units}</span>
               </div>
               {networkDetail.speed.up && (
                 <div className="sidebar-speed-gauge">
-                  <span className="sidebar-speed-arrow up">↑</span>
+                  <span className="sidebar-speed-arrow up"><ArrowUp size={12} /></span>
                   <span className="sidebar-speed-val">{(networkDetail.speed.up as { value: number }).value.toFixed(0)}</span>
                   <span className="sidebar-speed-unit">{(networkDetail.speed.up as { units: string }).units}</span>
                 </div>

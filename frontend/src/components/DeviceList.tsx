@@ -1,4 +1,10 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
+import type { JSX } from 'react';
+import {
+  Smartphone, Tablet, Laptop, Monitor, Tv, Speaker, Camera, Printer, Gamepad2,
+  Globe, Wifi, Cable, LayoutGrid, List, RefreshCw, Radio,
+  ArrowUp, ArrowDown, ArrowUpDown, Search, AlertTriangle,
+} from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import type { Device } from '../api';
 import { devicesClient } from '../features/devices/client';
@@ -129,9 +135,9 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
     }
   };
 
-  const sortIndicator = (col: SortCol) => {
-    if (sortCol !== col) return ' ↕';
-    return sortDir === 'asc' ? ' ↑' : ' ↓';
+  const sortIndicator = (col: SortCol): JSX.Element => {
+    if (sortCol !== col) return <>{' '}<ArrowUpDown size={12} /></>;
+    return sortDir === 'asc' ? <>{' '}<ArrowUp size={12} /></> : <>{' '}<ArrowDown size={12} /></>;
   };
 
   const handleAction = async (deviceId: string, type: 'pause' | 'block', value: boolean) => {
@@ -220,7 +226,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
         byNode.get(nodeName)!.push(d);
       }
       for (const [name, devs] of byNode) {
-        makeGroup(`📡 ${name} (${devs.length})`, devs);
+        makeGroup(`${name} (${devs.length})`, devs);
       }
     }
 
@@ -230,7 +236,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
   if (loading) return <div className="card loading-card"><div className="spinner" /> Loading devices…</div>;
   if (error) return (
     <div className="card error-card">
-      <span>⚠️ Failed to load devices: {error}</span>
+      <span><AlertTriangle size={16} /> Failed to load devices: {error}</span>
       <button className="btn-primary btn-sm" onClick={refetch} style={{ marginLeft: 16 }}>Retry</button>
     </div>
   );
@@ -303,13 +309,13 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
               onClick={() => setGroupBy(g => g === 'node' ? 'none' : 'node')}
               title="Group by eero node"
             >
-              📡 By Node
+              <Radio size={14} /> By Node
             </button>
             <div className="view-toggle">
-              <button className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')} title="Grid view">⊞</button>
-              <button className={`view-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')} title="List view">☰</button>
+              <button className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')} title="Grid view"><LayoutGrid size={16} /></button>
+              <button className={`view-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')} title="List view"><List size={16} /></button>
             </div>
-            <button className="btn-icon" onClick={refetch} title="Refresh">↻</button>
+            <button className="btn-icon" onClick={refetch} title="Refresh"><RefreshCw size={16} /></button>
           </div>
         </div>
         <div className="toolbar-row">
@@ -399,8 +405,8 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
                     <td className="td-mono">{d.mac || '—'}</td>
                     <td className="td-conn">
                       {d.wireless ? (
-                        <>📶 {conn?.frequency ? freqToBand(conn.frequency) : 'Wireless'}</>
-                      ) : '🔌 Wired'}
+                        <><Wifi size={14} /> {conn?.frequency ? freqToBand(conn.frequency) : 'Wireless'}</>
+                      ) : <><Cable size={14} /> Wired</>}
                     </td>
                     <td>
                       {d.wireless && conn ? (
@@ -444,13 +450,13 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
         <div className="empty-state">
           {search ? (
             <>
-              <p className="empty-icon">🔍</p>
+              <p className="empty-icon"><Search size={40} /></p>
               <p className="empty-text">No devices match "{search}"</p>
               <p className="empty-hint">Try searching by name, IP, MAC, or manufacturer</p>
             </>
           ) : (
             <>
-              <p className="empty-icon">🌐</p>
+              <p className="empty-icon"><Globe size={40} /></p>
               <p className="empty-text">No {statusFilter !== 'all' ? statusFilter : ''} devices {bandFilter !== 'all' ? `(${bandFilter})` : ''}</p>
             </>
           )}
@@ -490,7 +496,7 @@ function DeviceCard({ device: d, actionLoading, onAction, onRename, onReserve, o
         <span className="device-meta">{d.ip || d.mac}</span>
         {d.connection_type && (
           <span className="device-connection">
-            {d.wireless ? '📶' : '🔌'} {d.connection_type}
+            {d.wireless ? <Wifi size={14} /> : <Cable size={14} />} {d.connection_type}
             {d.wireless && conn?.frequency ? ` · ${freqToBand(conn.frequency)}` : ''}
           </span>
         )}
@@ -582,17 +588,17 @@ function TableRowMenu({ device: d, actionLoading, onAction, onRename, onReserve 
   );
 }
 
-function getDeviceIcon(d: Device) {
+function getDeviceIcon(d: Device): JSX.Element {
   const name = (d.display_name || d.hostname || '').toLowerCase();
   const type = (d.device_type || '').toLowerCase();
-  if (type.includes('phone') || name.includes('iphone') || name.includes('pixel') || name.includes('galaxy')) return '📱';
-  if (type.includes('tablet') || name.includes('ipad')) return '📱';
-  if (type.includes('laptop') || name.includes('macbook') || name.includes('laptop')) return '💻';
-  if (type.includes('desktop') || name.includes('imac') || name.includes('mac-pro')) return '🖥️';
-  if (type.includes('tv') || name.includes('apple-tv') || name.includes('roku') || name.includes('fire')) return '📺';
-  if (type.includes('speaker') || name.includes('echo') || name.includes('homepod') || name.includes('sonos')) return '🔊';
-  if (type.includes('camera') || name.includes('cam')) return '📷';
-  if (type.includes('printer')) return '🖨️';
-  if (name.includes('switch') || name.includes('playstation') || name.includes('xbox') || name.includes('nintendo')) return '🎮';
-  return '🌐';
+  if (type.includes('phone') || name.includes('iphone') || name.includes('pixel') || name.includes('galaxy')) return <Smartphone size={20} />;
+  if (type.includes('tablet') || name.includes('ipad')) return <Tablet size={20} />;
+  if (type.includes('laptop') || name.includes('macbook') || name.includes('laptop')) return <Laptop size={20} />;
+  if (type.includes('desktop') || name.includes('imac') || name.includes('mac-pro')) return <Monitor size={20} />;
+  if (type.includes('tv') || name.includes('apple-tv') || name.includes('roku') || name.includes('fire')) return <Tv size={20} />;
+  if (type.includes('speaker') || name.includes('echo') || name.includes('homepod') || name.includes('sonos')) return <Speaker size={20} />;
+  if (type.includes('camera') || name.includes('cam')) return <Camera size={20} />;
+  if (type.includes('printer')) return <Printer size={20} />;
+  if (name.includes('switch') || name.includes('playstation') || name.includes('xbox') || name.includes('nintendo')) return <Gamepad2 size={20} />;
+  return <Globe size={20} />;
 }
