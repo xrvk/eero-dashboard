@@ -145,8 +145,8 @@ Thin wrapper that re-exports device API functions under a `devicesClient` object
 | `NodeDrawer` | `NodeDrawer.tsx` | Slide-out node detail panel (LED, firmware, connectivity) |
 | `ActivityView` | `ActivityView.tsx` | Speed test trigger + network health monitoring |
 | `ClickableStatRow` | `ClickableStatRow.tsx` | Shared clickable bar-chart row used by Health tab band/signal sections |
-| `ProfileManager` | `ProfileManager.tsx` | Parental controls: pause, bedtime, content filters, scheduling |
-| `SettingsView` | `SettingsView.tsx` | Multi-section: security, DNS, SQM, port forwards, DHCP, blacklist |
+| `ProfileManager` | `profiles/` | Parental controls: pause, bedtime, content filters, scheduling. Split into sub-components: `ProfileDetailPanel`, `DevicesTab`, `ScheduleTab`, `BlockedAppsTab`, `DevicePicker`, `CreateProfileForm`, `InlineEditName`, `EeroPlusBanner`, plus `utils.ts` for helpers. |
+| `SettingsView` | `SettingsView.tsx` → `settings/` | Barrel re-export; individual components split into `components/settings/` (SecuritySettings, DnsSettings, GeneralSettings, SqmSettings, PortForwardsSettings, DhcpReservationsSettings, BlacklistSettings) |
 | `GuestNetwork` | `GuestNetwork.tsx` | Guest network enable/disable + credentials |
 | `SpeedHistory` | `SpeedHistory.tsx` | Recharts line chart of historical speed test data |
 
