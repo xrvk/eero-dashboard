@@ -199,7 +199,7 @@ animation: slideUp 0.25s ease-out
 | 🚀 | Speed test / QoS | section h3 prefix, button text |
 | 🔍 | Search / diagnostics | `.search-icon`, section h3 prefix, empty state |
 | 🔄 | Reboot / refresh | button text, dialog |
-| ✏️ | Edit action | `.btn-text` exclusively |
+| ✏️ | **REMOVED** — use plain text "Edit" / "Rename" buttons instead | `.btn-text` exclusively |
 | 🗑 | Delete / clear | `.btn-text` |
 | 📋 | Copy to clipboard | `.btn-text` |
 | 📌 | Reserve IP / pin | `.btn-text`, badge |
