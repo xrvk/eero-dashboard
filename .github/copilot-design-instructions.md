@@ -186,6 +186,7 @@ All icons follow the Feather icon convention: `viewBox="0 0 24 24"`, `fill="none
 | Eye (show) | `<path d="M1 12s4-8 11-8..."/><circle cx="12" cy="12" r="3"/>` | Show password `.btn-icon-sm` |
 | Eye-off (hide) | `<path .../><line x1="1" y1="1" x2="23" y2="23"/>` | Hide password `.btn-icon-sm` |
 | Copy | `<rect x="9" y="9".../><path d="M5 15H4..."/>` | Copy to clipboard `.btn-icon-sm` |
+| Edit/pencil | `<path d="M11 4H4a2 2 0 0 0-2 2v14..."/><path d="M18.5 2.5..."/>` | Edit action `.btn-icon-sm` |
 | Check | `<polyline points="20 6 9 17 4 12"/>` | Copied/success confirmation |
 | Trash | `<polyline points="3 6 5 6 21 6"/><path d="M19 6v14..."/>` | Delete `.btn-icon` |
 | Refresh | `<polyline points="23 4 23 10 17 10"/><path d="M20.49 15..."/>` | Reboot `.btn-action` |
