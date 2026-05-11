@@ -94,7 +94,7 @@ async def clear_schedule(client: EeroClient, network_id: str, profile_id: str):
 async def set_devices(client: EeroClient, network_id: str, profile_id: str, device_urls: list[str]):
     with translate_errors(code="set_devices_failed", message="Failed to update profile devices"):
         resp = await client.set_profile_devices(profile_id, device_urls, network_id=network_id)
-        cache.invalidate(f"net:{network_id}:profile:{profile_id}")
+        cache.invalidate(f"net:{network_id}:profile")
         return _data(resp)
 
 
