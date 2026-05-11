@@ -6,6 +6,7 @@ from eero import EeroClient
 
 from core import cache, facade
 from core.cache import keys
+from core.dry_run import is_dry_run, block_unmocked_mutation
 
 
 def _data(payload: dict):
@@ -203,6 +204,8 @@ async def _fetch_diagnostics(client: EeroClient, network_id: str):
 
 
 async def run_diagnostics(client: EeroClient, network_id: str):
+    if is_dry_run():
+        block_unmocked_mutation("run_diagnostics")
     try:
         result = _data(await client.run_diagnostics(network_id))
         cache.invalidate(keys.diagnostics(network_id))

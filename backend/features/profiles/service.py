@@ -3,6 +3,7 @@ from eero import EeroClient
 from core import cache
 from core.cache import keys
 from core import facade
+from core.dry_run import is_dry_run, block_unmocked_mutation
 from core.errors import translate_errors
 
 
@@ -34,6 +35,8 @@ async def get_profile(client: EeroClient, network_id: str, profile_id: str):
 
 
 async def pause_profile(client: EeroClient, network_id: str, profile_id: str, paused: bool):
+    if is_dry_run():
+        block_unmocked_mutation("pause_profile")
     with translate_errors(code="pause_profile_failed", message="Failed to update profile pause status"):
         resp = await client.pause_profile(profile_id, paused, network_id=network_id)
         cache.invalidate(keys.profile_prefix(network_id))
@@ -50,6 +53,8 @@ async def get_blocked_apps(client: EeroClient, network_id: str, profile_id: str)
 
 
 async def set_blocked_apps(client: EeroClient, network_id: str, profile_id: str, applications: list[str]):
+    if is_dry_run():
+        block_unmocked_mutation("set_blocked_apps")
     with translate_errors(code="set_blocked_apps_failed", message="Failed to update blocked apps"):
         resp = await client.set_blocked_applications(profile_id, applications, network_id=network_id)
         cache.invalidate(keys.profile(network_id, profile_id))
@@ -65,6 +70,8 @@ async def set_bedtime(
     end_time: str,
     days: list[str] | None = None,
 ):
+    if is_dry_run():
+        block_unmocked_mutation("set_bedtime")
     with translate_errors(code="set_bedtime_failed", message="Failed to set bedtime"):
         resp = await client.enable_bedtime(
             profile_id, start_time, end_time, days=days, network_id=network_id
@@ -83,6 +90,8 @@ async def get_schedule(client: EeroClient, network_id: str, profile_id: str):
 
 
 async def set_schedule(client: EeroClient, network_id: str, profile_id: str, time_blocks: list[dict]):
+    if is_dry_run():
+        block_unmocked_mutation("set_schedule")
     with translate_errors(code="set_schedule_failed", message="Failed to set schedule"):
         resp = await client.set_profile_schedule(profile_id, time_blocks, network_id=network_id)
         cache.invalidate(keys.profile(network_id, profile_id))
@@ -91,6 +100,8 @@ async def set_schedule(client: EeroClient, network_id: str, profile_id: str, tim
 
 
 async def clear_schedule(client: EeroClient, network_id: str, profile_id: str):
+    if is_dry_run():
+        block_unmocked_mutation("clear_schedule")
     with translate_errors(code="clear_schedule_failed", message="Failed to clear schedule"):
         resp = await client.clear_profile_schedule(profile_id, network_id=network_id)
         cache.invalidate(keys.profile(network_id, profile_id))
@@ -99,6 +110,8 @@ async def clear_schedule(client: EeroClient, network_id: str, profile_id: str):
 
 
 async def set_devices(client: EeroClient, network_id: str, profile_id: str, device_urls: list[str]):
+    if is_dry_run():
+        block_unmocked_mutation("set_profile_devices")
     with translate_errors(code="set_devices_failed", message="Failed to update profile devices"):
         resp = await client.set_profile_devices(profile_id, device_urls, network_id=network_id)
         cache.invalidate(keys.profile_prefix(network_id))

@@ -11,6 +11,8 @@ from typing import Any
 
 from eero import EeroClient
 
+from core.dry_run import is_dry_run, mock_endpoint_response, mock_settings_response
+
 
 async def _get_token(client: EeroClient) -> str:
     return await client._api.networks._auth_api.get_auth_token()
@@ -22,6 +24,8 @@ async def _put_settings(client: EeroClient, network_id: str, payload: dict) -> d
     The eero-api library incorrectly PUTs to /networks/{id} which is silently
     ignored by the eero cloud API. This sends to /settings instead.
     """
+    if is_dry_run():
+        return mock_settings_response(network_id, payload)
     token = await _get_token(client)
     return await client._api.networks.put(
         f"networks/{network_id}/settings",
@@ -84,6 +88,8 @@ async def set_network_name(client: EeroClient, network_id: str, name: str) -> di
 
 async def pause_device(client: EeroClient, network_id: str, device_id: str, paused: bool) -> dict:
     """Pause/unpause a device via PUT /devices/{id} (not /networks/{id})."""
+    if is_dry_run():
+        return mock_endpoint_response("PUT", f"devices/{device_id}", {"paused": paused})
     token = await _get_token(client)
     return await client._api.networks.put(
         f"devices/{device_id}",
@@ -98,12 +104,16 @@ async def set_guest_network(
     client: EeroClient, network_id: str,
     enabled: bool, name: str | None = None, password: str | None = None,
 ) -> dict:
-    token = await _get_token(client)
     payload: dict = {"enabled": enabled}
     if name is not None:
         payload["name"] = name
     if password is not None:
         payload["password"] = password
+    if is_dry_run():
+        return mock_endpoint_response(
+            "PUT", f"networks/{network_id}/guestnetwork", payload,
+        )
+    token = await _get_token(client)
     return await client._api.networks.put(
         f"networks/{network_id}/guestnetwork",
         auth_token=token,
@@ -114,6 +124,9 @@ async def set_guest_network(
 # ── Profiles (need raw API access for CRUD) ─────────────────────────────────
 
 async def create_profile(client: EeroClient, network_id: str, name: str) -> dict:
+    if is_dry_run():
+        from core.dry_run import block_unmocked_mutation
+        block_unmocked_mutation("create_profile")
     token = await _get_token(client)
     return await client._api.profiles.post(
         f"networks/{network_id}/profiles",
@@ -123,6 +136,9 @@ async def create_profile(client: EeroClient, network_id: str, name: str) -> dict
 
 
 async def rename_profile(client: EeroClient, network_id: str, profile_id: str, name: str) -> dict:
+    if is_dry_run():
+        from core.dry_run import block_unmocked_mutation
+        block_unmocked_mutation("rename_profile")
     token = await _get_token(client)
     return await client._api.profiles.put(
         f"networks/{network_id}/profiles/{profile_id}",
@@ -132,6 +148,9 @@ async def rename_profile(client: EeroClient, network_id: str, profile_id: str, n
 
 
 async def delete_profile(client: EeroClient, network_id: str, profile_id: str) -> dict:
+    if is_dry_run():
+        from core.dry_run import block_unmocked_mutation
+        block_unmocked_mutation("delete_profile")
     token = await _get_token(client)
     return await client._api.profiles.delete(
         f"networks/{network_id}/profiles/{profile_id}",
@@ -142,24 +161,42 @@ async def delete_profile(client: EeroClient, network_id: str, profile_id: str) -
 # ── Blacklist, forwards, reservations ────────────────────────────────────────
 
 async def add_to_blacklist(client: EeroClient, network_id: str, device_id: str) -> dict:
+    if is_dry_run():
+        from core.dry_run import block_unmocked_mutation
+        block_unmocked_mutation("add_to_blacklist")
     return await client._api.blacklist.add_to_blacklist(network_id, device_id)
 
 
 async def remove_from_blacklist(client: EeroClient, network_id: str, device_id: str) -> dict:
+    if is_dry_run():
+        from core.dry_run import block_unmocked_mutation
+        block_unmocked_mutation("remove_from_blacklist")
     return await client._api.blacklist.remove_from_blacklist(network_id, device_id)
 
 
 async def create_forward(client: EeroClient, network_id: str, forward_data: dict) -> dict:
+    if is_dry_run():
+        from core.dry_run import block_unmocked_mutation
+        block_unmocked_mutation("create_forward")
     return await client._api.forwards.create_forward(network_id, forward_data)
 
 
 async def delete_forward(client: EeroClient, network_id: str, forward_id: str) -> dict:
+    if is_dry_run():
+        from core.dry_run import block_unmocked_mutation
+        block_unmocked_mutation("delete_forward")
     return await client._api.forwards.delete_forward(network_id, forward_id)
 
 
 async def create_reservation(client: EeroClient, network_id: str, reservation_data: dict) -> dict:
+    if is_dry_run():
+        from core.dry_run import block_unmocked_mutation
+        block_unmocked_mutation("create_reservation")
     return await client._api.reservations.create_reservation(network_id, reservation_data)
 
 
 async def delete_reservation(client: EeroClient, network_id: str, reservation_id: str) -> dict:
+    if is_dry_run():
+        from core.dry_run import block_unmocked_mutation
+        block_unmocked_mutation("delete_reservation")
     return await client._api.reservations.delete_reservation(network_id, reservation_id)

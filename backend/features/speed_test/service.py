@@ -9,6 +9,8 @@ from fastapi import HTTPException
 
 from eero import EeroClient
 
+from core.dry_run import is_dry_run, block_unmocked_mutation
+
 DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 SEED_DIR = Path(__file__).resolve().parent.parent.parent / "seed"
 SPEED_HISTORY_FILE = DATA_DIR / "speed_history.json"
@@ -48,6 +50,8 @@ def _save_speed_result(network_id: str, result: dict) -> None:
 
 
 async def run_speed_test(client: EeroClient, network_id: str):
+    if is_dry_run():
+        block_unmocked_mutation("run_speed_test")
     # Snapshot the current speed date so we can detect when it changes
     pre_resp = await client.get_network(network_id, refresh_cache=True)
     pre_data = pre_resp.get("data", pre_resp)

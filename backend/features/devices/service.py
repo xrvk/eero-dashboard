@@ -2,6 +2,7 @@ from eero import EeroClient
 
 from core import cache, facade
 from core.cache import keys
+from core.dry_run import is_dry_run, block_unmocked_mutation
 from core.errors import translate_errors
 
 
@@ -25,6 +26,8 @@ async def pause_device(client: EeroClient, network_id: str, device_id: str, paus
 
 
 async def block_device(client: EeroClient, network_id: str, device_id: str, blocked: bool):
+    if is_dry_run():
+        block_unmocked_mutation("block_device")
     with translate_errors(code="block_device_failed", message="Failed to update block status"):
         resp = await client.block_device(device_id, blocked, network_id=network_id)
         cache.invalidate(keys.device_prefix(network_id))
@@ -41,6 +44,8 @@ async def get_device(client: EeroClient, network_id: str, device_id: str):
 
 
 async def set_device_nickname(client: EeroClient, network_id: str, device_id: str, nickname: str):
+    if is_dry_run():
+        block_unmocked_mutation("set_device_nickname")
     with translate_errors(code="rename_device_failed", message="Failed to update nickname"):
         resp = await client.set_device_nickname(device_id, nickname, network_id=network_id)
         cache.invalidate(keys.device_prefix(network_id))
@@ -63,6 +68,8 @@ async def set_device_priority(
     prioritized: bool,
     duration_minutes: int | None,
 ):
+    if is_dry_run():
+        block_unmocked_mutation("set_device_priority")
     with translate_errors(code="set_device_priority_failed", message="Failed to update priority"):
         resp = await client.set_device_priority(
             device_id, prioritized, duration_minutes=duration_minutes, network_id=network_id
