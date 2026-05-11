@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { Home, Radio, X, Cable, Wifi, ArrowUpCircle } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
 
@@ -53,13 +52,11 @@ interface NodeDrawerProps {
 export default function NodeDrawer({ networkId, node, onClose }: NodeDrawerProps) {
   const eeroId = extractId(node.url);
 
-  const cacheKey = eeroId ? `/networks/${networkId}/eeros/${eeroId}` : undefined;
-
   const { data: detail, loading } = useFetch(
     () => eeroId ? api.getEero(networkId, eeroId) : Promise.resolve(null),
     [networkId, eeroId],
     {},
-    cacheKey,
+    eeroId ? `/networks/${networkId}/eeros/${eeroId}` : undefined,
   );
 
   // Merge list data with detail data (detail has more fields)
@@ -73,13 +70,13 @@ export default function NodeDrawer({ networkId, node, onClose }: NodeDrawerProps
       <div className="drawer-panel" onClick={(e) => e.stopPropagation()}>
         <div className="drawer-header">
           <div className="node-drawer-title">
-            <span className="node-drawer-icon">{n.gateway ? <Home size={22} /> : <Radio size={22} />}</span>
+            <span className="node-drawer-icon">{n.gateway ? '🏠' : '📡'}</span>
             <div>
               <h2>{n.location || `Node`}</h2>
               <span className="node-drawer-subtitle">{n.model || 'eero'}</span>
             </div>
           </div>
-          <button className="btn-close" onClick={onClose}><X size={18} /></button>
+          <button className="btn-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="drawer-body">
@@ -164,13 +161,13 @@ export default function NodeDrawer({ networkId, node, onClose }: NodeDrawerProps
                 <label className="drawer-label">Backhaul</label>
                 <span className="drawer-value">
                   <span className={`backhaul-badge ${n.ethernet ? 'wired' : 'wireless'}`}>
-                    {n.ethernet ? <><Cable size={14} /> Wired</> : <><Wifi size={14} /> Wireless</>}
+                    {n.ethernet ? '🔌 Wired' : '📶 Wireless'}
                   </span>
                 </span>
               </div>
               {n.update_available && (
                 <div className="drawer-field drawer-field-full">
-                  <span className="update-badge"><ArrowUpCircle size={14} /> Update available</span>
+                  <span className="update-badge">⬆️ Update available</span>
                 </div>
               )}
             </div>

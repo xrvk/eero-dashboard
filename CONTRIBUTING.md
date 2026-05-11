@@ -107,8 +107,10 @@ When a bug appears: write a test first, then fix it. This grows a regression sui
 1. Touch the smallest scope possible (feature folder first, avoid broad edits in `backend/main.py` unless needed).
 2. Keep endpoint paths and response shape backward compatible unless explicitly changing contracts.
 3. For frontend API edits, update both typed wrappers and consuming components/tests.
-4. Run `npm run validate` before opening/updating PRs.
-5. If behavior changes, add or update tests in:
+4. **Every `useFetch()` call must include a `cacheKey`** matching the API path — see `.github/copilot-instructions.md` for the full pattern. This ensures prefetch warm-up and cross-mount caching work correctly.
+5. After mutations, call `refetch()` to invalidate cached data.
+6. Run `npm run validate` before opening/updating PRs.
+7. If behavior changes, add or update tests in:
    - `backend/tests/test_api_smoke.py`
    - `frontend/src/**/*.test.tsx`
 

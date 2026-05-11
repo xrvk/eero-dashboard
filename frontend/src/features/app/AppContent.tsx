@@ -16,7 +16,7 @@ interface AppContentProps {
   onNodeClick?: (eeroId: string, node: EeroNode) => void;
 }
 
-export default function AppContent({ selectedNetwork, tab, setTab, signalFilter, onClearSignalFilter, onSignalClick, onNodeClick }: AppContentProps) {
+export default function AppContent({ selectedNetwork, tab, setTab, signalFilter, onClearSignalFilter, onSignalClick, onNodeClick: _onNodeClick }: AppContentProps) {
   if (!selectedNetwork) return null;
 
   return (
@@ -29,7 +29,7 @@ export default function AppContent({ selectedNetwork, tab, setTab, signalFilter,
           onClearSignalFilter={onClearSignalFilter}
         />
       )}
-      {tab === 'activity' && <ActivityView networkId={selectedNetwork} onNodeClick={onNodeClick} onSignalClick={onSignalClick} />}
+      {tab === 'activity' && <ActivityView networkId={selectedNetwork} onSignalClick={onSignalClick} />}
       {tab === 'profiles' && <ProfileManager networkId={selectedNetwork} />}
       {tab === 'settings-general' && <GeneralSettings networkId={selectedNetwork} />}
       {tab === 'settings-forwards' && <PortForwardsSettings networkId={selectedNetwork} />}
