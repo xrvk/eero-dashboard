@@ -103,7 +103,9 @@ interface DeviceListProps {
 export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
   const { data, loading, error, refetch } = useFetch(
     () => devicesClient.list(networkId),
-    [networkId]
+    [networkId],
+    {},
+    `/networks/${networkId}/devices`,
   );
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ mac: string; type: 'pause' | 'block' } | null>(null);

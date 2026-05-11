@@ -1,4 +1,5 @@
 import { request } from './api/client';
+import { prefetchRequest } from './hooks/useFetch';
 
 // Compatibility exports:
 // prefer importing from feature API modules (e.g. ./api/devices) for new work.
@@ -71,8 +72,21 @@ export const getNetworks = () =>
 export const getNetwork = (id: string) =>
   request<Network>(`/networks/${id}`);
 
-export const prefetch = (networkId: string) =>
+export const prefetch = (networkId: string) => {
+  // Warm backend cache
   request<{ status: string; cached: number }>(`/prefetch/${networkId}`, { method: 'POST' }).catch(() => {});
+
+  // Warm frontend response cache so first tab visit is instant
+  const endpoints = [
+    'settings', 'password', 'updates', 'thread', 'routing',
+    'security', 'dns', 'sqm', 'forwards', 'reservations',
+    'blacklist', 'devices', 'eeros', 'profiles',
+  ];
+  for (const ep of endpoints) {
+    const path = `/networks/${networkId}/${ep}`;
+    prefetchRequest(path, () => request(path));
+  }
+};
 
 // Eeros (nodes)
 export interface EeroNode {

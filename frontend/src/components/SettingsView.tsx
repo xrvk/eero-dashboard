@@ -566,28 +566,28 @@ export function BlacklistSettings({ networkId }: { networkId: string }) {
 
 export function GeneralSettings({ networkId }: { networkId: string }) {
   const { data: settingsData, loading: sLoading, error: sError } = useFetch(
-    () => api.getSettings(networkId), [networkId]
+    () => api.getSettings(networkId), [networkId], {}, `/networks/${networkId}/settings`
   );
   const { data: passwordData, loading: pLoading } = useFetch(
-    () => api.getPassword(networkId), [networkId]
+    () => api.getPassword(networkId), [networkId], {}, `/networks/${networkId}/password`
   );
   const { data: updatesData, loading: uLoading } = useFetch(
-    () => api.getUpdates(networkId), [networkId]
+    () => api.getUpdates(networkId), [networkId], {}, `/networks/${networkId}/updates`
   );
   const { data: threadData, loading: tLoading } = useFetch(
-    () => api.getThread(networkId), [networkId]
+    () => api.getThread(networkId), [networkId], {}, `/networks/${networkId}/thread`
   );
   const { loading: rLoading } = useFetch(
-    () => api.getRouting(networkId), [networkId]
+    () => api.getRouting(networkId), [networkId], {}, `/networks/${networkId}/routing`
   );
   const { data: securityData, loading: secLoading, refetch: refetchSecurity } = useFetch(
-    () => api.getSecurity(networkId), [networkId]
+    () => api.getSecurity(networkId), [networkId], {}, `/networks/${networkId}/security`
   );
   const { data: dnsData, loading: dnsLoading, refetch: refetchDns } = useFetch(
-    () => api.getDns(networkId), [networkId]
+    () => api.getDns(networkId), [networkId], {}, `/networks/${networkId}/dns`
   );
   const { data: sqmData, loading: sqmLoading, refetch: refetchSqm } = useFetch(
-    () => api.getSqm(networkId), [networkId]
+    () => api.getSqm(networkId), [networkId], {}, `/networks/${networkId}/sqm`
   );
   const [renaming, setRenaming] = useState(false);
   const [newName, setNewName] = useState('');

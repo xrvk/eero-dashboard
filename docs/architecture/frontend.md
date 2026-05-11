@@ -28,7 +28,7 @@ else         → <AppSidebar /> + <AppContent />
 ### Key effects
 
 - **On mount:** `checkAuth()` → fetch auth status → load networks → auto-select first network
-- **On network select:** Fire `prefetch(selectedNetwork)` (fire-and-forget) to warm backend cache
+- **On network select:** Fire `prefetch(selectedNetwork)` which warms **both** the backend TTL cache and the frontend response cache (see [Data flow](./data-flow.md))
 - **On theme change:** Set `data-theme` attribute on `<html>`, persist to localStorage
 
 ## API layer
@@ -56,7 +56,7 @@ Re-exports everything from `api/devices.ts` plus all other API functions (networ
 
 ## Hooks
 
-### `useFetch<T>(fetcher, deps, options)`
+### `useFetch<T>(fetcher, deps, options, cacheKey?)`
 
 Shared data-fetching hook used by all components.
 
@@ -74,12 +74,16 @@ Shared data-fetching hook used by all components.
 - Configurable retry count + delay
 - AbortController cleanup on unmount
 - StrictMode-safe: detects aborted fetch on remount and re-triggers
+- **Frontend response cache:** When `cacheKey` is provided (typically the API path), data is stored in a module-level `Map`. On subsequent mounts, data is read synchronously — no loading spinner flash.
+- `prefetchRequest(path, fetcher)` can populate the cache before any component mounts
 
 **Usage pattern:**
 ```tsx
 const { data, loading, error } = useFetch(
   () => api.getDevices(networkId),
-  [networkId]
+  [networkId],
+  {},
+  `/networks/${networkId}/devices`,  // cacheKey for instant re-mount
 );
 ```
 
@@ -87,7 +91,9 @@ const { data, loading, error } = useFetch(
 
 ### `features/app/AppContent.tsx` — Tab router
 
-Maps `tab` prop to lazy-loaded components via `React.lazy()` + `<Suspense>`:
+All tab components are **eagerly imported** — no `React.lazy()` or `Suspense`. This eliminates the loading spinner flash on first tab visit.
+
+> **Design decision:** Lazy loading was removed because the perceived half-second delay from `Suspense` fallbacks was worse than the slightly larger initial bundle. Since the frontend prefetch already warms the response cache before any tab is visited, eager imports make tab switching feel instant.
 
 | Tab | Component |
 |-----|-----------|

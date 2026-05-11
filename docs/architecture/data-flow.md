@@ -63,19 +63,24 @@ The backend uses a simple in-memory TTL cache (`core/cache.py`). No external cac
 
 ### Prefetch
 
-When the user selects a network, the frontend fires `POST /api/prefetch/{network_id}` (fire-and-forget). The backend runs **12 parallel eero API calls** and stores results in cache. This means the first time the user visits any tab, data is already cached.
+When the user selects a network, the frontend fires `api.prefetch(networkId)` which does two things:
+
+1. **Backend cache warm:** `POST /api/prefetch/{network_id}` fires 12 parallel eero API calls, storing results in the backend TTL cache.
+2. **Frontend cache warm:** 14 parallel `GET` requests to the backend, storing responses in `_responseCache` (module-level `Map` in `useFetch.ts`).
 
 ```
-Frontend:  api.prefetch(selectedNetwork)  // fire-and-forget on network select
-Backend:   asyncio.gather(
-             get_network, get_devices, get_eeros, get_profiles,
-             get_security, get_dns, get_updates, get_thread,
-             get_blacklist, get_sqm, get_forwards, get_reservations
-           )
-           → each result stored with cache.put(key, result)
+Frontend prefetch (on network select):
+  ├─ POST /api/prefetch/{id}           → backend fires 12 eero API calls in parallel
+  └─ GET × 14 (settings, password,     → responses stored in _responseCache
+       updates, thread, routing,          so useFetch reads them synchronously
+       security, dns, sqm, forwards,      on first component mount
+       reservations, blacklist,
+       devices, eeros, profiles)
 ```
 
-Endpoints not covered by prefetch (activity, diagnostics, routing, password) are cached on first access.
+The `useFetch` hook accepts an optional `cacheKey` parameter (the API path). On mount, it checks `_responseCache` synchronously — if data exists, it initializes with `loading: false` and renders immediately. A background refetch still runs to keep data fresh.
+
+This means by the time a user clicks any tab, both the JS component (eagerly imported) and the data (prefetched) are ready — **zero loading spinners** on tab switch.
 
 ## Mutation flow
 

@@ -7,15 +7,33 @@ interface UseFetchOptions {
 
 type Fetcher<T> = (context?: { signal?: AbortSignal }) => Promise<T>;
 
+// Module-level cache keyed by URL path — survives unmount/remount (tab switching).
+const _responseCache = new Map<string, unknown>();
+
+/**
+ * Eagerly fetch a URL and store in the response cache.
+ * Call this at app level to warm data before components mount.
+ */
+export function prefetchRequest<T>(path: string, fetcher: () => Promise<T>): void {
+  if (_responseCache.has(path)) return;
+  fetcher().then((result) => _responseCache.set(path, result)).catch(() => {});
+}
+
 export function useFetch<T>(
   fetcher: Fetcher<T>,
   deps: unknown[] = [],
-  options: UseFetchOptions = {}
+  options: UseFetchOptions = {},
+  /** Stable cache key (e.g. the API path). If omitted, no cross-mount caching. */
+  cacheKey?: string,
 ) {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cached = cacheKey ? (_responseCache.get(cacheKey) as T | undefined) : undefined;
+
+  const [data, setData] = useState<T | null>(cached ?? null);
+  const [loading, setLoading] = useState(cached == null);
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    cached != null ? 'success' : 'idle',
+  );
   const fetcherRef = useRef(fetcher);
   const prevDepsRef = useRef<unknown[] | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -41,6 +59,7 @@ export function useFetch<T>(
           if (controller.signal.aborted) return;
           setData(result);
           setStatus('success');
+          if (cacheKey) _responseCache.set(cacheKey, result);
           return;
         } catch (e) {
           if (controller.signal.aborted) return;
@@ -58,7 +77,7 @@ export function useFetch<T>(
         setLoading(false);
       }
     }
-  }, [options.retries, options.retryDelayMs]);
+  }, [options.retries, options.retryDelayMs, cacheKey]);
 
   const refetch = useCallback(() => {
     void executeFetch();
