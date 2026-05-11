@@ -1358,6 +1358,19 @@ body {
 .dns-input:focus { border-color: var(--accent); }
 .dns-edit-actions { display: flex; gap: 8px; margin-top: 16px; }
 .dns-server-inputs { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.dns-provider-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.dns-select {
+  flex: 1; max-width: 280px; padding: 8px 12px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 0.85rem; outline: none; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M3 5l3 3 3-3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  padding-right: 30px;
+}
+.dns-select:focus { border-color: var(--accent); }
+.dns-select option { background: var(--bg-card); color: var(--text); }
 
 /* ── Rename Input ───────────────────────────── */
 .rename-input {
