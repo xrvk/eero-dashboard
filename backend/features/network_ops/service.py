@@ -6,6 +6,7 @@ from eero import EeroClient
 
 
 def _data(payload: dict):
+    """Normalize eero-api responses to the inner `data` payload when present."""
     return payload.get("data", payload)
 
 
