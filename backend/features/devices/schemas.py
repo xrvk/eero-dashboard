@@ -9,11 +9,7 @@ class DeviceBlockRequest(BaseModel):
     blocked: bool
 
 
-class DeviceRenameRequest(BaseModel):
-    nickname: str
-
-
-class DeviceNicknameRequest(BaseModel):
+class DeviceNameRequest(BaseModel):
     nickname: str
 
 

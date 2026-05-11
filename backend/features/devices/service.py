@@ -30,14 +30,6 @@ async def block_device(client: EeroClient, network_id: str, device_id: str, bloc
         raise HTTPException(status_code=500, detail=str(e))
 
 
-async def rename_device(client: EeroClient, network_id: str, device_id: str, nickname: str):
-    try:
-        resp = await client.set_device_nickname(device_id, nickname, network_id=network_id)
-        return resp.get("data", resp)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 async def get_device(client: EeroClient, network_id: str, device_id: str):
     try:
         resp = await client.get_device(device_id, network_id=network_id)

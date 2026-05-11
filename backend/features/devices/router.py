@@ -38,10 +38,10 @@ async def block_device(
 async def rename_device(
     network_id: str,
     device_id: str,
-    req: schemas.DeviceRenameRequest,
+    req: schemas.DeviceNameRequest,
     client: EeroClient = Depends(get_client),
 ):
-    return await service.rename_device(client, network_id, device_id, req.nickname)
+    return await service.set_device_nickname(client, network_id, device_id, req.nickname)
 
 
 @router.get("/networks/{network_id}/devices/{device_id}")
@@ -53,7 +53,7 @@ async def get_device(network_id: str, device_id: str, client: EeroClient = Depen
 async def set_device_nickname(
     network_id: str,
     device_id: str,
-    req: schemas.DeviceNicknameRequest,
+    req: schemas.DeviceNameRequest,
     client: EeroClient = Depends(get_client),
 ):
     return await service.set_device_nickname(client, network_id, device_id, req.nickname)
