@@ -893,7 +893,12 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           <div className="general-info-grid" style={{ marginTop: 12 }}>
             <div className="general-detail">
               <span>DNS Servers</span>
-              <span>{customIps.length > 0 ? customIps.join(', ') : 'eero Default'} <button className="btn-text" onClick={startDnsEdit}>Edit</button></span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span className="mono" style={{ fontWeight: 500, color: 'var(--text)' }}>{customIps.length > 0 ? customIps.join(', ') : 'eero Default'}</span>
+                <button className="btn-icon-sm" onClick={startDnsEdit} title="Edit DNS">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+              </div>
             </div>
           </div>
         )}
