@@ -1438,11 +1438,67 @@ body {
 .settings-card .toggle-row:last-child { border-bottom: none; }
 .settings-card .device-table { margin-top: 4px; }
 
-/* ── Speed Chart ───────────────────────────── */
-.speed-chart { margin-top: 16px; }
-.speed-chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.speed-chart-header h4 { font-size: 0.85rem; font-weight: 600; margin: 0; }
-.speed-chart-legend { display: flex; gap: 12px; }
+/* ── Speed History ─────────────────────────── */
+.speed-history { margin-top: 16px; }
+.speed-history-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+}
+.speed-history-header h4 { font-size: 0.85rem; font-weight: 600; margin: 0; }
+.speed-history-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Range picker pills */
+.speed-range-picker { display: flex; gap: 2px; background: var(--bg-input); border-radius: var(--radius-sm); padding: 2px; }
+.range-pill {
+  background: none; border: none; color: var(--text-dim); font-size: 0.75rem; font-weight: 500;
+  padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s;
+}
+.range-pill:hover { color: var(--text); }
+.range-pill.active { background: var(--accent); color: #fff; }
+
+/* View toggle */
+.speed-view-toggle { display: flex; gap: 2px; background: var(--bg-input); border-radius: var(--radius-sm); padding: 2px; }
+.toggle-btn {
+  background: none; border: none; font-size: 0.8rem; padding: 4px 8px;
+  border-radius: 6px; cursor: pointer; opacity: 0.5; transition: all 0.15s;
+}
+.toggle-btn:hover { opacity: 0.8; }
+.toggle-btn.active { background: var(--bg-card-hover); opacity: 1; }
+
+/* Export button */
+.speed-export-btn {
+  background: none; border: 1px solid var(--border); color: var(--text-muted);
+  font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; cursor: pointer;
+  transition: all 0.15s;
+}
+.speed-export-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Chart container */
+.speed-chart-container { margin-bottom: 4px; }
+.speed-chart-legend { display: flex; gap: 12px; justify-content: center; margin-top: 4px; }
 .legend-item { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: var(--text-muted); }
-.legend-color { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-.speed-chart-svg { width: 100%; max-height: 180px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* Recharts tooltip */
+.speed-tooltip {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 8px 12px; font-size: 0.8rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.speed-tooltip-date { margin: 0 0 4px; color: var(--text-muted); font-size: 0.7rem; }
+.speed-tooltip-row { margin: 2px 0; display: flex; justify-content: space-between; gap: 16px; }
+.speed-tooltip-label { font-weight: 500; }
+.speed-tooltip-value { font-variant-numeric: tabular-nums; }
+
+/* Table */
+.speed-table-wrap { max-height: 400px; overflow-y: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.speed-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.speed-table thead { position: sticky; top: 0; z-index: 1; }
+.speed-table th {
+  background: var(--bg-input); color: var(--text-muted); font-weight: 600; font-size: 0.75rem;
+  text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border);
+}
+.speed-table td { padding: 6px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+.speed-table tbody tr:nth-child(even) td { background: var(--bg-input); }
+.speed-table tbody tr:hover td { background: var(--bg-card-hover); }
+.speed-cell-down { color: var(--accent); font-variant-numeric: tabular-nums; }
+.speed-cell-up { color: var(--green); font-variant-numeric: tabular-nums; }

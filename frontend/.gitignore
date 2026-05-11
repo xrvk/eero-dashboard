@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Dev-only mock data
+mockSpeedData.dev.ts
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
