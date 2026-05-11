@@ -1239,6 +1239,13 @@ body {
 }
 .priority-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 
+/* DHCP Reservation in drawer */
+.reservation-badge {
+  background: rgba(59,130,246,0.15); color: var(--accent);
+}
+.reserve-ip-form { display: flex; flex-direction: column; gap: 6px; }
+.drawer-hint { font-size: 0.75rem; color: var(--text-muted); }
+
 /* ── Node Controls ─────────────────────────── */
 .node-controls {
   background: var(--bg); border: 1px solid var(--border);
