@@ -75,11 +75,13 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
               <div className="form-field">
                 <label>Network Name (SSID)</label>
                 <input type="text" value={guestName} onChange={(e) => setGuestName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false); }}
                   placeholder="Guest Network" />
               </div>
               <div className="form-field">
                 <label>Password</label>
                 <input type="text" value={guestPassword} onChange={(e) => setGuestPassword(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false); }}
                   placeholder="Enter password" />
               </div>
               <div className="dns-edit-actions">

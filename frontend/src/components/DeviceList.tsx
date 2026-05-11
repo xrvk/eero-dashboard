@@ -276,7 +276,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
               onChange={(e) => setRenameName(e.target.value)}
               placeholder="Leave empty to reset to default"
               autoFocus
-              onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setRenameTarget(null); }}
             />
             <div className="confirm-actions" style={{ marginTop: 16 }}>
               <button className="btn-confirm" onClick={handleRename} disabled={actionLoading === renameTarget.mac}>

@@ -751,6 +751,7 @@ function CreateProfileForm({
         placeholder="Profile name…"
         value={name}
         onChange={e => setName(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Escape') onCancel(); }}
         disabled={saving}
         maxLength={50}
       />
