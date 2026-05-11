@@ -12,7 +12,7 @@ async def list_devices(client: EeroClient, network_id: str):
             if isinstance(devices, dict):
                 devices = devices.get("devices", [])
             return {"devices": devices}
-    return await cache.cached(f"net:{network_id}:devices", _fetch)
+    return await cache.cached(f"net:{network_id}:device:list", _fetch)
 
 
 async def pause_device(client: EeroClient, network_id: str, device_id: str, paused: bool):
@@ -64,4 +64,5 @@ async def set_device_priority(
             device_id, prioritized, duration_minutes=duration_minutes, network_id=network_id
         )
         cache.invalidate(f"net:{network_id}:device:{device_id}")
+        cache.invalidate(f"net:{network_id}:device:list")
         return resp.get("data", resp)

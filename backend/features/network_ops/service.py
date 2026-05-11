@@ -70,7 +70,7 @@ async def prefetch(client: EeroClient, network_id: str):
 
     keys_and_fns = [
         (f"net:{network_id}:network", _net),
-        (f"net:{network_id}:devices", _devices),
+        (f"net:{network_id}:device:list", _devices),
         (f"net:{network_id}:eeros", _eeros),
         (f"net:{network_id}:profile:list", _profiles),
         (f"net:{network_id}:security", _security),
