@@ -289,7 +289,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
             <span className="search-icon">🔍</span>
             <input
               type="text"
-              placeholder="Search by name, IP, MAC, or manufacturer…"
+              placeholder="Name, IP, or MAC…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
