@@ -1,202 +1,66 @@
-# eero Dashboard
+<div align="center">
 
-A web dashboard for managing your eero mesh WiFi network. Built with FastAPI + React.
+# 📶 eero Dashboard
+
+**A self-hosted web dashboard for managing your eero mesh network**
+
+[![React](https://img.shields.io/badge/react-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev)
+[![FastAPI](https://img.shields.io/badge/fastapi-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Docker](https://img.shields.io/badge/docker-ready-2496ed?style=for-the-badge&logo=docker&logoColor=white)](https://ghcr.io/xrvk/eero-dashboard)
+
+---
+
+_A modern, responsive web dashboard for eero network management._
+_Built for operators who want fast, efficient network control._
+
+[Get Started](#-quick-start) · [Documentation](#-documentation) · [Features](#-features)
+
+</div>
+
+---
 
 <!-- TODO: Add screenshot of the dashboard overview here -->
+<!-- ## 📸 Screenshots -->
 <!-- ![Dashboard overview](docs/screenshots/dashboard.png) -->
 
 > **Note:** Uses the unofficial [`eero-api`](https://github.com/fulviofreitas/eero-api) library. All API calls go through eero's cloud — there is no local API. Amazon-linked eero accounts are not supported.
 
-See also:
-- [CONTRIBUTING.md](./CONTRIBUTING.md)
-- [Frontend README](./frontend/README.md)
-- [API Reference](./docs/API_REFERENCE.md)
+---
 
-## Features
+## ✨ Features
 
-- 🔐 Email-based eero login with verification code
-- 📶 Network overview (status, speed, client count)
-- 📱 Connected device list with usage stats
-- 📡 eero node status with mesh quality indicators
-- 🚀 Speed test with history chart
-- 🌙 Dark theme
+| 📊 Monitor | 🎛️ Control | 🎨 Experience |
+|-----------|-----------|--------------|
+| Network health & speed tests | Block/unblock devices | Dark & light themes |
+| Device listing with usage stats | Pause/unpause profiles | Real-time filtering |
+| eero node status & mesh quality | Reboot nodes, manage DNS | Instant tab switching |
 
 ---
 
-## Hosting
-
-### Docker (Recommended)
-
-The easiest way to run eero Dashboard. A single container serves both the frontend and API on port **8420**.
-
-**Prerequisites:** [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
-
-#### Option A: Pre-built image from GHCR (fastest)
-
-Create a `docker-compose.yml`:
-
-```yaml
-services:
-  eero-dashboard:
-    image: ghcr.io/xrvk/eero-dashboard:latest
-    container_name: eero-dashboard
-    ports:
-      - "8420:8420"
-    volumes:
-      - eero-data:/app/backend/data
-    environment:
-      - SPEED_HISTORY_DAYS=365
-    restart: unless-stopped
-
-volumes:
-  eero-data:
-```
-
-Then run:
+## 🚀 Quick Start
 
 ```bash
 docker compose up -d
 ```
 
-To update to the latest version:
+Open **http://localhost:8420** 🎉
 
-```bash
-docker compose pull && docker compose up -d
-```
-
-#### Option B: Build from source
-
-```bash
-git clone https://github.com/xrvk/eero-dashboard.git
-cd eero-dashboard
-docker compose up -d --build
-```
-
-### Synology NAS (Container Manager)
-
-1. Create a folder: **File Station → docker → eero-dashboard**
-2. Create a `data` subfolder inside it for persistent storage
-3. Place the `docker-compose.yml` from Option A above into the `eero-dashboard` folder
-4. Open **Container Manager → Project → Create**
-5. Set **Project name** to `eero-dashboard`
-6. Set **Path** to `/docker/eero-dashboard`
-7. It will auto-detect the compose file — click **Next → Done**
-
-The dashboard will be available at `http://<NAS-IP>:8420`.
-
-Speed history and eero session data are stored in `docker/eero-dashboard/data/`, visible in File Station.
-
-### Common commands
-
-To stop:
-
-```bash
-docker compose down
-```
-
-> Speed history and session data are persisted in the `data/` directory (bind-mounted via Docker). Your data survives container rebuilds and image updates.
-
-### Local Development
-
-Run the backend and frontend separately for development with hot-reload.
-
-**Prerequisites:** Python 3.12+, Node.js 22+
-
-#### Backend
-
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python main.py
-```
-
-The API server runs on **http://localhost:8420**.
-
-#### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-The dev server runs on **http://localhost:5173** and proxies `/api` requests to the backend.
+> 💡 See [Installation](./docs/installation.md) for Docker Compose setup, Synology NAS, or local development.
 
 ---
 
-## Environment Variables
+## 📚 Documentation
 
-| Variable | Default | Description |
-|---|---|---|
-| `SPEED_HISTORY_DAYS` | `365` | Number of days to retain speed test history. Set to `0` to keep all results. |
-
-Set variables in `docker-compose.yml` under `environment`, or export them in your shell for local development:
-
-```bash
-export SPEED_HISTORY_DAYS=90
-```
+| 📖 Guide | Description |
+|----------|-------------|
+| [🚀 Installation](./docs/installation.md) | Docker, Synology NAS & local dev setup |
+| [⚙️ Configuration](./docs/configuration.md) | Environment variables & cache behavior |
+| [🏗️ Architecture](./docs/architecture/README.md) | System design, backend, frontend & data flow |
+| [📡 API Reference](./docs/API_REFERENCE.md) | REST endpoint catalog |
+| [🤝 Contributing](./CONTRIBUTING.md) | Dev workflow, testing & validation |
 
 ---
 
-## Architecture
+## 🔗 Related
 
-```
-backend/
-  main.py                         # App wiring, middleware, shared endpoints
-  core/
-    client.py                     # eero client lifecycle/auth state
-    errors.py                     # Shared backend error translation/shape helpers
-  features/
-    auth/
-      router.py                   # /api/auth/* routes
-      service.py                  # Auth/session behavior
-    devices/
-      router.py                   # /api/networks/{id}/devices* routes
-      service.py                  # Device operations
-    network_ops/
-      router.py                   # Prefetch, DNS, activity, diagnostics routes
-      service.py                  # Network operations behavior
-      schemas.py                  # Request models for network ops
-    networks/
-      router.py                   # Network/profile/settings read routes
-      service.py                  # Network/profile/settings fetch + shaping
-  requirements.txt
-  tests/
-    test_api_smoke.py             # Backend API smoke coverage
-frontend/
-  src/
-    api.ts                         # Typed API surface
-    api/client.ts                  # Shared request/error handling
-    hooks/useFetch.ts              # Shared loading/error/retry/cancel fetch pattern
-    App.tsx                        # App entry + auth/network state
-    features/app/                  # Sidebar/content feature containers
-    components/
-      LoginForm.tsx                # Auth flow
-      DeviceList.tsx               # Connected devices + actions
-      SettingsView.tsx             # Security/settings workflows
-      ActivityView.tsx             # Speed tests & network activity
-    **/*.test.tsx                  # Frontend component tests
-docker-compose.yml     # Single-command Docker setup
-Dockerfile             # Multi-stage build (Node + Python)
-.github/workflows/
-  container-sanity.yml             # Build + startup check for container boot/import sanity
-  validate.yml                     # Frontend/backend validation on PRs
-```
-
-### Cache behavior
-
-- The backend currently does **not** maintain a response cache for API reads.
-- `/api/prefetch/{network_id}` only warms upstream eero API paths in parallel for faster subsequent reads.
-- Speed test history is persisted to `data/speed_history.json` (inside the data volume) and pruned using `SPEED_HISTORY_DAYS`.
-- The eero session cookie is persisted to `data/.eero_session` so logins survive container rebuilds.
-- There is no automatic invalidation layer beyond upstream freshness and speed-history retention pruning.
-
-## Validation and release checklist
-
-- Root workflows: `npm run test` and `npm run validate`
-- Backend: `python -m compileall backend` and `python -m unittest discover -s backend/tests`
-- Frontend: `cd frontend && npm run lint && npm run typecheck && npm run build && npm run test`
-- Container sanity: ensure `.github/workflows/container-sanity.yml` passes (image build + `/api/health` startup check)
-- Before release: verify login/session, device actions, and key settings updates in a running build
+- **[eero-api](https://github.com/fulviofreitas/eero-api)** — Async Python SDK for the eero cloud API

@@ -23,13 +23,20 @@ cd frontend
 npm run dev
 ```
 
-## Validation workflows
+## Validation & release checklist
 
 From repo root:
 
 - `npm run test` — frontend tests + backend smoke tests
 - `npm run validate` — frontend lint/typecheck/build/test + backend compile/test
 - `npm run test:watch` — vitest in watch mode for fast local feedback
+
+Before release:
+
+- Backend: `python -m compileall backend` and `python -m unittest discover -s backend/tests`
+- Frontend: `cd frontend && npm run lint && npm run typecheck && npm run build && npm run test`
+- Container sanity: ensure `.github/workflows/container-sanity.yml` passes (image build + `/api/health` startup check)
+- Manual: verify login/session, device actions, and key settings updates in a running build
 
 ## Development workflow
 
@@ -108,5 +115,8 @@ When a bug appears: write a test first, then fix it. This grows a regression sui
 ## Docs to update with behavior changes
 
 - `README.md`
+- `docs/installation.md`
+- `docs/configuration.md`
 - `docs/API_REFERENCE.md`
+- `docs/architecture/` (backend, frontend, data-flow)
 - Relevant ADR in `docs/adr/`

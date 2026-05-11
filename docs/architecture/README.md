@@ -1,6 +1,6 @@
 # Architecture Overview
 
-> Last updated: May 2026 · Branch: `copilot/decompose-app-architecture`
+> Last updated: May 2026
 
 eero Dashboard is a self-hosted web app for managing eero mesh networks. It consists of a **FastAPI backend** that proxies the unofficial eero cloud API and a **React frontend** that renders the dashboard UI.
 
