@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from eero import EeroClient
 
 from core import cache
+from core.cache import keys
 
 
 def _data(payload: dict):
@@ -70,9 +71,9 @@ async def prefetch(client: EeroClient, network_id: str):
 
     keys_and_fns = [
         (f"net:{network_id}:network", _net),
-        (f"net:{network_id}:devices", _devices),
+        (keys.device_list(network_id), _devices),
         (f"net:{network_id}:eeros", _eeros),
-        (f"net:{network_id}:profiles", _profiles),
+        (keys.profile_list(network_id), _profiles),
         (f"net:{network_id}:security", _security),
         (f"net:{network_id}:dns", _dns),
         (f"net:{network_id}:updates", _updates),

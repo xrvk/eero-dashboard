@@ -36,17 +36,6 @@ async def list_eeros(client: EeroClient, network_id: str):
     return await cache.cached(f"net:{network_id}:eeros", _fetch)
 
 
-async def list_profiles(client: EeroClient, network_id: str):
-    async def _fetch():
-        with translate_errors(code="list_profiles_failed", message="Failed to fetch profiles"):
-            resp = await client.get_profiles(network_id)
-            profiles = resp.get("data", resp.get("profiles", []))
-            if isinstance(profiles, dict):
-                profiles = profiles.get("profiles", [])
-            return {"profiles": profiles}
-    return await cache.cached(f"net:{network_id}:profiles", _fetch)
-
-
 async def get_settings(client: EeroClient, network_id: str):
     async def _fetch():
         with translate_errors(code="get_settings_failed", message="Failed to fetch settings"):
