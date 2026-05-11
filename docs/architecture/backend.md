@@ -88,10 +88,31 @@ Read-only network info. All endpoints are cached.
 | `/api/networks` | GET | List user's networks |
 | `/api/networks/{id}` | GET | Network detail (name, speed, status) |
 | `/api/networks/{id}/eeros` | GET | eero node list (gateway, mesh quality) |
-| `/api/networks/{id}/profiles` | GET | Parental control profiles |
 | `/api/networks/{id}/settings` | GET | Aggregated settings object |
 
 `get_settings()` calls `get_network()` upstream and extracts a curated subset (name, password, timezone, SQM, DNS, guest network, etc.).
+
+### `features/profiles/`
+
+Profile (parental control) management. Handles CRUD, pause, bedtime schedules, content filtering, and device assignment.
+
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/api/networks/{id}/profiles` | GET | List all profiles |
+| `/api/networks/{id}/profiles` | POST | Create new profile |
+| `/api/networks/{id}/profiles/{pid}` | GET | Single profile detail |
+| `/api/networks/{id}/profiles/{pid}/pause` | POST | Pause/unpause profile internet |
+| `/api/networks/{id}/profiles/{pid}/blocked-apps` | GET | List blocked apps |
+| `/api/networks/{id}/profiles/{pid}/blocked-apps` | POST | Update blocked apps |
+| `/api/networks/{id}/profiles/{pid}/bedtime` | POST | Set bedtime schedule |
+| `/api/networks/{id}/profiles/{pid}/schedule` | GET | Get internet schedule |
+| `/api/networks/{id}/profiles/{pid}/schedule/set` | POST | Set internet schedule |
+| `/api/networks/{id}/profiles/{pid}/schedule` | DELETE | Clear internet schedule |
+| `/api/networks/{id}/profiles/{pid}/devices` | PUT | Assign devices to profile |
+| `/api/networks/{id}/profiles/{pid}/rename` | PUT | Rename profile |
+| `/api/networks/{id}/profiles/{pid}` | DELETE | Delete profile |
+
+All mutations invalidate `net:{id}:profiles` cache keys.
 
 ### `features/network_ops/`
 
@@ -124,9 +145,10 @@ These haven't been decomposed into feature modules yet:
 | DHCP reservations | `GET/POST /api/networks/{id}/reservations`, `DELETE .../reservations/{rid}` |
 | Password & name | `GET /api/networks/{id}/password`, `POST .../name` |
 | Guest network | `POST /api/networks/{id}/guest` |
-| Node LED & nightlight | `GET/POST /api/networks/{id}/eeros/{eid}/led`, `.../nightlight` |
+| Node detail | `GET /api/networks/{id}/eeros/{eid}` |
+| Node reboot | `POST /api/networks/{id}/eeros/{eid}/reboot` |
+| Node LED & nightlight | `GET/POST /api/networks/{id}/eeros/{eid}/led`, `.../led/brightness`, `.../nightlight` |
 | SQM / QoS | `GET/POST /api/networks/{id}/sqm`, `POST .../sqm/configure`, `.../sqm/auto` |
-| Profiles | pause, bedtime, blocked-apps, schedule, content-filter, block-list |
 | Firmware updates | `GET /api/networks/{id}/updates` |
 | Thread / routing | `GET /api/networks/{id}/thread`, `.../routing` |
 | Blacklist | `GET/POST/DELETE /api/networks/{id}/blacklist/{did}` |

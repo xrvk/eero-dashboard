@@ -207,7 +207,6 @@ function AppMain() {
           signalFilter={signalFilter}
           onClearSignalFilter={handleClearSignalFilter}
           onSignalClick={handleSignalClick}
-          onNodeClick={handleNodeClick}
         />
       </main>
 
