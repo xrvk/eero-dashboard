@@ -1072,6 +1072,7 @@ body {
   color: var(--accent); border-bottom-color: var(--accent);
 }
 .profile-detail-body { padding: 16px 20px; }
+.profile-detail-body > div { width: 100%; }
 
 /* ── Schedule / Bedtime ────────────────────── */
 .schedule-section { display: flex; flex-direction: column; gap: 20px; }
