@@ -27,8 +27,9 @@ npm run dev
 
 From repo root:
 
+- `npm run quick-check` — lint + typecheck only (~3s, used by pre-commit hook)
 - `npm run test` — frontend tests + backend smoke tests
-- `npm run validate` — frontend lint/typecheck/build/test + backend compile/test
+- `npm run validate` — frontend lint/build/test + backend compile/test
 - `npm run test:watch` — vitest in watch mode for fast local feedback
 
 Before release:
@@ -50,7 +51,7 @@ npm run test:watch
 
 ### Pre-commit
 
-The Husky pre-commit hook runs `npm run validate` automatically. To skip for WIP commits:
+The Husky pre-commit hook runs `npm run quick-check` (lint + typecheck, ~3s) for fast feedback. Full validation happens in CI. To skip for WIP commits:
 
 ```bash
 git commit --no-verify -m "wip"
@@ -91,17 +92,34 @@ Write tests for things that have bitten you, not for everything.
 
 When a bug appears: write a test first, then fix it. This grows a regression suite around the things that actually break.
 
+### Test factories
+
+Use shared factories in `frontend/src/test/factories.ts` to build mock data:
+
+```typescript
+import { buildDevice, buildNetwork } from '../test/factories';
+
+const device = buildDevice({ display_name: 'iPhone', connected: true });
+const network = buildNetwork({ name: 'Home' });
+```
+
+Factories provide sensible defaults with `Partial<T>` overrides. Available: `buildNetwork`, `buildDevice`, `buildEeroNode`, `buildProfile`.
+
 ## Architecture map
 
 - `backend/main.py` — app wiring, speed-history flow, and remaining core endpoints
+- `backend/core/facade.py` — facade wrapping eero-api internals (never access `client._api` directly)
+- `backend/core/cache.py` — in-memory TTL cache with `keys` class for centralized key generators
 - `backend/features/auth` — auth routes/services/schemas
 - `backend/features/devices` — devices routes/services/schemas
 - `backend/features/networks` — network read routes/services
 - `backend/features/network_ops` — prefetch, dns, activity, diagnostics routes/services
 - `backend/features/profiles` — profile CRUD, pause, bedtime, schedule, content filter routes/services
-- `frontend/src/features/app` — shell/sidebar/content tabs
+- `frontend/src/features/app` — shell/sidebar/content tabs, ThemeContext, AuthContext, NetworkContext
 - `frontend/src/components` — domain UI modules
+- `frontend/src/components/shared` — reusable UI primitives (CopyableValue, ErrorBoundary)
 - `frontend/src/api/*` — API client + typed endpoint wrappers
+- `frontend/src/test/factories.ts` — shared test data builders
 
 ## Safe-change checklist
 
