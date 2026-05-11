@@ -287,7 +287,7 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ ip: '', mac: '', description: '' });
   const [saving, setSaving] = useState(false);
-  const [_deleting, setDeleting] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const handleCreate = async () => {
@@ -346,6 +346,7 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
                   <td>{String(r.description ?? r.hostname ?? r.nickname ?? '—')}</td>
                   <td>
                     <button className={`btn-action btn-delete ${confirmDelete === rid ? 'confirming' : ''}`}
+                      disabled={deleting === rid}
                       onClick={() => handleDelete(String(r.url || ''))}
                     >{confirmDelete === rid ? 'Confirm?' : '✕'}</button>
                   </td>
@@ -576,7 +577,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
   const { data: threadData, loading: tLoading } = useFetch(
     () => api.getThread(networkId), [networkId]
   );
-  const { data: _routingData, loading: rLoading } = useFetch(
+  const { loading: rLoading } = useFetch(
     () => api.getRouting(networkId), [networkId]
   );
   const { data: securityData, loading: secLoading, refetch: refetchSecurity } = useFetch(

@@ -161,7 +161,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
     }
   };
 
-  const allDevices = data?.devices ?? [];
+  const allDevices = useMemo(() => data?.devices ?? [], [data?.devices]);
 
   const filtered = useMemo(() => {
     let result = allDevices;
@@ -223,7 +223,7 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
     }
 
     return result;
-  }, [filtered, groupBy, sortCol, sortDir]);
+  }, [filtered, groupBy, bandFilter, sortCol, sortDir]);
 
   if (loading) return <div className="card loading-card"><div className="spinner" /> Loading devices…</div>;
   if (error) return (
@@ -359,7 +359,6 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
                 <DeviceCard
                   key={d.mac || extractId(d.url)}
                   device={d}
-                  networkId={networkId}
                   actionLoading={actionLoading}
                   onAction={(mac, type) => setConfirmAction({ mac, type })}
                   onRename={(mac, name) => { setRenameTarget({ mac, name }); setRenameName(name); }}
@@ -459,9 +458,8 @@ export default function DeviceList({ networkId, onNavigate }: DeviceListProps) {
   );
 }
 
-function DeviceCard({ device: d, networkId: _networkId, actionLoading, onAction, onRename, onReserve, onClick }: {
+function DeviceCard({ device: d, actionLoading, onAction, onRename, onReserve, onClick }: {
   device: Device;
-  networkId: string;
   actionLoading: string | null;
   onAction: (mac: string, type: 'pause' | 'block') => void;
   onRename: (mac: string, currentName: string) => void;

@@ -78,7 +78,12 @@ function AppMain() {
     }
   }, [selectedNetwork]);
 
-  useEffect(() => { checkAuth(); }, [checkAuth]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void checkAuth();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [checkAuth]);
 
   useEffect(() => {
     if (!selectedNetwork) return;

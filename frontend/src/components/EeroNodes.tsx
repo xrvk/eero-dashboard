@@ -107,7 +107,7 @@ export default function EeroNodes({ networkId }: EeroNodesProps) {
                 </button>
               </div>
               {isExpanded && (
-                <NodeControls networkId={networkId} eeroId={eeroId} node={node} />
+                <NodeControls networkId={networkId} eeroId={eeroId} />
               )}
             </div>
           );
@@ -117,7 +117,7 @@ export default function EeroNodes({ networkId }: EeroNodesProps) {
   );
 }
 
-function NodeControls({ networkId, eeroId, node: _node }: { networkId: string; eeroId: string; node: api.EeroNode }) {
+function NodeControls({ networkId, eeroId }: { networkId: string; eeroId: string }) {
   const { data: ledData, refetch: refetchLed } = useFetch(
     () => api.getLedStatus(networkId, eeroId),
     [networkId, eeroId]
