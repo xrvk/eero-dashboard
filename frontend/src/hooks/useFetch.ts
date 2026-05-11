@@ -49,8 +49,12 @@ export function useFetch<T>(
     const retries = Math.max(0, options.retries ?? 0);
     const retryDelayMs = options.retryDelayMs ?? 250;
 
-    setLoading(true);
-    setStatus('loading');
+    // Only show loading spinner if we don't already have data
+    const hasData = cacheKey ? _responseCache.has(cacheKey) : false;
+    if (!hasData) {
+      setLoading(true);
+      setStatus('loading');
+    }
     setError(null);
     try {
       for (let attempt = 0; attempt <= retries; attempt += 1) {
