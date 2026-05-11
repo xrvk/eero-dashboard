@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from core.client import is_authenticated, lifespan
+from core.dry_run import is_dry_run
 from core.errors import api_error_response
 from features.auth.router import router as auth_router
 from features.devices.router import router as devices_router
@@ -85,6 +86,7 @@ async def health():
         "version": "1.0.0",
         "authenticated": authenticated,
         "data_dir": data_dir_ok,
+        "dry_run": is_dry_run(),
     }
 
 
