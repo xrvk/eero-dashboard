@@ -7,3 +7,5 @@ export type AppTab =
   | 'settings-reservations'
   | 'settings-guest'
   | 'settings-blacklist';
+
+export type SignalFilter = 'all' | 'excellent' | 'good' | 'fair' | 'poor';

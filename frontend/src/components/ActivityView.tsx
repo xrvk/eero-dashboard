@@ -3,10 +3,12 @@ import { useFetch } from '../hooks/useFetch';
 import { ArrowDown, ArrowUp, Home, Radio, Info } from 'lucide-react';
 import * as api from '../api';
 import SpeedHistory from './SpeedHistory';
+import type { SignalFilter } from '../features/app/types';
 
 interface ActivityViewProps {
   networkId: string;
   onNodeClick?: (eeroId: string, node: api.EeroNode) => void;
+  onSignalClick?: (tier: SignalFilter) => void;
 }
 
 interface ConnectedDevice extends api.Device {
@@ -26,7 +28,7 @@ function extractId(url?: string) {
   return url.replace(/\/$/, '').split('/').pop() || '';
 }
 
-export default function ActivityView({ networkId, onNodeClick }: ActivityViewProps) {
+export default function ActivityView({ networkId, onNodeClick, onSignalClick }: ActivityViewProps) {
   const { data: devData, loading: devLoading } = useFetch(
     () => api.getDevices(networkId),
     [networkId]
@@ -159,17 +161,23 @@ export default function ActivityView({ networkId, onNodeClick }: ActivityViewPro
           <h3>Signal Quality</h3>
           <div className="band-bars">
             {[
-              { label: '●●●●● Excellent', count: signalDist.excellent, cls: 'band-6GHz' },
-              { label: '●●●●○ Good', count: signalDist.good, cls: 'band-5GHz' },
-              { label: '●●●○○ Fair', count: signalDist.fair, cls: 'band-24GHz' },
-              { label: '●●○○○ Poor', count: signalDist.poor, cls: 'band-poor' },
+              { label: '●●●●● Excellent', tier: 'excellent' as SignalFilter, count: signalDist.excellent, cls: 'band-6GHz' },
+              { label: '●●●●○ Good', tier: 'good' as SignalFilter, count: signalDist.good, cls: 'band-5GHz' },
+              { label: '●●●○○ Fair', tier: 'fair' as SignalFilter, count: signalDist.fair, cls: 'band-24GHz' },
+              { label: '●●○○○ Poor', tier: 'poor' as SignalFilter, count: signalDist.poor, cls: 'band-poor' },
             ].filter(r => r.count > 0).map((row) => (
-              <div key={row.label} className="band-row">
+              <div
+                key={row.label}
+                className={`band-row ${onSignalClick ? 'clickable' : ''}`}
+                onClick={() => onSignalClick?.(row.tier)}
+                title={onSignalClick ? `View ${row.tier} signal devices` : undefined}
+              >
                 <span className="band-label">{row.label}</span>
                 <div className="band-bar-track">
                   <div className={`band-bar-fill ${row.cls}`} style={{ width: `${Math.max(5, (row.count / (connected.length || 1)) * 100)}%` }} />
                 </div>
                 <span className="band-count">{row.count}</span>
+                {onSignalClick && <span className="band-link-arrow">→</span>}
               </div>
             ))}
           </div>

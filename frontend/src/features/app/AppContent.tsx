@@ -1,4 +1,4 @@
-import type { AppTab } from './types';
+import type { AppTab, SignalFilter } from './types';
 import type { EeroNode } from '../../api';
 import DeviceList from '../../components/DeviceList';
 import ActivityView from '../../components/ActivityView';
@@ -10,16 +10,26 @@ interface AppContentProps {
   selectedNetwork: string | null;
   tab: AppTab;
   setTab: (tab: AppTab) => void;
+  signalFilter?: SignalFilter;
+  onClearSignalFilter?: () => void;
+  onSignalClick?: (tier: SignalFilter) => void;
   onNodeClick?: (eeroId: string, node: EeroNode) => void;
 }
 
-export default function AppContent({ selectedNetwork, tab, setTab, onNodeClick }: AppContentProps) {
+export default function AppContent({ selectedNetwork, tab, setTab, signalFilter, onClearSignalFilter, onSignalClick, onNodeClick }: AppContentProps) {
   if (!selectedNetwork) return null;
 
   return (
     <div className="tab-content">
-      {tab === 'devices' && <DeviceList networkId={selectedNetwork} onNavigate={(t) => setTab(t as AppTab)} />}
-      {tab === 'activity' && <ActivityView networkId={selectedNetwork} onNodeClick={onNodeClick} />}
+      {tab === 'devices' && (
+        <DeviceList
+          networkId={selectedNetwork}
+          onNavigate={(t) => setTab(t as AppTab)}
+          signalFilter={signalFilter}
+          onClearSignalFilter={onClearSignalFilter}
+        />
+      )}
+      {tab === 'activity' && <ActivityView networkId={selectedNetwork} onNodeClick={onNodeClick} onSignalClick={onSignalClick} />}
       {tab === 'profiles' && <ProfileManager networkId={selectedNetwork} />}
       {tab === 'settings-general' && <GeneralSettings networkId={selectedNetwork} />}
       {tab === 'settings-forwards' && <PortForwardsSettings networkId={selectedNetwork} />}
