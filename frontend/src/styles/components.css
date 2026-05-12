@@ -1494,7 +1494,74 @@
 .btn-icon-sm:hover { opacity: 1; color: var(--text, #e2e8f0); }
 
 /* ── SQM ───────────────────────────────────── */
-.sqm-config { margin-top: 4px; }
+.sqm-config { margin-top: 16px; }
+
+/* Status card */
+.sqm-status-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+.sqm-status-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.sqm-status-title {
+  display: flex; align-items: center; gap: 8px;
+}
+.sqm-status-title h3 {
+  font-size: 0.9rem; font-weight: 600; margin: 0;
+}
+
+/* Mode badge */
+.sqm-mode-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: var(--radius-sm);
+  background: rgba(45,212,160,0.1); border: 1px solid rgba(45,212,160,0.2);
+  color: var(--green); font-size: 0.78rem; font-weight: 600;
+  margin-bottom: 14px;
+}
+.sqm-mode-badge svg { flex-shrink: 0; }
+
+/* Bandwidth limits */
+.sqm-limits {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.sqm-limit-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.85rem;
+}
+.sqm-limit-item svg { color: var(--text-dim); flex-shrink: 0; }
+.sqm-limit-label { color: var(--text-muted); min-width: 70px; }
+.sqm-limit-value { font-weight: 500; font-size: 0.85rem; }
+
+/* Auto button (shown when in manual mode) */
+.sqm-auto-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 16px; padding: 8px 16px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-muted);
+  font-size: 0.8rem; font-weight: 500; cursor: pointer;
+  transition: all 0.15s;
+}
+.sqm-auto-btn:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: var(--accent-glow);
+}
+.sqm-auto-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* Edit fields */
+.sqm-edit-fields {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.sqm-edit-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+@media (max-width: 500px) {
+  .sqm-edit-row { grid-template-columns: 1fr; }
+}
+.sqm-edit-fields .form-field { margin-bottom: 0; }
+
+/* Legacy SQM classes (used in GeneralSettings inline) */
 .sqm-edit-form {
   background: var(--bg); border: 1px solid var(--border);
   border-radius: var(--radius-sm); padding: 16px;
