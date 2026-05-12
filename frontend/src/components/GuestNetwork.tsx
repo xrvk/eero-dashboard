@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, Eye, EyeOff, Copy, Check, Pencil, Share2, Shield } from 'lucide-react';
+import { Users, Eye, EyeOff, Pencil, Shield } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
 
@@ -60,11 +60,6 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
       setEditing(false);
     } catch (e) { alert(e instanceof Error ? e.message : 'Failed'); }
     finally { setSaving(false); }
-  };
-
-  const handleCopyAll = async () => {
-    const text = `Network: ${name}\nPassword: ${password}`;
-    try { await navigator.clipboard.writeText(text); } catch { /* ignore */ }
   };
 
   return (
@@ -129,25 +124,6 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
                 </div>
               </div>
 
-              {/* Quick share card */}
-              <div className="guest-share-card">
-                <div className="guest-share-header">
-                  <Share2 size={16} />
-                  <span>Share with Guests</span>
-                </div>
-                <div className="guest-share-body">
-                  <div className="guest-share-line">
-                    <span className="guest-share-label">Network</span>
-                    <span className="guest-share-val mono">{name || '—'}</span>
-                  </div>
-                  <div className="guest-share-line">
-                    <span className="guest-share-label">Password</span>
-                    <span className="guest-share-val mono">{password || '—'}</span>
-                  </div>
-                </div>
-                <CopyAllButton onClick={handleCopyAll} />
-              </div>
-
               {/* Info strip */}
               <div className="guest-info-strip">
                 <div className="guest-info-item">
@@ -180,6 +156,7 @@ function PasswordField({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
+    if (!value) return;
     try {
       await navigator.clipboard.writeText(value);
       setCopied(true);
@@ -189,31 +166,17 @@ function PasswordField({ value }: { value: string }) {
 
   return (
     <span className="password-field">
-      <span className="password-value mono">{visible ? value : '••••••••'}</span>
+      <span
+        className={`password-value mono ${value ? 'password-clickable' : ''} ${copied ? 'password-copied' : ''}`}
+        onClick={handleCopy}
+        title={value ? 'Click to copy' : undefined}
+      >
+        {copied ? 'Copied!' : visible ? value : '••••••••'}
+      </span>
       <button className="btn-icon-sm" onClick={() => setVisible(!visible)} title={visible ? 'Hide' : 'Show'}>
         {visible ? <EyeOff size={18} /> : <Eye size={18} />}
       </button>
-      {value && (
-        <button className="btn-icon-sm" onClick={handleCopy} title="Copy">
-          {copied ? <Check size={18} /> : <Copy size={18} />}
-        </button>
-      )}
     </span>
   );
 }
 
-function CopyAllButton({ onClick }: { onClick: () => void }) {
-  const [copied, setCopied] = useState(false);
-
-  const handleClick = async () => {
-    await onClick();
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <button className="guest-share-copy-btn" onClick={handleClick}>
-      {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy credentials</>}
-    </button>
-  );
-}
