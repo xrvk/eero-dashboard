@@ -28,8 +28,8 @@
 .drawer-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
 .drawer-value { font-size: 0.9rem; }
 .drawer-value.mono { font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace; }
-.drawer-value.copyable { cursor: pointer; transition: color 0.15s, background 0.15s; border-radius: 4px; padding: 2px 6px; margin: -2px -6px; }
-.drawer-value.copyable:hover { background: var(--bg-hover, rgba(255,255,255,0.06)); color: var(--accent, #00aaff); }
+.drawer-value.copyable { cursor: pointer; transition: color 0.15s, background 0.15s; border-radius: var(--radius-sm); padding: 2px 6px; margin: -2px -6px; }
+.drawer-value.copyable:hover { background: var(--bg-card-hover); color: var(--accent); }
 .drawer-value.copyable.copied { color: var(--green); }
 .drawer-value-row { display: flex; align-items: center; gap: 8px; }
 .drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -76,19 +76,19 @@
 .firmware-tag {
   font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace; font-size: 0.82rem;
   background: var(--bg); border: 1px solid var(--border);
-  border-radius: 4px; padding: 2px 8px;
+  border-radius: var(--radius-sm); padding: 2px 8px;
 }
 .backhaul-badge {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 0.85rem; padding: 2px 8px;
-  border-radius: 4px; background: var(--bg);
+  border-radius: var(--radius-sm); background: var(--bg);
   border: 1px solid var(--border);
 }
 .backhaul-badge.wired { border-color: var(--green); color: var(--green); }
 .update-badge {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 0.82rem; padding: 4px 10px;
-  border-radius: 4px; background: rgba(var(--yellow-rgb),0.1);
+  border-radius: var(--radius-sm); background: rgba(var(--yellow-rgb),0.1);
   border: 1px solid rgba(var(--yellow-rgb),0.3); color: var(--yellow);
 }
 .drawer-field-full { grid-column: 1 / -1; }

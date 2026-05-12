@@ -64,7 +64,7 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
 
   return (
     <div className="guest-network">
-      <div className="toggle-row" style={{ marginBottom: 20 }}>
+      <div className="toggle-row mb-20">
         <div className="toggle-info">
           <span className="toggle-name">Guest Network</span>
           <span className="toggle-desc">Allow guests to connect without sharing your main password</span>

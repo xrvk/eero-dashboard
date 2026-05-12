@@ -94,11 +94,11 @@ export default function SpeedHistory({ networkId, refreshKey }: SpeedHistoryProp
   const handleExport = useCallback(() => downloadCsv(filtered, range), [filtered, range]);
 
   if (allHistory.length === 0) {
-    return <p className="empty-text" style={{ marginTop: 12 }}>Run speed tests to see history</p>;
+    return <p className="empty-text mt-12">Run speed tests to see history</p>;
   }
 
   if (allHistory.length === 1 && filtered.length <= 1) {
-    return <p className="empty-text" style={{ marginTop: 12 }}>Run more speed tests to see trends</p>;
+    return <p className="empty-text mt-12">Run more speed tests to see trends</p>;
   }
 
   return (
@@ -218,7 +218,7 @@ export default function SpeedHistory({ networkId, refreshKey }: SpeedHistoryProp
         </div>
       )}
 
-      <p className="empty-text" style={{ fontSize: '0.75rem', marginTop: 8 }}>
+      <p className="empty-text mt-8" style={{ fontSize: '0.75rem' }}>
         {filtered.length} test{filtered.length !== 1 ? 's' : ''} in selected range
       </p>
     </div>

@@ -201,7 +201,7 @@ export default function ActivityView({ networkId, onSignalClick, onBandClick }: 
       </div>
 
       {/* Summary row */}
-      <div className="activity-summary" style={{ marginTop: 16 }}>
+      <div className="activity-summary mt-16">
         <div className="activity-panel">
           <h3>Clients by Band</h3>
           <div className="band-bars">
@@ -245,7 +245,7 @@ export default function ActivityView({ networkId, onSignalClick, onBandClick }: 
       </div>
 
       {/* Network & Nodes — consolidated section */}
-      <div className="activity-panel full-width" style={{ marginTop: 16 }}>
+      <div className="activity-panel full-width mt-16">
         {/* Network status bar */}
         <div className="net-bar">
           <div className="net-bar-left">
@@ -300,7 +300,7 @@ export default function ActivityView({ networkId, onSignalClick, onBandClick }: 
         </button>
       </div>
 
-      <p className="empty-text" style={{ marginTop: 16 }}>
+      <p className="empty-text mt-16">
         ℹ️ Bandwidth history and per-device usage require eero Plus.
       </p>
     </div>

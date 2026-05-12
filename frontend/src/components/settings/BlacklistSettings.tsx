@@ -28,7 +28,7 @@ export function BlacklistSettings({ networkId }: { networkId: string }) {
   return (
     <div className="settings-page">
       <div className="settings-card">
-        <p className="toggle-desc" style={{ marginBottom: 16 }}>
+        <p className="toggle-desc mb-16">
           Permanently blocked devices cannot reconnect until removed.
         </p>
 

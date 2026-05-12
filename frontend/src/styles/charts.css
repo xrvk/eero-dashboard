@@ -47,7 +47,7 @@
 .speed-tooltip-date { margin: 0 0 4px; color: var(--text-muted); font-size: 0.7rem; }
 .speed-tooltip-row { margin: 2px 0; display: flex; justify-content: space-between; gap: 16px; }
 .speed-tooltip-label { font-weight: 500; }
-.speed-tooltip-value { font-variant-numeric: tabular-nums; }
+.speed-tooltip-value { font-variant-numeric: tabular-nums; font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace; }
 
 /* Table */
 .speed-table-wrap { max-height: 400px; overflow-y: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
