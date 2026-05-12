@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users } from 'lucide-react';
+import { Users, Eye, EyeOff, Pencil, Shield } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
 
@@ -77,51 +77,73 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
 
       {enabled && (
         <div className="guest-details">
-          {editing ? (
-            <div className="guest-edit-form">
-              <div className="form-field">
-                <label>Network Name (SSID)</label>
-                <input type="text" value={guestName} onChange={(e) => setGuestName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false); }}
-                  placeholder="Guest Network" />
+          <div className="guest-enabled-layout">
+            <div className="guest-credential-card">
+              <div className="guest-credential-header">
+                <div className="guest-credential-title">
+                  <span className="general-card-icon">👥</span>
+                  <h3>Guest Credentials</h3>
+                </div>
+                {!editing && (
+                  <button className="btn-icon-sm" onClick={startEditing} title="Edit credentials">
+                    <Pencil size={16} />
+                  </button>
+                )}
               </div>
-              <div className="form-field">
-                <label>Password</label>
-                <input type="text" value={guestPassword} onChange={(e) => setGuestPassword(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false); }}
-                  placeholder="Enter password" />
+
+              {editing ? (
+                <div className="guest-credential-fields">
+                  <div className="form-field">
+                    <label>Network Name (SSID)</label>
+                    <input type="text" value={guestName} onChange={(e) => setGuestName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false); }}
+                      placeholder="Guest Network" autoFocus />
+                  </div>
+                  <div className="form-field">
+                    <label>Password</label>
+                    <input type="text" value={guestPassword} onChange={(e) => setGuestPassword(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false); }}
+                      placeholder="Enter password" />
+                  </div>
+                  <div className="guest-edit-actions">
+                    <button className="btn-primary" onClick={handleSave} disabled={saving}>
+                      {saving ? 'Saving…' : 'Save'}
+                    </button>
+                    <button className="btn-cancel" onClick={() => setEditing(false)}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="guest-credential-fields">
+                  <div className="guest-field">
+                    <span className="guest-field-label">Network Name</span>
+                    <span className="guest-field-value">{name || '—'}</span>
+                  </div>
+                  <div className="guest-field">
+                    <span className="guest-field-label">Password</span>
+                    <PasswordField value={password} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Info strip */}
+            <div className="guest-info-strip">
+              <div className="guest-info-item">
+                <Shield size={14} />
+                <span>Isolated from your main network</span>
               </div>
-              <div className="dns-edit-actions">
-                <button className="btn-primary" onClick={handleSave} disabled={saving}>
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
-                <button className="btn-cancel" onClick={() => setEditing(false)}>Cancel</button>
+              <div className="guest-info-item">
+                <Users size={14} />
+                <span>Guests cannot see your devices</span>
               </div>
             </div>
-          ) : (
-            <div className="guest-info-card">
-              <div className="section-header-inline">
-                <h3>Guest Credentials</h3>
-                <button className="btn-icon-sm" onClick={startEditing} title="Edit credentials"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-              </div>
-              <div className="dns-grid">
-                <div className="dns-item">
-                  <span className="dns-label">SSID</span>
-                  <span className="dns-value">{name || '—'}</span>
-                </div>
-                <div className="dns-item">
-                  <span className="dns-label">Password</span>
-                  <PasswordField value={password} />
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       )}
 
       {!enabled && (
-        <div className="empty-state" style={{ marginTop: 20 }}>
-          <p className="empty-icon"><Users size={40} /></p>
+        <div className="guest-disabled-card">
+          <span className="guest-disabled-icon">👥</span>
           <p className="empty-text">Guest network is disabled</p>
           <p className="empty-hint">Enable it to let guests connect without sharing your main password</p>
         </div>
@@ -135,6 +157,7 @@ function PasswordField({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
+    if (!value) return;
     try {
       await navigator.clipboard.writeText(value);
       setCopied(true);
@@ -144,23 +167,17 @@ function PasswordField({ value }: { value: string }) {
 
   return (
     <span className="password-field">
-      <span className="password-value mono">{visible ? value : '••••••••'}</span>
+      <span
+        className={`password-value mono ${value ? 'password-clickable' : ''} ${copied ? 'password-copied' : ''}`}
+        onClick={handleCopy}
+        title={value ? 'Click to copy' : undefined}
+      >
+        {copied ? 'Copied!' : visible ? value : '••••••••'}
+      </span>
       <button className="btn-icon-sm" onClick={() => setVisible(!visible)} title={visible ? 'Hide' : 'Show'}>
-        {visible ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        )}
+        {visible ? <EyeOff size={18} /> : <Eye size={18} />}
       </button>
-      {value && (
-        <button className="btn-icon-sm" onClick={handleCopy} title="Copy">
-          {copied ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          )}
-        </button>
-      )}
     </span>
   );
 }
+

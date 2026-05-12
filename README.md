@@ -45,7 +45,7 @@ docker compose up -d
 
 Open **http://localhost:8420** 🎉
 
-> 💡 See [Installation](./docs/installation.md) for Docker Compose setup, Synology NAS, or local development.
+> 💡 See [Installation](./docs/html/installation.html) for Docker Compose setup, Synology NAS, or local development.
 
 ---
 
@@ -53,10 +53,10 @@ Open **http://localhost:8420** 🎉
 
 | 📖 Guide | Description |
 |----------|-------------|
-| [🚀 Installation](./docs/installation.md) | Docker, Synology NAS & local dev setup |
-| [⚙️ Configuration](./docs/configuration.md) | Environment variables & cache behavior |
-| [🏗️ Architecture](./docs/architecture/README.md) | System design, backend, frontend & data flow |
-| [📡 API Reference](./docs/API_REFERENCE.md) | REST endpoint catalog |
+| [🚀 Installation](./docs/html/installation.html) | Docker, Synology NAS & local dev setup |
+| [⚙️ Configuration](./docs/html/configuration.html) | Environment variables & cache behavior |
+| [🏗️ Architecture](./docs/html/architecture/index.html) | System design, backend, frontend & data flow |
+| [📡 API Reference](./docs/html/api-reference.html) | REST endpoint catalog |
 | [🤝 Contributing](./CONTRIBUTING.md) | Dev workflow, testing & validation |
 
 ---
