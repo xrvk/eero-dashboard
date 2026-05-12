@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { Check } from 'lucide-react';
 
 export default function CopyableValue({ value }: { value: string | undefined }) {
   const [copied, setCopied] = useState(false);
@@ -17,7 +18,7 @@ export default function CopyableValue({ value }: { value: string | undefined }) 
       onClick={handleCopy}
       title="Click to copy"
     >
-      {copied ? '✓ Copied' : value}
+      {copied ? <><Check size={14} /> Copied</> : value}
     </span>
   );
 }

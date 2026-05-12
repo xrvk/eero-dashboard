@@ -112,7 +112,7 @@ export default function ProfileManager({ networkId }: { networkId: string }) {
 
       {profiles.length === 0 && !showCreateForm ? (
         <div className="empty-state">
-          <p className="empty-icon"><User size={24} /></p>
+          <p className="empty-icon">👤</p>
           <p className="empty-text">No profiles configured</p>
           <p className="empty-subtext">Click <strong>＋ New</strong> to create one</p>
         </div>

@@ -14,7 +14,7 @@
   padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s;
 }
 .range-pill:hover { color: var(--text); }
-.range-pill.active { background: var(--accent); color: #fff; }
+.range-pill.active { background: var(--accent); color: white; }
 
 /* View toggle */
 .speed-view-toggle { display: flex; gap: 2px; background: var(--bg-input); border-radius: var(--radius-sm); padding: 2px; }

@@ -1,4 +1,5 @@
 import { useFetch } from '../hooks/useFetch';
+import { X } from 'lucide-react';
 import * as api from '../api';
 import CopyableValue from './shared/CopyableValue';
 
@@ -54,7 +55,7 @@ export default function NodeDrawer({ networkId, node, onClose }: NodeDrawerProps
               <span className="node-drawer-subtitle">{n.model || 'eero'}</span>
             </div>
           </div>
-          <button className="btn-close" onClick={onClose}>✕</button>
+          <button className="btn-close" onClick={onClose}><X size={18} /></button>
         </div>
 
         <div className="drawer-body">

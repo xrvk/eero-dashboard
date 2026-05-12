@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowUp, ArrowDown, Zap, Pencil } from 'lucide-react';
+import { ArrowUp, ArrowDown, Zap, Pencil, Eye, EyeOff, Check, Copy, X } from 'lucide-react';
 import { useFetch } from '../../hooks/useFetch';
 import * as api from '../../api';
 
@@ -179,15 +179,15 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
           <div className="general-card-header">
             <span className="general-card-icon">📡</span>
             <h3>Network</h3>
-            {!renaming && <button className="btn-icon-sm" onClick={() => { setNewName(networkName); setRenaming(true); }} title="Edit network name"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>}
+            {!renaming && <button className="btn-icon-sm" onClick={() => { setNewName(networkName); setRenaming(true); }} title="Edit network name"><Pencil size={16} /></button>}
           </div>
           {renaming ? (
             <div className="drawer-inline-edit">
               <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setRenaming(false); }}
                 autoFocus />
-              <button className="btn-primary btn-sm" onClick={handleRename} disabled={saving}>{saving ? '…' : '✓'}</button>
-              <button className="btn-cancel btn-sm" onClick={() => setRenaming(false)}>✕</button>
+              <button className="btn-primary btn-sm" onClick={handleRename} disabled={saving}>{saving ? '…' : <Check size={16} />}</button>
+              <button className="btn-cancel btn-sm" onClick={() => setRenaming(false)}><X size={16} /></button>
             </div>
           ) : (
             <span className="general-card-value">{networkName || '—'}</span>
@@ -208,19 +208,11 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
             <span className="general-card-value mono">{showPassword ? password : '••••••••••'}</span>
             <div className="general-password-actions">
               <button className="btn-icon-sm" onClick={() => setShowPassword(!showPassword)} title={showPassword ? 'Hide' : 'Show'}>
-                {showPassword ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                )}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
               {password && (
                 <button className="btn-icon-sm" onClick={handleCopy} title="Copy">
-                  {copied ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                  )}
+                  {copied ? <Check size={18} /> : <Copy size={18} />}
                 </button>
               )}
             </div>

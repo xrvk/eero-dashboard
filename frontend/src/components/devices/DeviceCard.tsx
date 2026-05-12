@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Wifi, Cable } from 'lucide-react';
+import { Wifi, Cable, MoreHorizontal } from 'lucide-react';
 import type { Device } from '../../api';
 import { getDeviceIcon, getConn, freqToBand } from './utils';
 
@@ -28,7 +28,7 @@ export default function DeviceCard({ device: d, actionLoading, onAction, onRenam
   }, [menuOpen]);
 
   return (
-    <div className={`device-card ${d.connected ? 'connected' : 'offline'}`} onClick={onClick} style={{ cursor: 'pointer' }}>
+    <div className={`device-card ${d.connected ? 'connected' : 'offline'}`} onClick={onClick}>
       <div className="device-icon">{getDeviceIcon(d)}</div>
       <div className="device-info">
         <span className="device-name">{d.display_name || d.hostname || 'Unknown'}</span>
@@ -47,7 +47,7 @@ export default function DeviceCard({ device: d, actionLoading, onAction, onRenam
               className="btn-menu"
               onClick={() => setMenuOpen(!menuOpen)}
               title="Actions"
-            >⋯</button>
+            ><MoreHorizontal size={16} /></button>
             {menuOpen && (
               <div className="card-menu">
                 <button

@@ -44,6 +44,19 @@ The eero Dashboard uses a **minimal, data-dense, dark-first** design with emoji-
 - **Blue (accent)** → Primary actions, 5 GHz band, focus rings, selected states
 - **Green (alternate)** → 6 GHz band
 
+### RGB Decomposition Variables
+For `rgba()` transparency effects, use the `--*-rgb` variants instead of hardcoding color values:
+
+| Token             | Dark Value         | Light Value         | Usage                         |
+|-------------------|--------------------|---------------------|-------------------------------|
+| `--accent-rgb`    | `110, 160, 255`    | `59, 125, 255`      | `rgba(var(--accent-rgb), 0.1)` |
+| `--green-rgb`     | `52, 211, 153`     | `13, 150, 104`      | `rgba(var(--green-rgb), 0.1)`  |
+| `--red-rgb`       | `248, 113, 113`    | `220, 38, 38`       | `rgba(var(--red-rgb), 0.1)`    |
+| `--yellow-rgb`    | `251, 191, 36`     | `217, 119, 6`       | `rgba(var(--yellow-rgb), 0.1)` |
+| `--border-rgb`    | `42, 46, 61`       | `216, 219, 229`     | `rgba(var(--border-rgb), 0.3)` |
+
+**Rule:** Never hardcode `rgba(110,160,255,0.1)` — always use `rgba(var(--accent-rgb), 0.1)` so colors adapt to the active theme.
+
 ---
 
 ## Typography
@@ -60,7 +73,7 @@ font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 | Body text        | `0.85rem` | 400    |                                    |
 | Table headers    | `0.75rem` | 500    | `text-transform: uppercase; letter-spacing: 0.05em` |
 | Labels / meta    | `0.75–0.8rem` | 400 | `color: var(--text-muted)`        |
-| Monospace values | `0.8rem`  | 400    | `font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace` — IPs, MACs, speeds |
+| Monospace values | `0.8rem`  | 400    | `font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace` — IPs, MACs, speeds. Use `.mono` utility class. |
 | Hero numbers     | `2.8rem`  | 800    | Speed test results (responsive: `1.5rem` mobile) |
 | Empty state icon | `2.5rem`  | —      | Emoji in `.empty-icon`             |
 
@@ -88,7 +101,7 @@ Always apply: `-webkit-font-smoothing: antialiased;`
 
 | Token          | Value  | Usage                     |
 |---------------|--------|---------------------------|
-| `--radius`    | `14px` | Cards, panels, dialogs    |
+| `--radius`    | `12px` | Cards, panels, dialogs    |
 | `--radius-sm` | `8px`  | Buttons, inputs, badges   |
 | `22px`        | —      | Toggle switches (pill)    |
 | `50%`         | —      | Status dots, circular elements |
