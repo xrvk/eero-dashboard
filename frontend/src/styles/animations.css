@@ -32,7 +32,7 @@
 .tab-content { animation: fadeIn 0.2s ease-out; }
 
 
-@keyframes pulse-border { from { border-color: var(--red); } to { border-color: rgba(248,113,113,0.4); } }
+@keyframes pulse-border { from { border-color: var(--red); } to { border-color: rgba(var(--red-rgb),0.4); } }
 
 
 /* Section toggle */

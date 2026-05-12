@@ -259,7 +259,7 @@ export default function DeviceList({ networkId, onNavigate, signalFilter = 'all'
   if (error) return (
     <div className="card error-card">
       <span><AlertTriangle size={16} /> Failed to load devices: {error}</span>
-      <button className="btn-primary btn-sm" onClick={refetch} style={{ marginLeft: 16 }}>Retry</button>
+      <button className="btn-primary btn-sm ml-16" onClick={refetch}>Retry</button>
     </div>
   );
 
@@ -290,7 +290,7 @@ export default function DeviceList({ networkId, onNavigate, signalFilter = 'all'
       {renameTarget && (
         <div className="confirm-overlay" onClick={() => setRenameTarget(null)}>
           <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
-            <p style={{ marginBottom: 12 }}>Rename device</p>
+            <p className="mb-12">Rename device</p>
             <input
               className="rename-input"
               type="text"
@@ -300,7 +300,7 @@ export default function DeviceList({ networkId, onNavigate, signalFilter = 'all'
               autoFocus
               onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setRenameTarget(null); }}
             />
-            <div className="confirm-actions" style={{ marginTop: 16 }}>
+            <div className="confirm-actions mt-16">
               <button className="btn-confirm" onClick={handleRename} disabled={actionLoading === renameTarget.mac}>
                 {actionLoading ? 'Saving…' : renameName.trim() ? 'Save' : 'Reset to default'}
               </button>

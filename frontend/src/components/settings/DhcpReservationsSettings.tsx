@@ -40,7 +40,7 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
   return (
     <div className="settings-page">
       <div className="settings-card">
-        <div className="section-header-inline" style={{ marginBottom: 12 }}>
+        <div className="section-header-inline mb-12">
           <span className="results-counter">{(list as unknown[]).length} reservation{(list as unknown[]).length !== 1 ? 's' : ''}</span>
           <button className="btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
             {showForm ? '✕ Cancel' : '+ Add'}
@@ -76,7 +76,7 @@ export function DhcpReservationsSettings({ networkId }: { networkId: string }) {
               );
             })}
             {(list as unknown[]).length === 0 && !showForm && (
-              <tr><td colSpan={4} className="empty-text" style={{ textAlign: 'center', padding: 20 }}>No DHCP reservations</td></tr>
+              <tr><td colSpan={4} className="empty-text" style={{ textAlign: 'center' }}>No DHCP reservations</td></tr>
             )}
           </tbody>
         </table>

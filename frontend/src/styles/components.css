@@ -518,7 +518,7 @@
 .card-menu {
   position: absolute; right: 0; top: 36px; z-index: 50;
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  border-radius: var(--radius-sm); box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.15);
   min-width: 170px; overflow: hidden;
 }
 .card-menu-item {
@@ -641,7 +641,7 @@
 }
 .picker-item {
   display: flex; align-items: center; gap: 8px;
-  padding: 5px 8px; border-radius: 4px; cursor: pointer;
+  padding: 5px 8px; border-radius: var(--radius-sm); cursor: pointer;
   font-size: 0.8rem; transition: background 0.1s;
 }
 .picker-item:hover { background: var(--bg-card-hover); }
@@ -756,7 +756,7 @@
 /* ── Improved empty states ──────────────────── */
 .empty-state {
   text-align: center; padding: 40px 20px;
-  background: rgba(0,0,0,0.15); border-radius: var(--radius);
+  background: var(--bg-input); border-radius: var(--radius);
   border: 1px dashed var(--border);
 }
 .empty-icon { font-size: 2.5rem; margin-bottom: 8px; }
@@ -826,7 +826,7 @@
 .enode-mesh { flex-shrink: 0; }
 .enode-update {
   font-size: 0.6rem; font-weight: 700; padding: 2px 7px;
-  border-radius: 3px; background: rgba(var(--yellow-rgb),0.12);
+  border-radius: var(--radius-sm); background: rgba(var(--yellow-rgb),0.12);
   color: var(--yellow); letter-spacing: 0.05em;
 }
 
@@ -1090,7 +1090,7 @@
 .profile-detail-name.editable {
   cursor: pointer; margin: 0; font-size: 1rem; font-weight: 600;
   display: flex; align-items: center; gap: 6px;
-  padding: 2px 4px; border-radius: 4px;
+  padding: 2px 4px; border-radius: var(--radius-sm);
   transition: background 0.15s;
 }
 .profile-detail-name.editable:hover { background: var(--bg-card-hover); }
@@ -1102,7 +1102,7 @@
 .inline-edit-input {
   font-size: 1rem; font-weight: 600; padding: 2px 6px;
   background: var(--bg-input); border: 1px solid var(--accent);
-  border-radius: 4px; color: var(--text); outline: none;
+  border-radius: var(--radius-sm); color: var(--text); outline: none;
   width: 200px;
 }
 
@@ -1332,7 +1332,7 @@
 .detail-action-link {
   background: none; border: none; color: var(--accent);
   font-size: 0.72rem; font-weight: 600; cursor: pointer;
-  padding: 2px 6px; border-radius: 4px; white-space: nowrap;
+  padding: 2px 6px; border-radius: var(--radius-sm); white-space: nowrap;
   transition: all 0.15s;
 }
 .detail-action-link:hover { background: rgba(var(--accent-rgb),0.1); }
@@ -1432,7 +1432,7 @@
 
 /* Password click-to-copy */
 .password-clickable {
-  cursor: pointer; border-radius: 4px;
+  cursor: pointer; border-radius: var(--radius-sm);
   padding: 2px 6px; margin: -2px -6px;
   transition: all 0.15s;
 }

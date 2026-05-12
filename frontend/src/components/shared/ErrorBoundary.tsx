@@ -25,20 +25,14 @@ export default class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return this.props.fallback ?? (
-        <div className="error-boundary-fallback" style={{
-          textAlign: 'center', padding: '40px 20px',
-          background: 'rgba(0,0,0,0.15)',
-          borderRadius: 'var(--radius)',
-          border: '1px dashed var(--border)',
-        }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>⚠️</div>
-          <p style={{ color: 'var(--text-dim)', fontStyle: 'italic', fontSize: '0.85rem' }}>
+        <div className="empty-state">
+          <div className="empty-icon">⚠️</div>
+          <p className="empty-text">
             Something went wrong{this.props.name ? ` in ${this.props.name}` : ''}.
           </p>
           <button
-            className="btn-text"
+            className="btn-text mt-12"
             onClick={() => this.setState({ hasError: false })}
-            style={{ marginTop: 12 }}
           >
             Try again
           </button>

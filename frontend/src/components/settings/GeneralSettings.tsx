@@ -377,7 +377,7 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
             <span className="toggle-slider" />
           </label>
         </div>
-        <div style={{ marginTop: 12 }}>
+        <div className="mt-12">
           <label className="drawer-label">DNS Provider</label>
           <div className="dns-provider-row">
             <select
@@ -437,23 +437,23 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
         <div className="general-section">
           <h3>🔍 Diagnostics</h3>
           <p className="toggle-desc">Check connectivity, DNS, and internet access.</p>
-          <button className="btn-primary" onClick={handleRunDiagnostics} disabled={diagRunning} style={{ marginTop: 8 }}>
+          <button className="btn-primary mt-8" onClick={handleRunDiagnostics} disabled={diagRunning}>
             {diagRunning ? <><div className="spinner" /> Running…</> : 'Run Diagnostics'}
           </button>
-          {diagError && <div className="error-banner" style={{ marginTop: 12 }}>{diagError}</div>}
+          {diagError && <div className="error-banner mt-12">{diagError}</div>}
         </div>
 
         <div className="general-section">
           <h3>🔄 Network Reboot</h3>
           <p className="toggle-desc">Reboot all nodes. Network offline for ~2 min.</p>
           {confirmReboot ? (
-            <div className="confirm-inline" style={{ marginTop: 8 }}>
+            <div className="confirm-inline mt-8">
               <span>⚠️ Are you sure?</span>
               <button className="btn-confirm btn-danger" onClick={handleRebootNetwork} disabled={rebooting}>{rebooting ? 'Rebooting…' : 'Confirm'}</button>
               <button className="btn-cancel" onClick={() => setConfirmReboot(false)}>Cancel</button>
             </div>
           ) : (
-            <button className="btn-danger" onClick={() => setConfirmReboot(true)} style={{ marginTop: 8 }}>Reboot Entire Network</button>
+            <button className="btn-danger mt-8" onClick={() => setConfirmReboot(true)}>Reboot Entire Network</button>
           )}
         </div>
       </div>
@@ -580,7 +580,7 @@ function NodeControlCard({ networkId, eeroId, node, index }: {
 
       {nightlight && (
         <>
-          <div className="toggle-row" style={{ marginTop: 12 }}>
+          <div className="toggle-row mt-12">
             <div className="toggle-info">
               <span className="toggle-name">Nightlight</span>
               <span className="toggle-desc">Ambient light on this node</span>
