@@ -77,41 +77,42 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
 
       {enabled && (
         <div className="guest-details">
-          {editing ? (
-            <div className="guest-edit-form">
-              <div className="form-field">
-                <label>Network Name (SSID)</label>
-                <input type="text" value={guestName} onChange={(e) => setGuestName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false); }}
-                  placeholder="Guest Network" />
-              </div>
-              <div className="form-field">
-                <label>Password</label>
-                <input type="text" value={guestPassword} onChange={(e) => setGuestPassword(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false); }}
-                  placeholder="Enter password" />
-              </div>
-              <div className="dns-edit-actions">
-                <button className="btn-primary" onClick={handleSave} disabled={saving}>
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
-                <button className="btn-cancel" onClick={() => setEditing(false)}>Cancel</button>
-              </div>
-            </div>
-          ) : (
-            <div className="guest-enabled-layout">
-              {/* Credential card */}
-              <div className="guest-credential-card">
-                <div className="guest-credential-header">
-                  <div className="guest-credential-title">
-                    <span className="general-card-icon">👥</span>
-                    <h3>Guest Credentials</h3>
-                  </div>
+          <div className="guest-enabled-layout">
+            <div className="guest-credential-card">
+              <div className="guest-credential-header">
+                <div className="guest-credential-title">
+                  <span className="general-card-icon">👥</span>
+                  <h3>Guest Credentials</h3>
+                </div>
+                {!editing && (
                   <button className="btn-icon-sm" onClick={startEditing} title="Edit credentials">
                     <Pencil size={16} />
                   </button>
-                </div>
+                )}
+              </div>
 
+              {editing ? (
+                <div className="guest-credential-fields">
+                  <div className="form-field">
+                    <label>Network Name (SSID)</label>
+                    <input type="text" value={guestName} onChange={(e) => setGuestName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false); }}
+                      placeholder="Guest Network" autoFocus />
+                  </div>
+                  <div className="form-field">
+                    <label>Password</label>
+                    <input type="text" value={guestPassword} onChange={(e) => setGuestPassword(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false); }}
+                      placeholder="Enter password" />
+                  </div>
+                  <div className="guest-edit-actions">
+                    <button className="btn-primary" onClick={handleSave} disabled={saving}>
+                      {saving ? 'Saving…' : 'Save'}
+                    </button>
+                    <button className="btn-cancel" onClick={() => setEditing(false)}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
                 <div className="guest-credential-fields">
                   <div className="guest-field">
                     <span className="guest-field-label">Network Name</span>
@@ -122,27 +123,27 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
                     <PasswordField value={password} />
                   </div>
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Info strip */}
-              <div className="guest-info-strip">
-                <div className="guest-info-item">
-                  <Shield size={14} />
-                  <span>Isolated from your main network</span>
-                </div>
-                <div className="guest-info-item">
-                  <Users size={14} />
-                  <span>Guests cannot see your devices</span>
-                </div>
+            {/* Info strip */}
+            <div className="guest-info-strip">
+              <div className="guest-info-item">
+                <Shield size={14} />
+                <span>Isolated from your main network</span>
+              </div>
+              <div className="guest-info-item">
+                <Users size={14} />
+                <span>Guests cannot see your devices</span>
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 
       {!enabled && (
-        <div className="empty-state" style={{ marginTop: 20 }}>
-          <p className="empty-icon"><Users size={40} /></p>
+        <div className="guest-disabled-card">
+          <span className="guest-disabled-icon">👥</span>
           <p className="empty-text">Guest network is disabled</p>
           <p className="empty-hint">Enable it to let guests connect without sharing your main password</p>
         </div>

@@ -1394,10 +1394,6 @@
 /* ── Guest Network ─────────────────────────── */
 .guest-network { max-width: 600px; }
 .guest-details { margin-top: 8px; }
-.guest-edit-form {
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); padding: 16px;
-}
 .guest-enabled-layout {
   display: flex; flex-direction: column; gap: 16px;
 }
@@ -1458,6 +1454,21 @@
   flex: 1; min-width: 200px;
 }
 .guest-info-item svg { flex-shrink: 0; color: var(--green); }
+
+/* Edit actions */
+.guest-edit-actions {
+  display: flex; gap: 10px; margin-top: 4px;
+}
+
+/* Disabled state */
+.guest-disabled-card {
+  text-align: center; padding: 36px 20px; margin-top: 16px;
+  background: var(--bg-card); border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+.guest-disabled-icon {
+  font-size: 2.5rem; display: block; margin-bottom: 8px;
+}
 .form-field { margin-bottom: 14px; }
 .form-field label {
   display: block; font-size: 0.78rem; color: var(--text-muted);
