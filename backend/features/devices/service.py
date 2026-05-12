@@ -1,6 +1,6 @@
 from eero import EeroClient
 
-from core import cache, facade
+from core import cache
 from core.cache import keys
 from core.dry_run import is_dry_run, block_unmocked_mutation
 from core.errors import translate_errors
@@ -18,8 +18,10 @@ async def list_devices(client: EeroClient, network_id: str):
 
 
 async def pause_device(client: EeroClient, network_id: str, device_id: str, paused: bool):
+    if is_dry_run():
+        block_unmocked_mutation("pause_device")
     with translate_errors(code="pause_device_failed", message="Failed to pause device"):
-        resp = await facade.pause_device(client, network_id, device_id, paused)
+        resp = await client.pause_device(device_id, paused, network_id=network_id)
         cache.invalidate(keys.device_prefix(network_id))
         cache.clear_upstream("devices", network_id=network_id)
         return resp.get("data", resp)

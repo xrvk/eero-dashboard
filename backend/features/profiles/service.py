@@ -2,7 +2,6 @@ from eero import EeroClient
 
 from core import cache
 from core.cache import keys
-from core import facade
 from core.dry_run import is_dry_run, block_unmocked_mutation
 from core.errors import translate_errors
 
@@ -120,24 +119,30 @@ async def set_devices(client: EeroClient, network_id: str, profile_id: str, devi
 
 
 async def create_profile(client: EeroClient, network_id: str, name: str):
+    if is_dry_run():
+        block_unmocked_mutation("create_profile")
     with translate_errors(code="create_profile_failed", message="Failed to create profile"):
-        resp = await facade.create_profile(client, network_id, name)
+        resp = await client.create_profile(name, network_id=network_id)
         cache.invalidate(keys.profile_prefix(network_id))
         cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 
 async def rename_profile(client: EeroClient, network_id: str, profile_id: str, name: str):
+    if is_dry_run():
+        block_unmocked_mutation("rename_profile")
     with translate_errors(code="rename_profile_failed", message="Failed to rename profile"):
-        resp = await facade.rename_profile(client, network_id, profile_id, name)
+        resp = await client.rename_profile(profile_id, name, network_id=network_id)
         cache.invalidate(keys.profile_prefix(network_id))
         cache.clear_upstream("profiles", network_id=network_id)
         return _data(resp)
 
 
 async def delete_profile(client: EeroClient, network_id: str, profile_id: str):
+    if is_dry_run():
+        block_unmocked_mutation("delete_profile")
     with translate_errors(code="delete_profile_failed", message="Failed to delete profile"):
-        resp = await facade.delete_profile(client, network_id, profile_id)
+        resp = await client.delete_profile(profile_id, network_id=network_id)
         cache.invalidate(keys.profile_prefix(network_id))
         cache.clear_upstream("profiles", network_id=network_id)
         return resp

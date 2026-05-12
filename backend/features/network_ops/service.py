@@ -4,7 +4,7 @@ from fastapi import HTTPException
 
 from eero import EeroClient
 
-from core import cache, facade
+from core import cache
 from core.cache import keys
 from core.dry_run import is_dry_run, block_unmocked_mutation
 
@@ -114,9 +114,11 @@ async def _fetch_dns(client: EeroClient, network_id: str):
 
 
 async def set_dns_mode(client: EeroClient, network_id: str, mode: str, custom_servers: list[str] | None = None):
+    if is_dry_run():
+        block_unmocked_mutation("set_dns_mode")
     try:
         result = _data(
-            await facade.set_dns_mode(client, network_id, mode, custom_servers)
+            await client.set_dns_mode(mode, custom_servers=custom_servers, network_id=network_id)
         )
         cache.invalidate_network(network_id)
         return result
@@ -125,8 +127,10 @@ async def set_dns_mode(client: EeroClient, network_id: str, mode: str, custom_se
 
 
 async def set_dns_caching(client: EeroClient, network_id: str, enabled: bool):
+    if is_dry_run():
+        block_unmocked_mutation("set_dns_caching")
     try:
-        result = _data(await facade.set_dns_caching(client, network_id, enabled))
+        result = _data(await client.set_dns_caching(enabled, network_id=network_id))
         cache.invalidate_network(network_id)
         return result
     except Exception as exc:

@@ -16,17 +16,21 @@ async def get_password(client: EeroClient, network_id: str):
 
 
 async def set_network_name(client: EeroClient, network_id: str, name: str):
+    if is_dry_run():
+        block_unmocked_mutation("set_network_name")
     with translate_errors(code="set_name_failed", message="Failed to set network name"):
-        resp = await facade.set_network_name(client, network_id, name)
+        resp = await client.set_network_name(name, network_id=network_id)
         cache.invalidate_network(network_id)
         cache.clear_upstream("network", network_id=network_id)
         return resp.get("data", resp)
 
 
 async def set_guest_network(client: EeroClient, network_id: str, enabled: bool, name: str | None, password: str | None):
+    if is_dry_run():
+        block_unmocked_mutation("set_guest_network")
     with translate_errors(code="set_guest_failed", message="Failed to set guest network"):
-        resp = await facade.set_guest_network(
-            client, network_id, enabled, name=name, password=password,
+        resp = await client.set_guest_network(
+            enabled, name=name, password=password, network_id=network_id,
         )
         cache.invalidate_network(network_id)
         cache.clear_upstream("network", network_id=network_id)
@@ -46,8 +50,10 @@ async def get_sqm(client: EeroClient, network_id: str):
 
 
 async def set_sqm_enabled(client: EeroClient, network_id: str, enabled: bool):
+    if is_dry_run():
+        block_unmocked_mutation("set_sqm_enabled")
     with translate_errors(code="set_sqm_failed", message="Failed to set SQM enabled"):
-        resp = await facade.set_sqm_enabled(client, network_id, enabled)
+        resp = await client.set_sqm_enabled(enabled, network_id=network_id)
         cache.invalidate(keys.sqm(network_id))
         cache.invalidate(keys.network(network_id))
         cache.invalidate(keys.settings(network_id))
@@ -56,8 +62,10 @@ async def set_sqm_enabled(client: EeroClient, network_id: str, enabled: bool):
 
 
 async def configure_sqm(client: EeroClient, network_id: str, enabled: bool, upload_mbps: int | None, download_mbps: int | None):
+    if is_dry_run():
+        block_unmocked_mutation("configure_sqm")
     with translate_errors(code="configure_sqm_failed", message="Failed to configure SQM"):
-        resp = await facade.configure_sqm(client, network_id, enabled, upload_mbps, download_mbps)
+        resp = await client.configure_sqm(enabled, upload_mbps=upload_mbps, download_mbps=download_mbps, network_id=network_id)
         cache.invalidate(keys.sqm(network_id))
         cache.invalidate(keys.network(network_id))
         cache.invalidate(keys.settings(network_id))
@@ -66,8 +74,10 @@ async def configure_sqm(client: EeroClient, network_id: str, enabled: bool, uplo
 
 
 async def set_sqm_auto(client: EeroClient, network_id: str):
+    if is_dry_run():
+        block_unmocked_mutation("set_sqm_auto")
     with translate_errors(code="set_sqm_auto_failed", message="Failed to set SQM auto"):
-        resp = await facade.set_sqm_auto(client, network_id)
+        resp = await client.set_sqm_enabled(True, network_id=network_id)
         cache.invalidate(keys.sqm(network_id))
         cache.invalidate(keys.network(network_id))
         cache.invalidate(keys.settings(network_id))

@@ -90,8 +90,8 @@ class BlockUnmockedTests(unittest.TestCase):
         self.assertEqual(ctx.exception.detail["code"], "dry_run_blocked")
 
 
-class FacadeDryRunIntegrationTests(unittest.TestCase):
-    """Test that facade methods respect dry-run mode."""
+class ServiceDryRunIntegrationTests(unittest.TestCase):
+    """Test that service mutations respect dry-run mode."""
 
     def setUp(self):
         dry_run_module._DRY_RUN = None
@@ -100,54 +100,41 @@ class FacadeDryRunIntegrationTests(unittest.TestCase):
         dry_run_module._DRY_RUN = None
 
     @patch.dict(os.environ, {"EERO_DRY_RUN": "true"})
-    def test_put_settings_returns_mock(self):
-        import asyncio
-        from core import facade
-
-        client = AsyncMock()
-        result = asyncio.get_event_loop().run_until_complete(
-            facade._put_settings(client, "net1", {"name": "Test"})
-        )
-        self.assertEqual(result["data"]["name"], "Test")
-        self.assertTrue(result["data"]["_dry_run"])
-        # Should NOT have called the real API
-        client._api.networks._auth_api.get_auth_token.assert_not_called()
-
-    @patch.dict(os.environ, {"EERO_DRY_RUN": "true"})
-    def test_pause_device_returns_mock(self):
-        import asyncio
-        from core import facade
-
-        client = AsyncMock()
-        result = asyncio.get_event_loop().run_until_complete(
-            facade.pause_device(client, "net1", "dev1", True)
-        )
-        self.assertEqual(result["data"]["paused"], True)
-        self.assertTrue(result["data"]["_dry_run"])
-
-    @patch.dict(os.environ, {"EERO_DRY_RUN": "true"})
-    def test_guest_network_returns_mock(self):
-        import asyncio
-        from core import facade
-
-        client = AsyncMock()
-        result = asyncio.get_event_loop().run_until_complete(
-            facade.set_guest_network(client, "net1", True, name="Guest")
-        )
-        self.assertEqual(result["data"]["enabled"], True)
-        self.assertEqual(result["data"]["name"], "Guest")
-        self.assertTrue(result["data"]["_dry_run"])
-
-    @patch.dict(os.environ, {"EERO_DRY_RUN": "true"})
-    def test_blocked_mutation_raises_403(self):
+    def test_pause_device_blocked(self):
         import asyncio
         from fastapi import HTTPException
-        from core import facade
+        from features.devices import service as device_service
 
         client = AsyncMock()
         with self.assertRaises(HTTPException) as ctx:
             asyncio.get_event_loop().run_until_complete(
-                facade.create_profile(client, "net1", "Kid")
+                device_service.pause_device(client, "net1", "dev1", True)
+            )
+        self.assertEqual(ctx.exception.status_code, 403)
+
+    @patch.dict(os.environ, {"EERO_DRY_RUN": "true"})
+    def test_set_guest_network_blocked(self):
+        import asyncio
+        from fastapi import HTTPException
+        from features.network_settings import service as ns_service
+
+        client = AsyncMock()
+        with self.assertRaises(HTTPException) as ctx:
+            asyncio.get_event_loop().run_until_complete(
+                ns_service.set_guest_network(client, "net1", True, None, None)
+            )
+        self.assertEqual(ctx.exception.status_code, 403)
+
+    @patch.dict(os.environ, {"EERO_DRY_RUN": "true"})
+    def test_create_profile_blocked(self):
+        import asyncio
+        from fastapi import HTTPException
+        from features.profiles import service as profile_service
+
+        client = AsyncMock()
+        with self.assertRaises(HTTPException) as ctx:
+            asyncio.get_event_loop().run_until_complete(
+                profile_service.create_profile(client, "net1", "Kid")
             )
         self.assertEqual(ctx.exception.status_code, 403)
 
