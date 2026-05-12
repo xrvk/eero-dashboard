@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ArrowUp, ArrowDown, Zap, Pencil } from 'lucide-react';
 import { useFetch } from '../../hooks/useFetch';
 import * as api from '../../api';
 
@@ -281,33 +282,72 @@ export function GeneralSettings({ networkId }: { networkId: string }) {
             </label>
           </div>
           {sqmEnabled && (
-            <div style={{ paddingLeft: 4 }}>
-              {sqmEditMode ? (
-                <div className="sqm-edit-form">
-                  <div className="form-field">
-                    <label>Upload (Mbps)</label>
-                    <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)} placeholder="e.g. 50" min="1" />
+            <div className="sqm-config">
+              <div className="sqm-status-card">
+                <div className="sqm-status-header">
+                  <div className="sqm-status-title">
+                    <span className="general-card-icon">🚀</span>
+                    <h3>Queue Management</h3>
                   </div>
-                  <div className="form-field">
-                    <label>Download (Mbps)</label>
-                    <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)} placeholder="e.g. 500" min="1" />
-                  </div>
-                  <div className="dns-edit-actions">
-                    <button className="btn-primary" onClick={handleSqmSave} disabled={sqmSaving}>{sqmSaving ? 'Saving…' : 'Save'}</button>
-                    <button className="btn-cancel" onClick={() => setSqmEditMode(false)}>Cancel</button>
-                  </div>
+                  {!sqmEditMode && (
+                    <button className="btn-icon-sm" onClick={() => { setUploadMbps(currentUpload ? String(currentUpload) : ''); setDownloadMbps(currentDownload ? String(currentDownload) : ''); setSqmEditMode(true); }} title="Set manual limits">
+                      <Pencil size={16} />
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <div className="general-card-details">
-                  <div className="general-detail"><span>Mode</span><span>{sqmMode}</span></div>
-                  {currentUpload != null && <div className="general-detail"><span>Upload</span><span>{currentUpload} Mbps</span></div>}
-                  {currentDownload != null && <div className="general-detail"><span>Download</span><span>{currentDownload} Mbps</span></div>}
-                  <div className="sqm-mode-buttons" style={{ marginTop: 8 }}>
-                    <button className="btn-primary btn-sm" onClick={handleSqmAuto} disabled={sqmSaving}>Auto Optimize</button>
-                    <button className="btn-text" onClick={() => { setUploadMbps(currentUpload ? String(currentUpload) : ''); setDownloadMbps(currentDownload ? String(currentDownload) : ''); setSqmEditMode(true); }}>Manual</button>
+
+                {sqmEditMode ? (
+                  <div className="sqm-edit-fields">
+                    <div className="sqm-edit-row">
+                      <div className="form-field">
+                        <label>Upload (Mbps)</label>
+                        <input type="number" value={uploadMbps} onChange={(e) => setUploadMbps(e.target.value)} placeholder="e.g. 50" min="1" autoFocus />
+                      </div>
+                      <div className="form-field">
+                        <label>Download (Mbps)</label>
+                        <input type="number" value={downloadMbps} onChange={(e) => setDownloadMbps(e.target.value)} placeholder="e.g. 500" min="1" />
+                      </div>
+                    </div>
+                    <div className="guest-edit-actions">
+                      <button className="btn-primary" onClick={handleSqmSave} disabled={sqmSaving}>{sqmSaving ? 'Saving…' : 'Save'}</button>
+                      <button className="btn-cancel" onClick={() => setSqmEditMode(false)}>Cancel</button>
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <>
+                    <div className="sqm-mode-badge">
+                      <Zap size={14} />
+                      <span>{sqmMode === 'auto' ? 'Auto-optimized' : 'Manual'}</span>
+                    </div>
+
+                    {(currentUpload != null || currentDownload != null) && (
+                      <div className="sqm-limits">
+                        {currentUpload != null && (
+                          <div className="sqm-limit-item">
+                            <ArrowUp size={14} />
+                            <span className="sqm-limit-label">Upload</span>
+                            <span className="sqm-limit-value mono">{currentUpload} Mbps</span>
+                          </div>
+                        )}
+                        {currentDownload != null && (
+                          <div className="sqm-limit-item">
+                            <ArrowDown size={14} />
+                            <span className="sqm-limit-label">Download</span>
+                            <span className="sqm-limit-value mono">{currentDownload} Mbps</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {sqmMode !== 'auto' && (
+                      <button className="sqm-auto-btn" onClick={handleSqmAuto} disabled={sqmSaving}>
+                        <Zap size={14} />
+                        {sqmSaving ? 'Optimizing…' : 'Switch to Auto'}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           )}
           <div className="toggle-row">
