@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Frontend Architecture — eero Dashboard</title>
+</head>
+<body>
+
+<h1>Frontend Architecture</h1>
+
+<nav>
+  <strong>Sections:</strong>
+  <ul>
+    <li><a href="#entry-point">Entry Point</a></li>
+    <li><a href="#root-component">Root Component</a></li>
+    <li><a href="#api-layer">API Layer</a></li>
+    <li><a href="#hooks">Hooks</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#components">Components</a></li>
+    <li><a href="#styling">Styling</a></li>
+    <li><a href="#build-tooling">Build Tooling</a></li>
+  </ul>
+</nav>
+
+<section id="entry-point">
+  <h2>Entry Point</h2>
+  <p><code>main.tsx</code> renders <code>&lt;App /&gt;</code> inside <code>&lt;StrictMode&gt;</code>. No router library — navigation is tab-based state managed via <code>useHashRoute</code> hook. Global state lives in React Contexts (Theme, Auth, Network) rather than prop drilling from App.tsx.</p>
+</section>
+
+<section id="root-component">
+  <h2>Root Component (<code>App.tsx</code>)</h2>
+  <p><code>App.tsx</code> wraps the app in context providers and delegates state management:</p>
+  <table>
+    <thead>
+      <tr><th>Provider</th><th>Context</th><th>State Managed</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>ThemeProvider</code></td><td><code>ThemeContext</code></td><td>theme (dark/light/auto), localStorage sync</td></tr>
+      <tr><td><code>NetworkProvider</code></td><td><code>NetworkContext</code></td><td>networks, selectedNetwork, networkDetail, eeros, prefetch</td></tr>
+      <tr><td><code>AuthProvider</code></td><td><code>AuthContext</code></td><td>auth status, checkAuth flow, logout</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Render Logic</h3>
+  <pre><code>ThemeProvider → NetworkProvider → AuthProvider → AppMain
+  checking?    → spinner
+  !auth?       → &lt;LoginForm /&gt;
+  else         → &lt;AppSidebar /&gt; + &lt;AppContent /&gt;</code></pre>
+
+  <h3>Key Effects</h3>
+  <ul>
+    <li><strong>On mount:</strong> <code>AuthProvider.checkAuth()</code> → fetch auth status → load networks → auto-select first</li>
+    <li><strong>On network select:</strong> <code>NetworkProvider</code> fires <code>prefetch(selectedNetwork)</code> which warms <strong>both</strong> the backend TTL cache and the frontend response cache (see <a href="data-flow.html">Data flow</a>)</li>
+    <li><strong>On theme change:</strong> <code>ThemeProvider</code> sets <code>data-theme</code> attribute on <code>&lt;html&gt;</code>, persists to localStorage</li>
+  </ul>
+</section>
+
+<section id="api-layer">
+  <h2>API Layer</h2>
+  <p>All API functions live in feature-scoped modules under <code>api/</code>. The top-level <code>api.ts</code> is a thin re-export barrel (<code>export * from './api/index'</code>) so existing <code>import * as api from '../api'</code> imports continue to work.</p>
+
+  <section id="api-client">
+    <h3><code>api/client.ts</code> — Base Request Handler</h3>
+    <pre><code>request&lt;T&gt;(path: string, options?: RequestInit): Promise&lt;T&gt;</code></pre>
+    <ul>
+      <li>Prepends <code>/api</code> base path</li>
+      <li>Sets <code>Content-Type: application/json</code></li>
+      <li>Extracts error messages from <code>{ detail, error.message }</code> on failure</li>
+      <li>All API modules use this as their HTTP primitive</li>
+    </ul>
+  </section>
+
+  <section id="api-types">
+    <h3><code>api/types.ts</code> — Shared Types</h3>
+    <p>Cross-cutting types used by multiple modules: <code>SqmSettings</code>, <code>GuestNetworkSettings</code>, <code>DnsSettingsData</code>, <code>DnsCustomConfig</code>, <code>FirmwareUpdate</code>.</p>
+  </section>
+
+  <section id="api-auth">
+    <h3><code>api/auth.ts</code> — Authentication</h3>
+    <p><code>AuthStatus</code> type. Functions: <code>getAuthStatus()</code>, <code>login()</code>, <code>verify()</code>, <code>logout()</code>.</p>
+  </section>
+
+  <section id="api-networks">
+    <h3><code>api/networks.ts</code> — Networks &amp; Speed</h3>
+    <p><code>Network</code>, <code>SpeedHistoryEntry</code> types. Functions: <code>getNetworks()</code>, <code>getNetwork()</code>, <code>runSpeedTest()</code>, <code>getSpeedHistory()</code>.</p>
+  </section>
+
+  <section id="api-eeros">
+    <h3><code>api/eeros.ts</code> — Eero Nodes</h3>
+    <p><code>EeroNode</code> type. Functions: <code>getEeros()</code>, <code>getEero()</code>, <code>prefetchEero()</code>, <code>rebootEero()</code>, <code>getLedStatus()</code>, <code>setLed()</code>, <code>setLedBrightness()</code>, <code>getNightlight()</code>, <code>setNightlight()</code>.</p>
+  </section>
+
+  <section id="api-devices">
+    <h3><code>api/devices.ts</code> — Devices</h3>
+    <p><code>Device</code> type. Functions: <code>getDevices()</code>, <code>getDevice()</code>, <code>pauseDevice()</code>, <code>blockDevice()</code>, <code>setDeviceNickname()</code>, <code>renameDevice()</code>, <code>getDevicePriority()</code>, <code>setDevicePriority()</code>.</p>
+  </section>
+
+  <section id="api-profiles">
+    <h3><code>api/profiles.ts</code> — Profiles &amp; Parental Controls</h3>
+    <p><code>Profile</code> type. Functions: <code>getProfiles()</code>, <code>createProfile()</code>, <code>renameProfile()</code>, <code>deleteProfile()</code>, <code>pauseProfile()</code>, <code>setBedtime()</code>, <code>getBlockedApps()</code>, <code>setBlockedApps()</code>, <code>setProfileDevices()</code>, <code>getProfileSchedule()</code>, <code>setProfileScheduleFull()</code>, <code>setWeekdayBedtime()</code>, <code>setWeekendBedtime()</code>, <code>clearProfileSchedule()</code>, <code>updateContentFilter()</code>, <code>updateBlockList()</code>.</p>
+  </section>
+
+  <section id="api-settings">
+    <h3><code>api/settings.ts</code> — Network Settings</h3>
+    <p>Types: <code>SecuritySettings</code>, <code>ForwardEntry</code>, <code>ReservationEntry</code>, <code>BlacklistEntry</code>, <code>DiagnosticsResult</code>, <code>NetworkSettingsSummary</code>. Functions for security, DNS, port forwarding, reservations, SQM, blacklist, firmware updates, network reboot, password, guest network, thread, routing, and diagnostics.</p>
+  </section>
+
+  <section id="api-activity">
+    <h3><code>api/activity.ts</code> — Activity &amp; Health</h3>
+    <p>Functions: <code>getActivity()</code>, <code>getActivityHistory()</code>, <code>getActivityClients()</code>, <code>getActivityCategories()</code>.</p>
+  </section>
+
+  <section id="api-prefetch">
+    <h3><code>api/prefetch.ts</code> — Cache Warming</h3>
+    <p><code>prefetch()</code> warms both the backend TTL cache and the frontend response cache on network select.</p>
+  </section>
+
+  <section id="api-legacy">
+    <h3><code>api.ts</code> — Legacy Barrel</h3>
+    <p>Re-exports everything from <code>api/index.ts</code>. Existing components import from here. New code should prefer feature-scoped imports (e.g. <code>import { getDevices } from './api/devices'</code>).</p>
+  </section>
+</section>
+
+<section id="hooks">
+  <h2>Hooks</h2>
+  <section id="usefetch">
+    <h3><code>useFetch&lt;T&gt;(fetcher, deps, options, cacheKey?)</code></h3>
+    <p>Shared data-fetching hook used by all components.</p>
+    <table>
+      <thead>
+        <tr><th>Return</th><th>Type</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>data</code></td><td><code>T | null</code></td><td>Latest fetched data</td></tr>
+        <tr><td><code>loading</code></td><td><code>boolean</code></td><td>Request in flight</td></tr>
+        <tr><td><code>error</code></td><td><code>string | null</code></td><td>Error message</td></tr>
+        <tr><td><code>status</code></td><td><code>idle | loading | success | error</code></td><td>Fetch lifecycle</td></tr>
+        <tr><td><code>refetch()</code></td><td>function</td><td>Manual re-trigger</td></tr>
+        <tr><td><code>cancel()</code></td><td>function</td><td>Abort in-flight request</td></tr>
+      </tbody>
+    </table>
+    <h4>Features</h4>
+    <ul>
+      <li>Dependency-based re-fetch (like <code>useEffect</code> deps)</li>
+      <li>Configurable retry count + delay</li>
+      <li>AbortController cleanup on unmount</li>
+      <li>StrictMode-safe: detects aborted fetch on remount and re-triggers</li>
+      <li><strong>Frontend response cache:</strong> When <code>cacheKey</code> is provided (typically the API path), data is stored in a module-level <code>Map</code>. On subsequent mounts, data is read synchronously — no loading spinner flash.</li>
+      <li><code>prefetchRequest(path, fetcher)</code> can populate the cache before any component mounts</li>
+    </ul>
+    <h4>Usage Pattern</h4>
+    <pre><code>const { data, loading, error } = useFetch(
+  () =&gt; api.getDevices(networkId),
+  [networkId],
+  {},
+  `/networks/${networkId}/devices`,  // cacheKey for instant re-mount
+);</code></pre>
+  </section>
+</section>
+
+<section id="features">
+  <h2>Features</h2>
+
+  <section id="theme-context">
+    <h3><code>features/app/ThemeContext.tsx</code> — Theme Management</h3>
+    <p>Provides <code>useTheme()</code> hook returning <code>{ theme, setTheme }</code>. Handles localStorage persistence and <code>data-theme</code> attribute sync.</p>
+  </section>
+
+  <section id="auth-context">
+    <h3><code>features/app/AuthContext.tsx</code> — Authentication State</h3>
+    <p>Provides <code>useAuth()</code> hook returning <code>{ auth, checking, checkAuth, logout }</code>. Manages the auth lifecycle including initial status check.</p>
+  </section>
+
+  <section id="network-context">
+    <h3><code>features/app/NetworkContext.tsx</code> — Network Data</h3>
+    <p>Provides <code>useNetwork()</code> hook returning <code>{ networks, selectedNetwork, setSelectedNetwork, networkDetail, eeros, setNetworks }</code>. Owns data fetching (via <code>useFetch</code>) and prefetch triggering.</p>
+  </section>
+
+  <section id="app-content">
+    <h3><code>features/app/AppContent.tsx</code> — Tab Router</h3>
+    <p>All tab components are <strong>eagerly imported</strong> — no <code>React.lazy()</code> or <code>Suspense</code>. Each tab is wrapped in an <code>ErrorBoundary</code> for per-feature crash isolation (a crash in Devices doesn't take down Profiles).</p>
+    <aside>
+      <p><strong>Design decision:</strong> Lazy loading was removed because the perceived half-second delay from <code>Suspense</code> fallbacks was worse than the slightly larger initial bundle. Since the frontend prefetch already warms the response cache before any tab is visited, eager imports make tab switching feel instant.</p>
+    </aside>
+    <table>
+      <thead>
+        <tr><th>Tab</th><th>Component</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>devices</code></td><td><code>DeviceList</code></td></tr>
+        <tr><td><code>activity</code></td><td><code>ActivityView</code></td></tr>
+        <tr><td><code>profiles</code></td><td><code>ProfileManager</code></td></tr>
+        <tr><td><code>settings-general</code></td><td><code>GeneralSettings</code></td></tr>
+        <tr><td><code>settings-forwards</code></td><td><code>PortForwardsSettings</code></td></tr>
+        <tr><td><code>settings-reservations</code></td><td><code>DhcpReservationsSettings</code></td></tr>
+        <tr><td><code>settings-guest</code></td><td><code>GuestNetwork</code></td></tr>
+        <tr><td><code>settings-blacklist</code></td><td><code>BlacklistSettings</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="app-sidebar">
+    <h3><code>features/app/AppSidebar.tsx</code> — Navigation</h3>
+    <p>Renders network selector dropdown, tab navigation buttons, eero node status indicators, and speed widget.</p>
+  </section>
+
+  <section id="shared-types">
+    <h3><code>features/app/types.ts</code> — Shared Types</h3>
+    <table>
+      <thead>
+        <tr><th>Type</th><th>Values</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>AppTab</code></td><td><code>devices</code>, <code>activity</code>, <code>profiles</code>, <code>settings-*</code></td><td>Tab navigation IDs</td></tr>
+        <tr><td><code>SignalFilter</code></td><td><code>all</code>, <code>excellent</code>, <code>good</code>, <code>fair</code>, <code>poor</code></td><td>Signal quality click-through filter</td></tr>
+        <tr><td><code>BandClickFilter</code></td><td><code>all</code>, <code>2.4ghz</code>, <code>5ghz</code>, <code>6ghz</code>, <code>wired</code></td><td>Band click-through filter from Health tab</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="cross-tab">
+    <h3>Cross-tab Click-throughs (Health → Devices)</h3>
+    <p>The Health tab (<code>ActivityView</code>) has clickable stat rows in "Clients by Band" and "Signal Quality" panels. Clicking a row navigates to the Devices tab with a URL filter parameter:</p>
+    <pre><code>Health tab band row click    →  #/devices?band=5ghz
+Health tab signal row click  →  #/devices?signal=excellent</code></pre>
+    <p>The flow is: <code>ActivityView</code> → <code>onBandClick</code>/<code>onSignalClick</code> callback → <code>App.tsx</code> calls <code>setRoute('devices', { band })</code> → <code>useHashRoute</code> updates URL hash → <code>DeviceList</code> reads <code>bandClickFilter</code>/<code>signalFilter</code> prop and applies the filter. Both filters show a dismissible chip in the DeviceList toolbar.</p>
+    <p><code>ActivityView</code> also calls <code>prefetchRequest</code> on mount for the devices endpoint, ensuring the response cache is warm even if the initial prefetch has expired.</p>
+  </section>
+
+  <section id="device-client">
+    <h3><code>features/devices/client.ts</code> — Feature-scoped Device Client</h3>
+    <p>Thin wrapper that re-exports device API functions under a <code>devicesClient</code> object for use by <code>DeviceList</code>.</p>
+  </section>
+</section>
+
+<section id="components">
+  <h2>Components</h2>
+  <table>
+    <thead>
+      <tr><th>Component</th><th>File</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>CopyableValue</code></td><td><code>shared/CopyableValue.tsx</code></td><td>Click-to-copy monospace value with feedback</td></tr>
+      <tr><td><code>ErrorBoundary</code></td><td><code>shared/ErrorBoundary.tsx</code></td><td>Per-feature crash isolation with retry button</td></tr>
+      <tr><td><code>LoginForm</code></td><td><code>LoginForm.tsx</code></td><td>Email/phone → verification code 2FA flow</td></tr>
+      <tr><td><code>DeviceList</code></td><td><code>devices/</code></td><td>Device grid/list with filtering, sorting, grouping by node. Split into sub-components: <code>DeviceCard</code>, <code>TableRowMenu</code>, plus <code>utils.ts</code> for <code>getDeviceIcon</code> and connectivity helpers.</td></tr>
+      <tr><td><code>DeviceDrawer</code></td><td><code>DeviceDrawer.tsx</code></td><td>Slide-out device detail panel (priority, DHCP reservation)</td></tr>
+      <tr><td><code>NodeDrawer</code></td><td><code>NodeDrawer.tsx</code></td><td>Slide-out node detail panel (LED, firmware, connectivity)</td></tr>
+      <tr><td><code>ActivityView</code></td><td><code>ActivityView.tsx</code></td><td>Speed test trigger + network health monitoring</td></tr>
+      <tr><td><code>ClickableStatRow</code></td><td><code>ClickableStatRow.tsx</code></td><td>Shared clickable bar-chart row used by Health tab band/signal sections</td></tr>
+      <tr><td><code>ProfileManager</code></td><td><code>profiles/</code></td><td>Parental controls: pause, bedtime, content filters, scheduling. Split into sub-components.</td></tr>
+      <tr><td><code>SettingsView</code></td><td><code>SettingsView.tsx</code> → <code>settings/</code></td><td>Barrel re-export; individual components split into <code>components/settings/</code></td></tr>
+      <tr><td><code>GuestNetwork</code></td><td><code>GuestNetwork.tsx</code></td><td>Guest network enable/disable + credentials</td></tr>
+      <tr><td><code>SpeedHistory</code></td><td><code>SpeedHistory.tsx</code></td><td>Recharts line chart of historical speed test data</td></tr>
+    </tbody>
+  </table>
+  <p><code>SettingsView.tsx</code> exports multiple named components: <code>GeneralSettings</code>, <code>PortForwardsSettings</code>, <code>DhcpReservationsSettings</code>, <code>BlacklistSettings</code>.</p>
+</section>
+
+<section id="styling">
+  <h2>Styling</h2>
+  <ul>
+    <li><strong>Plain CSS</strong> — <code>index.css</code> is an import aggregator that loads split files from <code>styles/</code>:
+      <ul>
+        <li><code>styles/variables.css</code> — CSS custom properties (<code>:root</code>, <code>[data-theme]</code>, color-scheme media query)</li>
+        <li><code>styles/base.css</code> — Reset (<code>*</code>), <code>body</code>, and app-loading spinner</li>
+        <li><code>styles/layout.css</code> — App shell: sidebar, header, main content area, theme toggle, sidebar speed widget</li>
+        <li><code>styles/components.css</code> — All UI components: cards, buttons, toggles, forms, tables, tabs, badges, filters, etc.</li>
+        <li><code>styles/drawers.css</code> — Slide-out drawer panels (device drawer, node drawer)</li>
+        <li><code>styles/charts.css</code> — Speed history charts, tooltips, speed table</li>
+        <li><code>styles/animations.css</code> — <code>@keyframes</code> definitions and spinner</li>
+        <li><code>styles/responsive.css</code> — All <code>@media</code> breakpoint overrides</li>
+      </ul>
+    </li>
+    <li><strong><code>App.css</code></strong> — Additional layout styles</li>
+    <li><strong>Theme:</strong> Dark / light / auto via <code>data-theme</code> attribute on <code>&lt;html&gt;</code></li>
+    <li><strong>CSS variables</strong> for colors, shadows, and gradients: <code>--bg-card</code>, <code>--text</code>, <code>--accent</code>, etc.</li>
+    <li><strong>Typography:</strong> DM Sans (body), JetBrains Mono (monospace values)</li>
+    <li><strong>Icons:</strong> Lucide React (<code>lucide-react</code>) — all icons are SVG components with <code>currentColor</code></li>
+    <li><strong>Atmosphere:</strong> Radial gradient overlays on body/login, gradient card surfaces, glow shadows on hover</li>
+    <li><strong>Animations:</strong> Staggered card reveal, tab slide-fade, hover lift transforms</li>
+    <li><strong>Layout:</strong> CSS Grid (sidebar + main) and Flexbox</li>
+    <li><strong>Charts:</strong> Recharts library</li>
+  </ul>
+</section>
+
+<section id="build-tooling">
+  <h2>Build Tooling</h2>
+  <table>
+    <thead>
+      <tr><th>Tool</th><th>Version</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Vite</td><td>8.x</td><td>Dev server (port 5173) + production bundler</td></tr>
+      <tr><td>TypeScript</td><td>6.x</td><td>Type checking (<code>tsc -b</code>)</td></tr>
+      <tr><td>ESLint</td><td>10.x</td><td>Linting with react-hooks + react-refresh plugins</td></tr>
+      <tr><td>Vitest</td><td>4.x</td><td>Unit tests (jsdom environment)</td></tr>
+      <tr><td>React</td><td>19.x</td><td>UI framework</td></tr>
+      <tr><td>Recharts</td><td>3.8</td><td>Speed history charting</td></tr>
+      <tr><td>Lucide React</td><td>1.x</td><td>SVG icon components</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Scripts</h3>
+  <pre><code>npm run dev        # Start Vite dev server
+npm run build      # tsc -b &amp;&amp; vite build
+npm run typecheck  # tsc -b (type check only)
+npm run lint       # eslint .
+npm run test       # vitest run</code></pre>
+
+  <h3>Vite Proxy</h3>
+  <p>In development, Vite proxies <code>/api</code> requests to <code>http://localhost:8420</code>:</p>
+  <pre><code>server: {
+  port: 5173,
+  proxy: { '/api': { target: 'http://localhost:8420', changeOrigin: true } }
+}</code></pre>
+  <p>In production, FastAPI serves the built frontend from <code>backend/static/</code>.</p>
+</section>
+
+</body>
+</html>

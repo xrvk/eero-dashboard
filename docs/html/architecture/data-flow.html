@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Data Flow &amp; Caching — eero Dashboard</title>
+</head>
+<body>
+
+<h1>Data Flow &amp; Caching</h1>
+
+<section id="request-lifecycle">
+  <h2>Request Lifecycle</h2>
+  <p>A typical read request flows through five layers:</p>
+  <pre><code> Component          useFetch(() =&gt; api.getDevices(networkId))
+     │
+ API client          fetch("/api/networks/{id}/devices")
+     │
+ Vite proxy          → http://localhost:8420 (dev only)
+     │
+ FastAPI router      features/devices/router.py → service.list_devices()
+     │
+ Service + cache     cache.cached("net:{id}:devices", λ → client.get_devices())
+     │                    ├─ cache hit  → return immediately (~1ms)
+     │                    └─ cache miss → call eero cloud API (~300-500ms)
+     │
+ eero cloud API      https://api-user.e2ro.com/2.2/networks/{id}/devices</code></pre>
+</section>
+
+<section id="caching-strategy">
+  <h2>Caching Strategy</h2>
+
+  <section id="cache-layer">
+    <h3>Cache Layer</h3>
+    <p>The backend uses a simple in-memory TTL cache (<code>core/cache.py</code>). No external cache (Redis, etc.) is needed since the app is single-process.</p>
+    <table>
+      <thead>
+        <tr><th>Property</th><th>Value</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Storage</td><td>Python dict in process memory</td></tr>
+        <tr><td>Default TTL</td><td>300 seconds (5 minutes)</td></tr>
+        <tr><td>Key format</td><td><code>net:{network_id}:{resource}</code></td></tr>
+        <tr><td>Invalidation</td><td>Prefix-based deletion</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="cache-key-catalog">
+    <h3>Cache Key Catalog</h3>
+    <table>
+      <thead>
+        <tr><th>Key Pattern</th><th>Populated By</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>networks</code></td><td><code>networks/service.list_networks()</code></td></tr>
+        <tr><td><code>net:{id}:network</code></td><td><code>networks/service.get_network()</code>, prefetch</td></tr>
+        <tr><td><code>net:{id}:devices</code></td><td><code>devices/service.list_devices()</code>, prefetch</td></tr>
+        <tr><td><code>net:{id}:device:{did}</code></td><td><code>devices/service.get_device()</code></td></tr>
+        <tr><td><code>net:{id}:device:{did}:priority</code></td><td><code>devices/service.get_device_priority()</code></td></tr>
+        <tr><td><code>net:{id}:eeros</code></td><td><code>networks/service.list_eeros()</code>, prefetch</td></tr>
+        <tr><td><code>net:{id}:profiles</code></td><td><code>networks/service.list_profiles()</code>, prefetch</td></tr>
+        <tr><td><code>net:{id}:settings</code></td><td><code>networks/service.get_settings()</code></td></tr>
+        <tr><td><code>net:{id}:security</code></td><td><code>main.get_security()</code>, prefetch</td></tr>
+        <tr><td><code>net:{id}:dns</code></td><td><code>network_ops/service.get_dns()</code>, prefetch</td></tr>
+        <tr><td><code>net:{id}:sqm</code></td><td><code>main.get_sqm()</code>, prefetch</td></tr>
+        <tr><td><code>net:{id}:forwards</code></td><td><code>main.get_forwards()</code>, prefetch</td></tr>
+        <tr><td><code>net:{id}:reservations</code></td><td><code>main.get_reservations()</code>, prefetch</td></tr>
+        <tr><td><code>net:{id}:updates</code></td><td><code>main.get_updates()</code>, prefetch</td></tr>
+        <tr><td><code>net:{id}:thread</code></td><td><code>main.get_thread()</code>, prefetch</td></tr>
+        <tr><td><code>net:{id}:blacklist</code></td><td><code>main.get_blacklist()</code>, prefetch</td></tr>
+        <tr><td><code>net:{id}:routing</code></td><td><code>main.get_routing()</code></td></tr>
+        <tr><td><code>net:{id}:password</code></td><td><code>main.get_password()</code></td></tr>
+        <tr><td><code>net:{id}:activity</code></td><td><code>network_ops/service.get_activity()</code></td></tr>
+        <tr><td><code>net:{id}:activity:history:{period}</code></td><td><code>network_ops/service.get_activity_history()</code></td></tr>
+        <tr><td><code>net:{id}:activity:clients</code></td><td><code>network_ops/service.get_activity_clients()</code></td></tr>
+        <tr><td><code>net:{id}:activity:categories</code></td><td><code>network_ops/service.get_activity_categories()</code></td></tr>
+        <tr><td><code>net:{id}:diagnostics</code></td><td><code>network_ops/service.get_diagnostics()</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="prefetch">
+    <h3>Prefetch</h3>
+    <p>When the user selects a network, the frontend fires <code>api.prefetch(networkId)</code> which does two things:</p>
+    <ol>
+      <li><strong>Backend cache warm:</strong> <code>POST /api/prefetch/{network_id}</code> fires 12 parallel eero API calls, storing results in the backend TTL cache.</li>
+      <li><strong>Frontend cache warm:</strong> 14 parallel <code>GET</code> requests to the backend, storing responses in <code>_responseCache</code> (module-level <code>Map</code> in <code>useFetch.ts</code>).</li>
+    </ol>
+    <pre><code>Frontend prefetch (on network select):
+  ├─ POST /api/prefetch/{id}           → backend fires 12 eero API calls in parallel
+  └─ GET × 14 (settings, password,     → responses stored in _responseCache
+       updates, thread, routing,          so useFetch reads them synchronously
+       security, dns, sqm, forwards,      on first component mount
+       reservations, blacklist,
+       devices, eeros, profiles)</code></pre>
+    <p>The <code>useFetch</code> hook accepts an optional <code>cacheKey</code> parameter (the API path). On mount, it checks <code>_responseCache</code> synchronously — if data exists, it initializes with <code>loading: false</code> and renders immediately. A background refetch still runs to keep data fresh.</p>
+    <p>This means by the time a user clicks any tab, both the JS component (eagerly imported) and the data (prefetched) are ready — <strong>zero loading spinners</strong> on tab switch.</p>
+  </section>
+</section>
+
+<section id="mutation-flow">
+  <h2>Mutation Flow</h2>
+  <p>Mutations follow a write-then-invalidate pattern:</p>
+  <pre><code> Component          api.pauseDevice(networkId, deviceId, true)
+     │
+ Service            client.pause_device(deviceId, true)
+     │               cache.invalidate("net:{id}:device")    ← bust all device cache
+     │
+ Component          refetch()  → useFetch re-triggers
+     │
+ Service            cache miss → fresh data from eero API</code></pre>
+
+  <section id="invalidation-scope">
+    <h3>Invalidation Scope</h3>
+    <table>
+      <thead>
+        <tr><th>Mutation</th><th>Cache Keys Invalidated</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Device pause/block/rename</td><td><code>net:{id}:device*</code> (all device entries)</td></tr>
+        <tr><td>Device priority</td><td><code>net:{id}:device:{did}*</code> (specific device)</td></tr>
+        <tr><td>Security settings</td><td><code>net:{id}:*</code> (entire network — broad)</td></tr>
+        <tr><td>DNS mode/caching</td><td><code>net:{id}:*</code> (entire network)</td></tr>
+        <tr><td>SQM changes</td><td><code>net:{id}:sqm</code></td></tr>
+        <tr><td>Port forward create/delete</td><td><code>net:{id}:forwards</code></td></tr>
+        <tr><td>DHCP reservation create/delete</td><td><code>net:{id}:reservations</code></td></tr>
+        <tr><td>Blacklist add/remove</td><td><code>net:{id}:blacklist</code></td></tr>
+        <tr><td>Network name/guest/reboot</td><td><code>net:{id}:*</code> (entire network)</td></tr>
+        <tr><td>Profile pause</td><td><code>net:{id}:profiles</code></td></tr>
+        <tr><td>Run diagnostics</td><td><code>net:{id}:diagnostics</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+</section>
+
+<section id="frontend-state">
+  <h2>Frontend State Management</h2>
+  <p>No state management library. All state lives in <code>App.tsx</code> root component and is passed down as props.</p>
+  <pre><code>App.tsx
+├── auth, networks, selectedNetwork, tab, theme
+├── signalFilter, bandClickFilter (from URL hash params)
+├── &lt;AppSidebar /&gt;     ← receives networks, eeros, tab setter
+└── &lt;AppContent /&gt;     ← receives selectedNetwork, tab, filters
+    ├── &lt;ActivityView /&gt; ← receives onSignalClick, onBandClick callbacks
+    └── &lt;DeviceList /&gt;   ← receives signalFilter, bandClickFilter props</code></pre>
+  <p>Each leaf component manages its own fetch state via <code>useFetch</code>. No global data store.</p>
+
+  <section id="cross-tab-nav">
+    <h3>Cross-tab Navigation</h3>
+    <p>The Health tab (<code>ActivityView</code>) exposes click-through rows that navigate to the Devices tab with URL-driven filters via <code>useHashRoute</code>. The URL hash encodes the filter (e.g. <code>#/devices?band=5ghz</code> or <code>#/devices?signal=excellent</code>), which <code>App.tsx</code> reads and passes as props to <code>DeviceList</code>.</p>
+  </section>
+</section>
+
+<section id="error-handling">
+  <h2>Error Handling</h2>
+
+  <section id="backend-errors">
+    <h3>Backend</h3>
+    <pre><code>Service function
+  └─ translate_errors() context manager
+       └─ catches Exception → HTTPException({ code, message, status })
+            └─ http_exception_handler() in main.py
+                 └─ JSONResponse({ error: { code, message, status }, detail })</code></pre>
+  </section>
+
+  <section id="frontend-errors">
+    <h3>Frontend</h3>
+    <pre><code>api/client.ts request()
+  └─ res.ok?
+       ├─ yes → return parsed JSON
+       └─ no  → extract message from { detail, error.message }
+                → throw Error(message)
+                     └─ useFetch catches → sets error state
+                          └─ component renders error banner</code></pre>
+  </section>
+</section>
+
+<section id="env-vars">
+  <h2>Environment Variables</h2>
+  <table>
+    <thead>
+      <tr><th>Variable</th><th>Default</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>SPEED_HISTORY_DAYS</code></td><td><code>365</code></td><td>Speed test history retention</td></tr>
+      <tr><td><code>SPEED_TEST_POLL_INTERVAL</code></td><td><code>10</code></td><td>Seconds between speed test polls</td></tr>
+      <tr><td><code>SPEED_TEST_TIMEOUT</code></td><td><code>120</code></td><td>Max seconds to wait for speed test</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</body>
+</html>
