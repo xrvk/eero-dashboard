@@ -573,7 +573,7 @@
 .band-row { display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: var(--radius-sm); transition: background 0.15s; }
 .band-row.clickable { cursor: pointer; }
 .band-row.clickable:hover { background: var(--bg-card-hover); }
-.band-label { font-size: 0.8rem; min-width: 80px; color: var(--text-muted); }
+.band-label { font-size: 0.8rem; width: 140px; flex-shrink: 0; white-space: nowrap; color: var(--text-muted); }
 .band-bar-track {
   flex: 1; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden;
 }
