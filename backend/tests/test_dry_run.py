@@ -142,12 +142,12 @@ class FacadeDryRunIntegrationTests(unittest.TestCase):
     def test_blocked_mutation_raises_403(self):
         import asyncio
         from fastapi import HTTPException
-        from core import facade
+        from features.profiles import service as profile_service
 
         client = AsyncMock()
         with self.assertRaises(HTTPException) as ctx:
             asyncio.get_event_loop().run_until_complete(
-                facade.create_profile(client, "net1", "Kid")
+                profile_service.create_profile(client, "net1", "Kid")
             )
         self.assertEqual(ctx.exception.status_code, 403)
 

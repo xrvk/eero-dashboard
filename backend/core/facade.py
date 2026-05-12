@@ -121,43 +121,6 @@ async def set_guest_network(
     )
 
 
-# ── Profiles (need raw API access for CRUD) ─────────────────────────────────
-
-async def create_profile(client: EeroClient, network_id: str, name: str) -> dict:
-    if is_dry_run():
-        from core.dry_run import block_unmocked_mutation
-        block_unmocked_mutation("create_profile")
-    token = await _get_token(client)
-    return await client._api.profiles.post(
-        f"networks/{network_id}/profiles",
-        auth_token=token,
-        json={"name": name},
-    )
-
-
-async def rename_profile(client: EeroClient, network_id: str, profile_id: str, name: str) -> dict:
-    if is_dry_run():
-        from core.dry_run import block_unmocked_mutation
-        block_unmocked_mutation("rename_profile")
-    token = await _get_token(client)
-    return await client._api.profiles.put(
-        f"networks/{network_id}/profiles/{profile_id}",
-        auth_token=token,
-        json={"name": name},
-    )
-
-
-async def delete_profile(client: EeroClient, network_id: str, profile_id: str) -> dict:
-    if is_dry_run():
-        from core.dry_run import block_unmocked_mutation
-        block_unmocked_mutation("delete_profile")
-    token = await _get_token(client)
-    return await client._api.profiles.delete(
-        f"networks/{network_id}/profiles/{profile_id}",
-        auth_token=token,
-    )
-
-
 # ── Blacklist, forwards, reservations ────────────────────────────────────────
 
 async def add_to_blacklist(client: EeroClient, network_id: str, device_id: str) -> dict:
