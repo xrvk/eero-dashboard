@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Configuration — eero Dashboard</title>
+</head>
+<body>
+
+<h1>Configuration</h1>
+
+<section id="environment-variables">
+  <h2>Environment Variables</h2>
+  <table>
+    <thead>
+      <tr><th>Variable</th><th>Default</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>SPEED_HISTORY_DAYS</code></td><td><code>365</code></td><td>Number of days to retain speed test history. Set to <code>0</code> to keep all results.</td></tr>
+      <tr><td><code>SPEED_TEST_POLL_INTERVAL</code></td><td><code>10</code></td><td>Seconds between speed test status polls.</td></tr>
+      <tr><td><code>SPEED_TEST_TIMEOUT</code></td><td><code>120</code></td><td>Max seconds to wait for a speed test to complete.</td></tr>
+    </tbody>
+  </table>
+  <p>Set variables in <code>docker-compose.yml</code> under <code>environment</code>, or export them in your shell for local development:</p>
+  <pre><code>export SPEED_HISTORY_DAYS=90</code></pre>
+</section>
+
+<section id="cache-behavior">
+  <h2>Cache Behavior</h2>
+  <ul>
+    <li>The backend uses an in-memory TTL cache (5-minute default) for API reads. See <a href="architecture/data-flow.html">Data Flow &amp; Caching</a> for details.</li>
+    <li><code>/api/prefetch/{network_id}</code> warms upstream eero API paths in parallel for faster subsequent reads.</li>
+    <li>Speed test history is persisted to <code>data/speed_history.json</code> (inside the data volume) and pruned using <code>SPEED_HISTORY_DAYS</code>.</li>
+    <li>The eero session cookie is persisted to <code>data/.eero_session</code> so logins survive container rebuilds.</li>
+    <li>There is no automatic invalidation layer beyond upstream freshness and speed-history retention pruning.</li>
+  </ul>
+</section>
+
+</body>
+</html>

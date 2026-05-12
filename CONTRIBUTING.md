@@ -163,8 +163,8 @@ Blocked endpoints return a 403 with a clear message explaining the limitation.
 ## Docs to update with behavior changes
 
 - `README.md`
-- `docs/installation.md`
-- `docs/configuration.md`
-- `docs/API_REFERENCE.md`
-- `docs/architecture/` (backend, frontend, data-flow)
-- Relevant ADR in `docs/adr/`
+- `docs/html/installation.html`
+- `docs/html/configuration.html`
+- `docs/html/api-reference.html`
+- `docs/html/architecture/` (backend, frontend, data-flow)
+- Relevant ADR in `docs/html/adr/`

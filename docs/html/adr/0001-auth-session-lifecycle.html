@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ADR 0001: Auth Session Lifecycle — eero Dashboard</title>
+</head>
+<body>
+
+<article>
+  <h1>ADR 0001: Single Shared eero Client/Session Lifecycle</h1>
+
+  <section id="status">
+    <h2>Status</h2>
+    <p><strong>Accepted</strong></p>
+  </section>
+
+  <section id="context">
+    <h2>Context</h2>
+    <p>The backend needs a stable authenticated eero client across requests while still supporting logout/reset and clean shutdown behavior.</p>
+  </section>
+
+  <section id="decision">
+    <h2>Decision</h2>
+    <p>Maintain one process-level <code>EeroClient</code> instance in <code>backend/core/client.py</code>, initialized via FastAPI lifespan and reused through dependency helpers.</p>
+  </section>
+
+  <section id="consequences">
+    <h2>Consequences</h2>
+    <ul>
+      <li>Auth state is centralized and simpler for API handlers.</li>
+      <li>The session cookie is persisted to <code>backend/data/.eero_session</code> (inside the Docker volume), so logins survive container rebuilds.</li>
+      <li>Logout/reset can explicitly clear cookies and rebuild client state.</li>
+      <li>Future refactors should preserve this lifecycle unless migrating to per-user multi-session architecture.</li>
+    </ul>
+  </section>
+</article>
+
+</body>
+</html>

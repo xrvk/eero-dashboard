@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Backend Architecture — eero Dashboard</title>
+</head>
+<body>
+
+<h1>Backend Architecture</h1>
+
+<nav>
+  <strong>Sections:</strong>
+  <ul>
+    <li><a href="#core-modules">Core Modules</a></li>
+    <li><a href="#feature-modules">Feature Modules</a></li>
+    <li><a href="#main-endpoints">Endpoints in main.py</a></li>
+    <li><a href="#speed-test-flow">Speed Test Flow</a></li>
+  </ul>
+</nav>
+
+<section id="core-modules">
+  <h2>Core Modules</h2>
+
+  <section id="client">
+    <h3><code>core/client.py</code> — EeroClient Lifecycle</h3>
+    <p>Global singleton pattern. One <code>EeroClient</code> instance per app lifetime.</p>
+    <table>
+      <thead>
+        <tr><th>Function</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>ensure_client()</code></td><td>Lazy-init client, persists auth to <code>data/.eero_session</code> cookie file</td></tr>
+        <tr><td><code>get_client()</code></td><td>Returns authenticated client or raises 401</td></tr>
+        <tr><td><code>is_authenticated()</code></td><td>Quick flag check (no network call)</td></tr>
+        <tr><td><code>reset_client()</code></td><td>Close → reinitialize (called after logout)</td></tr>
+        <tr><td><code>lifespan()</code></td><td>FastAPI lifespan context: init on startup, close on shutdown</td></tr>
+      </tbody>
+    </table>
+    <p>The client uses the <code>eero-api</code> library (<code>EeroClient</code> class) which wraps the unofficial eero cloud REST API. Auth state is stored in a cookie file (<code>data/.eero_session</code>), not in memory, so it survives restarts and container rebuilds when the <code>data/</code> directory is volume-mounted.</p>
+  </section>
+
+  <section id="cache">
+    <h3><code>core/cache.py</code> — In-memory TTL Cache</h3>
+    <p>Simple dict-based cache: <code>{key: (expiry_monotonic, value)}</code>.</p>
+    <table>
+      <thead>
+        <tr><th>Function</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>get(key)</code></td><td>Return value if not expired, else <code>None</code></td></tr>
+        <tr><td><code>put(key, value, ttl)</code></td><td>Store with monotonic expiry (default 300s)</td></tr>
+        <tr><td><code>cached(key, factory, ttl)</code></td><td>Check cache → call <code>factory()</code> on miss → store → return</td></tr>
+        <tr><td><code>invalidate(prefix)</code></td><td>Delete all keys starting with prefix</td></tr>
+        <tr><td><code>invalidate_network(id)</code></td><td>Shorthand for <code>invalidate(f"net:{id}:")</code> + clear upstream</td></tr>
+        <tr><td><code>clear()</code></td><td>Flush everything</td></tr>
+        <tr><td><code>clear_upstream(*cats)</code></td><td>Clear eero-api client's internal cache for given categories</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Cache key convention:</strong> Always use <code>cache.keys.*</code> methods — never hardcode f-strings.</p>
+    <pre><code>cache.keys.device_list(network_id)    # "net:{id}:device:list"
+cache.keys.security(network_id)       # "net:{id}:security"
+cache.keys.profile(network_id, pid)   # "net:{id}:profile:{pid}"</code></pre>
+    <p>Available key generators: <code>networks_list</code>, <code>network</code>, <code>eeros</code>, <code>settings</code>, <code>password</code>, <code>security</code>, <code>dns</code>, <code>sqm</code>, <code>updates</code>, <code>thread</code>, <code>routing</code>, <code>blacklist</code>, <code>forwards</code>, <code>reservations</code>, <code>activity</code>, <code>activity_sub</code>, <code>diagnostics</code>, plus device/profile prefix/list/detail/sub variants.</p>
+    <p><strong>TTL:</strong> 5 minutes. Mutations call <code>invalidate()</code> on affected keys so stale data is never served after a write.</p>
+    <p><strong>Upstream cache clearing:</strong> Every mutation <strong>must</strong> call <code>cache.clear_upstream()</code> to also clear the eero-api library's internal cache.</p>
+  </section>
+
+  <section id="facade">
+    <h3><code>core/facade.py</code> — eero-api Facade</h3>
+    <p>Wraps <code>client._api.*</code> access behind clean async functions. Service modules should <strong>never</strong> access <code>client._api</code> directly.</p>
+    <table>
+      <thead>
+        <tr><th>Function</th><th>Wraps</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>create_profile()</code></td><td><code>client._api.profiles.post(...)</code></td></tr>
+        <tr><td><code>rename_profile()</code></td><td><code>client._api.profiles.put(...)</code></td></tr>
+        <tr><td><code>delete_profile()</code></td><td><code>client._api.profiles.delete(...)</code></td></tr>
+        <tr><td><code>add_to_blacklist()</code></td><td><code>client._api.blacklist.add_to_blacklist(...)</code></td></tr>
+        <tr><td><code>remove_from_blacklist()</code></td><td><code>client._api.blacklist.remove_from_blacklist(...)</code></td></tr>
+        <tr><td><code>create_forward()</code></td><td><code>client._api.forwards.create_forward(...)</code></td></tr>
+        <tr><td><code>delete_forward()</code></td><td><code>client._api.forwards.delete_forward(...)</code></td></tr>
+        <tr><td><code>create_reservation()</code></td><td><code>client._api.reservations.create_reservation(...)</code></td></tr>
+        <tr><td><code>delete_reservation()</code></td><td><code>client._api.reservations.delete_reservation(...)</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="errors">
+    <h3><code>core/errors.py</code> — Error Handling</h3>
+    <p>All API errors use a consistent JSON shape:</p>
+    <pre><code>{
+  "error": { "code": "list_devices_failed", "message": "...", "status": 500 },
+  "detail": "..."
+}</code></pre>
+    <ul>
+      <li><code>api_error_response()</code> — builds the response dict</li>
+      <li><code>translate_errors()</code> — context manager that catches exceptions and converts to <code>HTTPException</code></li>
+    </ul>
+  </section>
+</section>
+
+<section id="feature-modules">
+  <h2>Feature Modules</h2>
+  <p>Each feature folder follows the pattern: <strong>router → service → schemas</strong>.</p>
+
+  <section id="feature-auth">
+    <h3><code>features/auth/</code></h3>
+    <p>Handles eero account login via email/phone + SMS/email verification code.</p>
+    <table>
+      <thead>
+        <tr><th>Route</th><th>Method</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>/api/auth/status</code></td><td>GET</td><td>Check auth state, return name/email</td></tr>
+        <tr><td><code>/api/auth/login</code></td><td>POST</td><td>Send verification code to email/phone</td></tr>
+        <tr><td><code>/api/auth/verify</code></td><td>POST</td><td>Submit verification code</td></tr>
+        <tr><td><code>/api/auth/logout</code></td><td>POST</td><td>Clear session, reset client</td></tr>
+      </tbody>
+    </table>
+    <p>Login detects phone vs email by regex and returns a message hinting where the code was sent.</p>
+  </section>
+
+  <section id="feature-devices">
+    <h3><code>features/devices/</code></h3>
+    <p>Device CRUD with caching and cache invalidation on mutations.</p>
+    <table>
+      <thead>
+        <tr><th>Route</th><th>Method</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>/api/networks/{id}/devices</code></td><td>GET</td><td>List all devices (cached)</td></tr>
+        <tr><td><code>/api/networks/{id}/devices/{did}</code></td><td>GET</td><td>Single device detail (cached)</td></tr>
+        <tr><td><code>/api/networks/{id}/devices/{did}/pause</code></td><td>POST</td><td>Pause/unpause internet</td></tr>
+        <tr><td><code>/api/networks/{id}/devices/{did}/block</code></td><td>POST</td><td>Block/unblock device</td></tr>
+        <tr><td><code>/api/networks/{id}/devices/{did}/nickname</code></td><td>POST</td><td>Set display name</td></tr>
+        <tr><td><code>/api/networks/{id}/devices/{did}/priority</code></td><td>GET/POST</td><td>Priority boost</td></tr>
+      </tbody>
+    </table>
+    <p>All mutations invalidate <code>net:{id}:device*</code> cache keys.</p>
+  </section>
+
+  <section id="feature-networks">
+    <h3><code>features/networks/</code></h3>
+    <p>Read-only network info. All endpoints are cached.</p>
+    <table>
+      <thead>
+        <tr><th>Route</th><th>Method</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>/api/networks</code></td><td>GET</td><td>List user's networks</td></tr>
+        <tr><td><code>/api/networks/{id}</code></td><td>GET</td><td>Network detail (name, speed, status)</td></tr>
+        <tr><td><code>/api/networks/{id}/eeros</code></td><td>GET</td><td>eero node list (gateway, mesh quality)</td></tr>
+        <tr><td><code>/api/networks/{id}/settings</code></td><td>GET</td><td>Aggregated settings object</td></tr>
+      </tbody>
+    </table>
+    <p><code>get_settings()</code> calls <code>get_network()</code> upstream and extracts a curated subset (name, password, timezone, SQM, DNS, guest network, etc.).</p>
+  </section>
+
+  <section id="feature-profiles">
+    <h3><code>features/profiles/</code></h3>
+    <p>Profile (parental control) management. Handles CRUD, pause, bedtime schedules, content filtering, and device assignment.</p>
+    <table>
+      <thead>
+        <tr><th>Route</th><th>Method</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>/api/networks/{id}/profiles</code></td><td>GET</td><td>List all profiles</td></tr>
+        <tr><td><code>/api/networks/{id}/profiles</code></td><td>POST</td><td>Create new profile</td></tr>
+        <tr><td><code>/api/networks/{id}/profiles/{pid}</code></td><td>GET</td><td>Single profile detail</td></tr>
+        <tr><td><code>/api/networks/{id}/profiles/{pid}/pause</code></td><td>POST</td><td>Pause/unpause profile internet</td></tr>
+        <tr><td><code>/api/networks/{id}/profiles/{pid}/blocked-apps</code></td><td>GET</td><td>List blocked apps</td></tr>
+        <tr><td><code>/api/networks/{id}/profiles/{pid}/blocked-apps</code></td><td>POST</td><td>Update blocked apps</td></tr>
+        <tr><td><code>/api/networks/{id}/profiles/{pid}/bedtime</code></td><td>POST</td><td>Set bedtime schedule</td></tr>
+        <tr><td><code>/api/networks/{id}/profiles/{pid}/schedule</code></td><td>GET</td><td>Get internet schedule</td></tr>
+        <tr><td><code>/api/networks/{id}/profiles/{pid}/schedule/set</code></td><td>POST</td><td>Set internet schedule</td></tr>
+        <tr><td><code>/api/networks/{id}/profiles/{pid}/schedule</code></td><td>DELETE</td><td>Clear internet schedule</td></tr>
+        <tr><td><code>/api/networks/{id}/profiles/{pid}/devices</code></td><td>PUT</td><td>Assign devices to profile</td></tr>
+        <tr><td><code>/api/networks/{id}/profiles/{pid}/rename</code></td><td>PUT</td><td>Rename profile</td></tr>
+        <tr><td><code>/api/networks/{id}/profiles/{pid}</code></td><td>DELETE</td><td>Delete profile</td></tr>
+      </tbody>
+    </table>
+    <p>All mutations invalidate <code>net:{id}:profiles</code> cache keys.</p>
+  </section>
+
+  <section id="feature-network-ops">
+    <h3><code>features/network_ops/</code></h3>
+    <p>Complex operations: prefetch, DNS, activity monitoring, diagnostics.</p>
+    <table>
+      <thead>
+        <tr><th>Route</th><th>Method</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>/api/prefetch/{id}</code></td><td>POST</td><td>Warm cache with 12 parallel eero API calls</td></tr>
+        <tr><td><code>/api/networks/{id}/dns</code></td><td>GET</td><td>DNS settings (cached)</td></tr>
+        <tr><td><code>/api/networks/{id}/dns/mode</code></td><td>POST</td><td>Set DNS mode + custom servers</td></tr>
+        <tr><td><code>/api/networks/{id}/dns/caching</code></td><td>POST</td><td>Toggle DNS caching</td></tr>
+        <tr><td><code>/api/networks/{id}/activity</code></td><td>GET</td><td>Current network activity</td></tr>
+        <tr><td><code>/api/networks/{id}/activity/history</code></td><td>GET</td><td>Activity by period (day/week/month)</td></tr>
+        <tr><td><code>/api/networks/{id}/activity/clients</code></td><td>GET</td><td>Per-client breakdown</td></tr>
+        <tr><td><code>/api/networks/{id}/activity/categories</code></td><td>GET</td><td>Per-category breakdown</td></tr>
+        <tr><td><code>/api/networks/{id}/diagnostics</code></td><td>GET/POST</td><td>Fetch/run diagnostics</td></tr>
+      </tbody>
+    </table>
+    <p>DNS mutations call <code>cache.invalidate_network()</code> since DNS changes affect multiple views.</p>
+  </section>
+</section>
+
+<section id="main-endpoints">
+  <h2>Endpoints in <code>main.py</code></h2>
+  <p>These haven't been decomposed into feature modules yet:</p>
+  <table>
+    <thead>
+      <tr><th>Category</th><th>Endpoints</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Health</td><td><code>GET /api/health</code></td></tr>
+      <tr><td>Speed test</td><td><code>POST /api/networks/{id}/speed-test</code>, <code>GET /api/networks/{id}/speed-history</code></td></tr>
+      <tr><td>Security</td><td><code>GET/PATCH /api/networks/{id}/security</code></td></tr>
+      <tr><td>Port forwards</td><td><code>GET/POST /api/networks/{id}/forwards</code>, <code>DELETE .../forwards/{fid}</code></td></tr>
+      <tr><td>DHCP reservations</td><td><code>GET/POST /api/networks/{id}/reservations</code>, <code>DELETE .../reservations/{rid}</code></td></tr>
+      <tr><td>Password &amp; name</td><td><code>GET /api/networks/{id}/password</code>, <code>POST .../name</code></td></tr>
+      <tr><td>Guest network</td><td><code>POST /api/networks/{id}/guest</code></td></tr>
+      <tr><td>Node detail</td><td><code>GET /api/networks/{id}/eeros/{eid}</code></td></tr>
+      <tr><td>Node reboot</td><td><code>POST /api/networks/{id}/eeros/{eid}/reboot</code></td></tr>
+      <tr><td>Node LED &amp; nightlight</td><td><code>GET/POST .../eeros/{eid}/led</code>, <code>.../led/brightness</code>, <code>.../nightlight</code></td></tr>
+      <tr><td>SQM / QoS</td><td><code>GET/POST /api/networks/{id}/sqm</code>, <code>POST .../sqm/configure</code>, <code>.../sqm/auto</code></td></tr>
+      <tr><td>Firmware updates</td><td><code>GET /api/networks/{id}/updates</code></td></tr>
+      <tr><td>Thread / routing</td><td><code>GET /api/networks/{id}/thread</code>, <code>.../routing</code></td></tr>
+      <tr><td>Blacklist</td><td><code>GET/POST/DELETE /api/networks/{id}/blacklist/{did}</code></td></tr>
+      <tr><td>Network reboot</td><td><code>POST /api/networks/{id}/reboot</code></td></tr>
+    </tbody>
+  </table>
+  <p><strong>Decomposition opportunity:</strong> These can be migrated to feature modules following the same router/service/schemas pattern.</p>
+</section>
+
+<section id="speed-test-flow">
+  <h2>Speed Test Flow</h2>
+  <p>The speed test is a polling-based operation:</p>
+  <ol>
+    <li>Snapshot the current <code>speed.date</code> from network detail</li>
+    <li>Call <code>client.run_speed_test()</code> (returns 202 accepted)</li>
+    <li>Poll <code>client.get_network(refresh_cache=True)</code> every 10s</li>
+    <li>When <code>speed.date</code> changes → save result to <code>speed_history.json</code> → return</li>
+    <li>Timeout after 120s → return 504</li>
+  </ol>
+  <p>Results are persisted to <code>backend/data/speed_history.json</code> with automatic pruning (default 365 days).</p>
+</section>
+
+</body>
+</html>
