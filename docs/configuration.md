@@ -4,6 +4,7 @@
 
 | Variable | Default | Description |
 |---|---|---|
+| `EERO_DRY_RUN` | `false` | Enable dry-run mode — blocks all mutations (POST/PUT/DELETE) with 403. See [Dry-Run Mode](./dry-run-mode.md). |
 | `SPEED_HISTORY_DAYS` | `365` | Number of days to retain speed test history. Set to `0` to keep all results. |
 | `SPEED_TEST_POLL_INTERVAL` | `10` | Seconds between speed test status polls. |
 | `SPEED_TEST_TIMEOUT` | `120` | Max seconds to wait for a speed test to complete. |
