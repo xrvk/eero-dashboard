@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Check } from 'lucide-react';
 import { useFetch, prefetchRequest } from '../hooks/useFetch';
 import * as api from '../api';
 import { request } from '../api/client';
@@ -192,7 +193,7 @@ export default function ActivityView({ networkId, onSignalClick, onBandClick }: 
           </div>
         )}
         <button className="btn-primary" onClick={handleSpeedTest} disabled={speedRunning}>
-          {speedRunning ? <><div className="spinner" /> Running (~30s)…</> : '🚀 Run Speed Test'}
+          {speedRunning ? <><div className="spinner" /> Running (~30s)…</> : 'Run Speed Test'}
         </button>
         {speedSuccess && <div className="speed-success">✅ Speed test complete</div>}
         {speedError && <div className="error-banner">{speedError}</div>}
@@ -320,7 +321,7 @@ function CopyVal({ value }: { value: string | undefined }) {
   if (!value) return <span className="enode-f-val mono">—</span>;
   return (
     <span className={`enode-f-val mono copyable${copied ? ' copied' : ''}`} onClick={handleCopy} title="Click to copy">
-      {copied ? '✓ Copied' : value}
+      {copied ? <><Check size={14} /> Copied</> : value}
     </span>
   );
 }

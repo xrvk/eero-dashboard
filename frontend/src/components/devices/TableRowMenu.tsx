@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { MoreHorizontal } from 'lucide-react';
 import type { Device } from '../../api';
 
 interface TableRowMenuProps {
@@ -24,7 +25,7 @@ export default function TableRowMenu({ device: d, actionLoading, onAction, onRen
 
   return (
     <div className="card-menu-wrapper" ref={ref}>
-      <button className="btn-menu" onClick={() => setOpen(!open)} title="Actions">⋯</button>
+      <button className="btn-menu" onClick={() => setOpen(!open)} title="Actions"><MoreHorizontal size={16} /></button>
       {open && (
         <div className="card-menu">
           <button className="card-menu-item" onClick={() => { setOpen(false); onRename(d.mac!, d.display_name || d.hostname || ''); }}>
