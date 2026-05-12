@@ -27,10 +27,10 @@
 .drawer-section h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--text-muted); }
 .drawer-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
 .drawer-value { font-size: 0.9rem; }
-.drawer-value.mono { font-family: 'SF Mono', monospace; }
+.drawer-value.mono { font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace; }
 .drawer-value.copyable { cursor: pointer; transition: color 0.15s, background 0.15s; border-radius: 4px; padding: 2px 6px; margin: -2px -6px; }
 .drawer-value.copyable:hover { background: var(--bg-hover, rgba(255,255,255,0.06)); color: var(--accent, #00aaff); }
-.drawer-value.copyable.copied { color: #34d399; }
+.drawer-value.copyable.copied { color: var(--green); }
 .drawer-value-row { display: flex; align-items: center; gap: 8px; }
 .drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .drawer-field { margin-bottom: 4px; }
@@ -48,7 +48,7 @@
 /* Priority */
 .priority-active { display: flex; align-items: center; gap: 12px; }
 .priority-badge {
-  background: rgba(251,191,36,0.15); color: var(--yellow);
+  background: rgba(var(--yellow-rgb),0.15); color: var(--yellow);
   padding: 6px 14px; border-radius: var(--radius-sm);
   font-size: 0.85rem; font-weight: 600;
 }
@@ -56,7 +56,7 @@
 
 /* DHCP Reservation in drawer */
 .reservation-badge {
-  background: rgba(59,130,246,0.15); color: var(--accent);
+  background: rgba(var(--accent-rgb),0.15); color: var(--accent);
 }
 .reserve-ip-form { display: flex; flex-direction: column; gap: 6px; }
 .drawer-hint { font-size: 0.75rem; color: var(--text-muted); }
@@ -74,7 +74,7 @@
 .text-yellow { color: var(--yellow); }
 .text-red { color: var(--red); }
 .firmware-tag {
-  font-family: 'SF Mono', monospace; font-size: 0.82rem;
+  font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace; font-size: 0.82rem;
   background: var(--bg); border: 1px solid var(--border);
   border-radius: 4px; padding: 2px 8px;
 }
@@ -88,8 +88,8 @@
 .update-badge {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 0.82rem; padding: 4px 10px;
-  border-radius: 4px; background: rgba(250,204,21,0.1);
-  border: 1px solid rgba(250,204,21,0.3); color: var(--yellow);
+  border-radius: 4px; background: rgba(var(--yellow-rgb),0.1);
+  border: 1px solid rgba(var(--yellow-rgb),0.3); color: var(--yellow);
 }
 .drawer-field-full { grid-column: 1 / -1; }
 
