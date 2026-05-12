@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users } from 'lucide-react';
+import { Users, Eye, EyeOff, Copy, Check, Pencil, Share2, Shield } from 'lucide-react';
 import { useFetch } from '../hooks/useFetch';
 import * as api from '../api';
 
@@ -62,6 +62,11 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
     finally { setSaving(false); }
   };
 
+  const handleCopyAll = async () => {
+    const text = `Network: ${name}\nPassword: ${password}`;
+    try { await navigator.clipboard.writeText(text); } catch { /* ignore */ }
+  };
+
   return (
     <div className="guest-network">
       <div className="toggle-row" style={{ marginBottom: 20 }}>
@@ -99,19 +104,59 @@ export default function GuestNetwork({ networkId }: GuestNetworkProps) {
               </div>
             </div>
           ) : (
-            <div className="guest-info-card">
-              <div className="section-header-inline">
-                <h3>Guest Credentials</h3>
-                <button className="btn-icon-sm" onClick={startEditing} title="Edit credentials"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-              </div>
-              <div className="dns-grid">
-                <div className="dns-item">
-                  <span className="dns-label">SSID</span>
-                  <span className="dns-value">{name || '—'}</span>
+            <div className="guest-enabled-layout">
+              {/* Credential card */}
+              <div className="guest-credential-card">
+                <div className="guest-credential-header">
+                  <div className="guest-credential-title">
+                    <span className="general-card-icon">👥</span>
+                    <h3>Guest Credentials</h3>
+                  </div>
+                  <button className="btn-icon-sm" onClick={startEditing} title="Edit credentials">
+                    <Pencil size={16} />
+                  </button>
                 </div>
-                <div className="dns-item">
-                  <span className="dns-label">Password</span>
-                  <PasswordField value={password} />
+
+                <div className="guest-credential-fields">
+                  <div className="guest-field">
+                    <span className="guest-field-label">Network Name</span>
+                    <span className="guest-field-value">{name || '—'}</span>
+                  </div>
+                  <div className="guest-field">
+                    <span className="guest-field-label">Password</span>
+                    <PasswordField value={password} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick share card */}
+              <div className="guest-share-card">
+                <div className="guest-share-header">
+                  <Share2 size={16} />
+                  <span>Share with Guests</span>
+                </div>
+                <div className="guest-share-body">
+                  <div className="guest-share-line">
+                    <span className="guest-share-label">Network</span>
+                    <span className="guest-share-val mono">{name || '—'}</span>
+                  </div>
+                  <div className="guest-share-line">
+                    <span className="guest-share-label">Password</span>
+                    <span className="guest-share-val mono">{password || '—'}</span>
+                  </div>
+                </div>
+                <CopyAllButton onClick={handleCopyAll} />
+              </div>
+
+              {/* Info strip */}
+              <div className="guest-info-strip">
+                <div className="guest-info-item">
+                  <Shield size={14} />
+                  <span>Isolated from your main network</span>
+                </div>
+                <div className="guest-info-item">
+                  <Users size={14} />
+                  <span>Guests cannot see your devices</span>
                 </div>
               </div>
             </div>
@@ -146,21 +191,29 @@ function PasswordField({ value }: { value: string }) {
     <span className="password-field">
       <span className="password-value mono">{visible ? value : '••••••••'}</span>
       <button className="btn-icon-sm" onClick={() => setVisible(!visible)} title={visible ? 'Hide' : 'Show'}>
-        {visible ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        )}
+        {visible ? <EyeOff size={18} /> : <Eye size={18} />}
       </button>
       {value && (
         <button className="btn-icon-sm" onClick={handleCopy} title="Copy">
-          {copied ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          )}
+          {copied ? <Check size={18} /> : <Copy size={18} />}
         </button>
       )}
     </span>
+  );
+}
+
+function CopyAllButton({ onClick }: { onClick: () => void }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleClick = async () => {
+    await onClick();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button className="guest-share-copy-btn" onClick={handleClick}>
+      {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy credentials</>}
+    </button>
   );
 }
