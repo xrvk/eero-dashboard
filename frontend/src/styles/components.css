@@ -1394,11 +1394,81 @@
 /* ── Guest Network ─────────────────────────── */
 .guest-network { max-width: 600px; }
 .guest-details { margin-top: 8px; }
-.guest-edit-form {
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); padding: 16px;
+.guest-enabled-layout {
+  display: flex; flex-direction: column; gap: 16px;
 }
-.guest-info-card { margin-top: 4px; }
+
+/* Credential card */
+.guest-credential-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+.guest-credential-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.guest-credential-title {
+  display: flex; align-items: center; gap: 8px;
+}
+.guest-credential-title h3 {
+  font-size: 0.9rem; font-weight: 600; margin: 0;
+}
+.guest-credential-fields {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.guest-field {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.guest-field-label {
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-dim); font-weight: 600;
+}
+.guest-field-value {
+  font-size: 1rem; font-weight: 500;
+}
+
+/* Password click-to-copy */
+.password-clickable {
+  cursor: pointer; border-radius: 4px;
+  padding: 2px 6px; margin: -2px -6px;
+  transition: all 0.15s;
+}
+.password-clickable:hover {
+  background: var(--accent-glow); color: var(--accent);
+}
+.password-copied {
+  color: var(--green) !important; font-weight: 600;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 0.82rem !important;
+}
+
+/* Info strip */
+.guest-info-strip {
+  display: flex; gap: 12px; flex-wrap: wrap;
+}
+.guest-info-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.75rem; color: var(--text-dim);
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 8px 14px;
+  flex: 1; min-width: 200px;
+}
+.guest-info-item svg { flex-shrink: 0; color: var(--green); }
+
+/* Edit actions */
+.guest-edit-actions {
+  display: flex; gap: 10px; margin-top: 4px;
+}
+
+/* Disabled state */
+.guest-disabled-card {
+  text-align: center; padding: 36px 20px; margin-top: 16px;
+  background: var(--bg-card); border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+.guest-disabled-icon {
+  font-size: 2.5rem; display: block; margin-bottom: 8px;
+}
 .form-field { margin-bottom: 14px; }
 .form-field label {
   display: block; font-size: 0.78rem; color: var(--text-muted);
@@ -1424,7 +1494,74 @@
 .btn-icon-sm:hover { opacity: 1; color: var(--text, #e2e8f0); }
 
 /* ── SQM ───────────────────────────────────── */
-.sqm-config { margin-top: 4px; }
+.sqm-config { margin-top: 16px; }
+
+/* Status card */
+.sqm-status-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+.sqm-status-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.sqm-status-title {
+  display: flex; align-items: center; gap: 8px;
+}
+.sqm-status-title h3 {
+  font-size: 0.9rem; font-weight: 600; margin: 0;
+}
+
+/* Mode badge */
+.sqm-mode-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: var(--radius-sm);
+  background: rgba(45,212,160,0.1); border: 1px solid rgba(45,212,160,0.2);
+  color: var(--green); font-size: 0.78rem; font-weight: 600;
+  margin-bottom: 14px;
+}
+.sqm-mode-badge svg { flex-shrink: 0; }
+
+/* Bandwidth limits */
+.sqm-limits {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.sqm-limit-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.85rem;
+}
+.sqm-limit-item svg { color: var(--text-dim); flex-shrink: 0; }
+.sqm-limit-label { color: var(--text-muted); min-width: 70px; }
+.sqm-limit-value { font-weight: 500; font-size: 0.85rem; }
+
+/* Auto button (shown when in manual mode) */
+.sqm-auto-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 16px; padding: 8px 16px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text-muted);
+  font-size: 0.8rem; font-weight: 500; cursor: pointer;
+  transition: all 0.15s;
+}
+.sqm-auto-btn:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: var(--accent-glow);
+}
+.sqm-auto-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* Edit fields */
+.sqm-edit-fields {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.sqm-edit-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+@media (max-width: 500px) {
+  .sqm-edit-row { grid-template-columns: 1fr; }
+}
+.sqm-edit-fields .form-field { margin-bottom: 0; }
+
+/* Legacy SQM classes (used in GeneralSettings inline) */
 .sqm-edit-form {
   background: var(--bg); border: 1px solid var(--border);
   border-radius: var(--radius-sm); padding: 16px;
