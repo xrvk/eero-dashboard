@@ -19,9 +19,19 @@ _Built for operators who want fast, efficient network control._
 
 ---
 
-<!-- TODO: Add screenshot of the dashboard overview here -->
-<!-- ## 📸 Screenshots -->
-<!-- ![Dashboard overview](docs/screenshots/dashboard.png) -->
+## 📸 Screenshots
+
+| Devices | Network Health |
+|---------|---------------|
+| ![Devices](docs/screenshots/devices.png) | ![Health](docs/screenshots/health.png) |
+
+| Device Detail | Profiles |
+|---------------|----------|
+| ![Device Detail](docs/screenshots/device-detail.png) | ![Profiles](docs/screenshots/profiles.png) |
+
+| Settings |
+|----------|
+| ![Settings](docs/screenshots/settings.png) |
 
 > **Note:** Uses the unofficial [`eero-api`](https://github.com/fulviofreitas/eero-api) library. All API calls go through eero's cloud — there is no local API. Amazon-linked eero accounts are not supported.
 
