@@ -61,6 +61,15 @@ Open **http://localhost:8420** 🎉
 
 ---
 
+## 🆘 Support
+
+- **Bug?** [Open a bug report](https://github.com/xrvk/eero-dashboard/issues/new?template=bug_report.yml)
+- **Feature idea?** [Request a feature](https://github.com/xrvk/eero-dashboard/issues/new?template=feature_request.yml)
+- **Question?** [Start a discussion](https://github.com/xrvk/eero-dashboard/discussions)
+- **Want to contribute?** See [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+---
+
 ## 🔗 Related
 
 - **[eero-api](https://github.com/fulviofreitas/eero-api)** — Async Python SDK for the eero cloud API

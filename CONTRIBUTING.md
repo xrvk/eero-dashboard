@@ -1,6 +1,70 @@
 # Contributing
 
-## Quick start
+Thanks for your interest in contributing to eero Dashboard! Whether you're fixing a bug, adding a feature, or improving docs — all contributions are welcome.
+
+## Table of contents
+
+- [Getting help](#getting-help)
+- [How to contribute](#how-to-contribute)
+- [Development setup](#development-setup)
+- [Development workflow](#development-workflow)
+- [Code guidelines](#code-guidelines)
+- [Architecture map](#architecture-map)
+
+---
+
+## Getting help
+
+| Channel | Use for |
+|---------|---------|
+| [GitHub Issues](https://github.com/xrvk/eero-dashboard/issues) | Bug reports, feature requests |
+| [GitHub Discussions](https://github.com/xrvk/eero-dashboard/discussions) | Questions, ideas, show & tell |
+
+Before opening an issue, please:
+1. Search existing issues to avoid duplicates
+2. Check the [documentation](./docs/html/installation.html) for setup/config questions
+3. Use the appropriate issue template (bug report or feature request)
+
+---
+
+## How to contribute
+
+### Reporting bugs
+
+Use the [bug report template](https://github.com/xrvk/eero-dashboard/issues/new?template=bug_report.yml). Include:
+- Steps to reproduce
+- Expected vs actual behavior
+- Deployment method and browser info
+- Relevant logs or screenshots
+
+### Suggesting features
+
+Use the [feature request template](https://github.com/xrvk/eero-dashboard/issues/new?template=feature_request.yml). Explain:
+- The problem you're trying to solve
+- Your proposed solution
+- Any alternatives you've considered
+
+### Submitting code
+
+1. Fork the repo and create a branch off `main`
+2. Make your changes (see [code guidelines](#code-guidelines) below)
+3. Run `npm run validate` to ensure everything passes
+4. Open a pull request — fill out the PR template
+5. Respond to review feedback
+
+**First time?** Look for issues labeled [`good first issue`](https://github.com/xrvk/eero-dashboard/labels/good%20first%20issue).
+
+---
+
+## Development setup
+
+### Prerequisites
+
+- Node.js 20+
+- Python 3.12+
+- Docker (optional, for container testing)
+
+### Quick start
 
 ```bash
 npm run bootstrap
