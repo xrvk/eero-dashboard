@@ -184,15 +184,9 @@ curl http://localhost:8420/api/health | jq .dry_run
 # → true
 ```
 
-### What gets mocked vs blocked
+### Behavior
 
-| Status | Endpoints | Why |
-|--------|-----------|-----|
-| ✅ Mocked | `set_network_name`, `set_guest_network`, `configure_security`, `set_sqm_enabled`, `configure_sqm`, `set_sqm_auto`, `set_dns_caching`, `set_dns_mode`, `pause_device` | Response shape verified — uses `_put_settings` or known REST patterns |
-| ⚠️ Blocked (403) | `reboot_network`, `run_diagnostics`, `run_speed_test`, `pause_profile`, `block_device`, `set_device_nickname`, `set_device_priority`, `set_blocked_apps`, `set_bedtime`, `set_schedule`, `clear_schedule`, `set_profile_devices`, `add_to_blacklist`, `remove_from_blacklist`, `create/delete_forward`, `create/delete_reservation`, `create/rename/delete_profile` | Uses eero-api library internals — response shape not verified |
-
-Mocked endpoints return `{"data": {...payload, "_dry_run": true}}` and log what would have been sent.
-Blocked endpoints return a 403 with a clear message explaining the limitation.
+Reads (GET) hit the live eero API normally. Every mutation (POST/PUT/DELETE) is blocked with HTTP 403 and a `dry_run_blocked` error code; no synthetic success responses are returned, so no live state can change while dry-run is active.
 
 **Production safety:** `EERO_DRY_RUN` defaults to `false`. Never set it in production.
 

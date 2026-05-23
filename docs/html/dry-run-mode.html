@@ -81,9 +81,10 @@ export EERO_DRY_RUN=true   # also accepts: 1, yes, TRUE</code></pre>
       <tr><th>File</th><th>Role</th></tr>
     </thead>
     <tbody>
-      <tr><td><code>backend/core/dry_run.py</code></td><td><code>is_dry_run()</code>, <code>block_unmocked_mutation()</code>, mock helpers</td></tr>
-      <tr><td><code>backend/features/*/service.py</code></td><td>Dry-run guards at the top of each mutation function</td></tr>
-      <tr><td><code>backend/tests/test_dry_run.py</code></td><td>Unit tests for flag parsing, blocking, and integration</td></tr>
+      <tr><td><code>backend/core/dry_run.py</code></td><td><code>is_dry_run()</code> and <code>block_unmocked_mutation()</code></td></tr>
+      <tr><td><code>backend/features/*/service.py</code></td><td>Dry-run guards for mutations that call the eero client directly</td></tr>
+      <tr><td><code>backend/core/facade.py</code></td><td>Dry-run guards for facade-routed mutations (blacklist, port forwards, reservations)</td></tr>
+      <tr><td><code>backend/tests/test_dry_run.py</code></td><td>Unit tests for flag parsing, blocking, and service integration</td></tr>
     </tbody>
   </table>
 </section>
