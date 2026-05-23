@@ -9,6 +9,7 @@ from fastapi import HTTPException
 
 from eero import EeroClient
 
+from core.demo import is_demo_mode
 from core.dry_run import is_dry_run, block_unmocked_mutation
 
 DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
@@ -84,14 +85,16 @@ async def run_speed_test(client: EeroClient, network_id: str):
 
 
 async def get_speed_history(network_id: str):
-    using_seed = not SPEED_HISTORY_FILE.exists()
-    history_file = SPEED_HISTORY_SEED if using_seed else SPEED_HISTORY_FILE
-    if not history_file.exists():
+    history_file = (
+        SPEED_HISTORY_FILE
+        if SPEED_HISTORY_FILE.exists()
+        else (SPEED_HISTORY_SEED if is_demo_mode() else None)
+    )
+    if history_file is None or not history_file.exists():
         return {"history": [], "retention_days": SPEED_HISTORY_DAYS}
     try:
         history = json.loads(history_file.read_text())
-        if not using_seed:
-            history = [h for h in history if h.get("network_id") == network_id]
+        history = [h for h in history if h.get("network_id") == network_id]
         return {"history": history, "retention_days": SPEED_HISTORY_DAYS}
     except (json.JSONDecodeError, OSError):
         return {"history": [], "retention_days": SPEED_HISTORY_DAYS}

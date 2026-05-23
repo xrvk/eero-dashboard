@@ -2,6 +2,7 @@ import { request } from './client';
 
 export interface AuthStatus {
   authenticated: boolean;
+  demo?: boolean;
   name?: string;
   email?: string;
 }
