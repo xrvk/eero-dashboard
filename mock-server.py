@@ -131,6 +131,34 @@ EERO_NODES = [
     },
 ]
 
+import os as _os
+_extra = int(_os.environ.get("MOCK_EXTRA_NODES", "0") or "0")
+for _i in range(_extra):
+    _idx = len(EERO_NODES) + 1
+    EERO_NODES.append({
+        "url": f"/2.2/eeros/{_idx}",
+        "serial": f"E010{_idx:04d}",
+        "model": "eero 6+",
+        "model_number": "K010001",
+        "location": f"Extra Node {_idx}",
+        "status": "green",
+        "connected_clients_count": 2,
+        "mesh_quality_bars": 4,
+        "gateway": False,
+        "ip_address": f"192.168.1.{_idx}",
+        "mac_address": f"00:1A:2B:3C:4D:{_idx:02X}",
+        "os_version": "7.3.0-1234",
+        "ethernet": False,
+        "wired": False,
+        "connection_type": "wireless",
+        "last_reboot": "2026-05-16T10:30:00Z",
+        "update_available": False,
+        "hardware_rev": "1.0",
+        "led_on": True,
+        "led_brightness": 75,
+        "nightlight": {"enabled": False, "brightness": 50, "schedule": {"enabled": False, "on": "21:00", "off": "07:00"}, "ambient_light_enabled": False},
+    })
+
 PROFILES = [
     {"url": f"/2.2/networks/{NETWORK_ID}/profiles/1", "name": "Family", "paused": False, "devices": [{"url": f"/2.2/devices/{1000 + i}"} for i in range(0, 5)]},
     {"url": f"/2.2/networks/{NETWORK_ID}/profiles/2", "name": "Kids", "paused": False, "devices": [{"url": f"/2.2/devices/{1000 + i}"} for i in range(5, 10)]},

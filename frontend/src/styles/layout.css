@@ -6,6 +6,7 @@
   background: var(--bg-card); border-right: 1px solid var(--border);
   display: flex; flex-direction: column;
   position: fixed; top: 0; left: 0; bottom: 0; z-index: 20;
+  overflow-y: auto; overscroll-behavior: contain;
 }
 .sidebar-logo {
   display: flex; align-items: center; gap: 10px;
