@@ -12,17 +12,18 @@ PHONE_IDENTIFIER_RE = re.compile(r"^[\+\d\s\-\(\)]+$")
 async def auth_status() -> dict:
     client = await ensure_client()
     if not client.is_authenticated:
-        return {"authenticated": False}
+        return {"authenticated": False, "demo": False}
 
     try:
         account = await client.get_account()
         return {
             "authenticated": True,
+            "demo": False,
             "name": account.get("name", ""),
             "email": account.get("email", {}).get("value", ""),
         }
     except Exception:
-        return {"authenticated": False}
+        return {"authenticated": False, "demo": False}
 
 
 async def login(identifier: str) -> dict:

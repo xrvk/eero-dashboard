@@ -2,6 +2,7 @@ import { Suspense, lazy, useCallback, useEffect, useState, useRef } from 'react'
 import { Moon, Sun, SunMoon } from 'lucide-react';
 
 import LoginForm from './components/LoginForm';
+import DemoBanner from './components/DemoBanner';
 import NodeDrawer from './components/NodeDrawer';
 import { useHashRoute } from './hooks/useHashRoute';
 import AppContent from './features/app/AppContent';
@@ -124,6 +125,7 @@ function AppMain() {
       </div>
 
       <main className="app-main">
+        <DemoBanner visible={!!auth?.demo} />
         <header className="app-header">
           <div className="header-left">
             <button
