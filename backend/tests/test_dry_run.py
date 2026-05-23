@@ -1,4 +1,4 @@
-"""Tests for dry-run mode (core/dry_run.py + facade integration)."""
+"""Tests for dry-run mode (core/dry_run.py + service integration)."""
 
 import os
 import sys
@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, patch
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 import core.dry_run as dry_run_module
-from core.dry_run import block_unmocked_mutation, mock_endpoint_response, mock_settings_response
+from core.dry_run import block_unmocked_mutation
 
 
 class DryRunFlagTests(unittest.TestCase):
@@ -54,31 +54,8 @@ class DryRunFlagTests(unittest.TestCase):
         self.assertTrue(dry_run_module.is_dry_run())
 
 
-class MockResponseTests(unittest.TestCase):
-    """Test mock response builders."""
-
-    def test_mock_settings_response_echoes_payload(self):
-        result = mock_settings_response("net123", {"sqm": True})
-        self.assertEqual(result["data"]["sqm"], True)
-        self.assertTrue(result["data"]["_dry_run"])
-
-    def test_mock_settings_response_preserves_nested_payload(self):
-        payload = {"dns": {"mode": "custom", "custom": {"ips": ["1.1.1.1"]}}}
-        result = mock_settings_response("net123", payload)
-        self.assertEqual(result["data"]["dns"]["mode"], "custom")
-
-    def test_mock_endpoint_response_with_payload(self):
-        result = mock_endpoint_response("PUT", "devices/d1", {"paused": True})
-        self.assertEqual(result["data"]["paused"], True)
-        self.assertTrue(result["data"]["_dry_run"])
-
-    def test_mock_endpoint_response_without_payload(self):
-        result = mock_endpoint_response("DELETE", "profiles/p1")
-        self.assertTrue(result["data"]["_dry_run"])
-
-
 class BlockUnmockedTests(unittest.TestCase):
-    """Test that unmocked mutations raise HTTPException 403."""
+    """Test that blocked mutations raise HTTPException 403."""
 
     def test_raises_http_403(self):
         from fastapi import HTTPException

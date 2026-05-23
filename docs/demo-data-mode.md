@@ -124,7 +124,7 @@ through to the real handler.
 
 ## Related flags
 
-- `EERO_DRY_RUN` — see [dry-run-mode.md](./dry-run-mode.md). Independent of
+- `EERO_DRY_RUN` — see [dry-run-mode.html](./html/dry-run-mode.html). Independent of
   demo mode; can be combined, though demo mode already short-circuits
   mutations.
 
