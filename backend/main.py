@@ -6,6 +6,8 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from core.client import is_authenticated, lifespan
+from core.demo import is_demo_mode
+from core.demo_middleware import DemoModeMiddleware
 from core.dry_run import is_dry_run
 from core.errors import api_error_response
 from features.auth.router import router as auth_router
@@ -30,6 +32,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(DemoModeMiddleware)
 app.include_router(auth_router)
 app.include_router(devices_router)
 app.include_router(eero_nodes_router)
@@ -87,6 +90,7 @@ async def health():
         "authenticated": authenticated,
         "data_dir": data_dir_ok,
         "dry_run": is_dry_run(),
+        "demo_mode": is_demo_mode(),
     }
 
 

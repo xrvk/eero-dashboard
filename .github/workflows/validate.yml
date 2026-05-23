@@ -47,3 +47,36 @@ jobs:
         run: python -m compileall backend
       - name: Test
         run: python -m unittest discover -s backend/tests
+
+  demo-flag-guard:
+    name: Demo flag not leaking to prod manifests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan production-bound files for truthy EERO_DEMO_DATA
+        run: |
+          set -u
+          FILES=(
+            "Dockerfile"
+            "docker-compose.yml"
+            ".github/workflows/docker-publish.yml"
+            ".github/workflows/container-sanity.yml"
+          )
+          PATTERN='EERO_DEMO_DATA[[:space:]]*[:=][[:space:]]*"?(true|1|yes|TRUE|YES)"?'
+          fail=0
+          for f in "${FILES[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "::warning::Expected guarded file missing: $f"
+              continue
+            fi
+            if grep -nE "$PATTERN" "$f"; then
+              echo "::error file=$f::EERO_DEMO_DATA must not be enabled in production-bound manifests. Move it to docker-compose.demo.yml."
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            exit 1
+          fi
+          echo "OK — no demo flag found in production manifests."

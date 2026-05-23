@@ -1,0 +1,13 @@
+# Compose override file that turns on demo mode.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.demo.yml up
+#
+# Merges on top of docker-compose.yml, adding only the EERO_DEMO_DATA flag.
+# Keeps the base file production-safe by default.
+# See docs/demo-data-mode.md.
+
+services:
+  eero-dashboard:
+    environment:
+      - EERO_DEMO_DATA=true
