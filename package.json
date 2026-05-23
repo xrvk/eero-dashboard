@@ -1,5 +1,6 @@
 {
   "private": true,
+  "license": "MIT",
   "scripts": {
     "prepare": "husky",
     "bootstrap": "npm --prefix frontend install && python3.12 -m venv backend/.venv && backend/.venv/bin/pip install -r backend/requirements.txt",
