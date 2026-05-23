@@ -7,6 +7,7 @@
 [![React](https://img.shields.io/badge/react-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev)
 [![FastAPI](https://img.shields.io/badge/fastapi-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ed?style=for-the-badge&logo=docker&logoColor=white)](https://ghcr.io/xrvk/eero-dashboard)
+[![License](https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge)](LICENSE)
 
 ---
 
@@ -82,3 +83,7 @@ Open **http://localhost:8420** 🎉
 ## 🔗 Related
 
 - **[eero-api](https://github.com/fulviofreitas/eero-api)** — Async Python SDK for the eero cloud API
+
+## 📄 License
+
+[MIT](LICENSE) © xrvk
