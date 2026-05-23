@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.1] - 2026-05-23
+## [1.0.0] - 2026-05-23
+
+First tagged release. Promotes the project from the unstable `0.y.z` line — the REST surface (`/api/*`) and container env vars are now committed to SemVer compatibility going forward.
 
 ### Fixed
 - Sidebar not scrolling when content exceeds viewport height; wheel/trackpad events over the sidebar no longer hijack the main content panel ([#46](https://github.com/xrvk/eero-dashboard/issues/46), [#51](https://github.com/xrvk/eero-dashboard/pull/51)).
