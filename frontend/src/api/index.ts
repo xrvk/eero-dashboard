@@ -4,6 +4,5 @@ export * from './networks';
 export * from './eeros';
 export * from './profiles';
 export * from './settings';
-export * from './activity';
 export * from './devices';
 export * from './prefetch';

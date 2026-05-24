@@ -39,9 +39,6 @@ export const setDeviceNickname = (networkId: string, deviceId: string, nickname:
 
 export const renameDevice = setDeviceNickname;
 
-export const getDevice = (networkId: string, deviceId: string) =>
-  request<Device>(`/networks/${networkId}/devices/${deviceId}`);
-
 export const getDevicePriority = (networkId: string, deviceId: string) =>
   request<Record<string, unknown>>(`/networks/${networkId}/devices/${deviceId}/priority`);
 

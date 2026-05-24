@@ -42,10 +42,6 @@ export const prefetchEero = (networkId: string, eeroId: string) => {
   prefetchRequest(path, () => request<EeroNode>(path));
 };
 
-// Reboot
-export const rebootEero = (networkId: string, eeroId: string) =>
-  request(`/networks/${networkId}/eeros/${eeroId}/reboot`, { method: 'POST' });
-
 // LED
 export const getLedStatus = (networkId: string, eeroId: string) =>
   request<{ led_on?: boolean; brightness?: number }>(`/networks/${networkId}/eeros/${eeroId}/led`);

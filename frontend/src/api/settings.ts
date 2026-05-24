@@ -171,15 +171,9 @@ export const getRouting = (networkId: string) =>
 export const getBlacklist = (networkId: string) =>
   request<{ blacklist?: BlacklistEntry[] } | BlacklistEntry[]>(`/networks/${networkId}/blacklist`);
 
-export const addToBlacklist = (networkId: string, deviceId: string) =>
-  request(`/networks/${networkId}/blacklist/${deviceId}`, { method: 'POST' });
-
 export const removeFromBlacklist = (networkId: string, deviceId: string) =>
   request(`/networks/${networkId}/blacklist/${deviceId}`, { method: 'DELETE' });
 
 // Diagnostics
-export const getDiagnostics = (networkId: string) =>
-  request<DiagnosticsResult>(`/networks/${networkId}/diagnostics`);
-
 export const runDiagnostics = (networkId: string) =>
   request<DiagnosticsResult>(`/networks/${networkId}/diagnostics`, { method: 'POST' });
