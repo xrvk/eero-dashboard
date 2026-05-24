@@ -22,7 +22,7 @@ Thanks for your interest in contributing to eero Dashboard! Whether you're fixin
 
 Before opening an issue, please:
 1. Search existing issues to avoid duplicates
-2. Check the [documentation](./docs/html/installation.html) for setup/config questions
+2. Check the [documentation](./docs/installation.md) for setup/config questions
 3. Use the appropriate issue template (bug report or feature request)
 
 ---
@@ -221,8 +221,8 @@ Reads (GET) hit the live eero API normally. Every mutation (POST/PUT/DELETE) is 
 ## Docs to update with behavior changes
 
 - `README.md`
-- `docs/html/installation.html`
-- `docs/html/configuration.html`
-- `docs/html/api-reference.html`
-- `docs/html/architecture/` (backend, frontend, data-flow)
-- Relevant ADR in `docs/html/adr/`
+- `docs/installation.md`
+- `docs/configuration.md`
+- `docs/api-reference.md`
+- `docs/architecture/` (backend, frontend, data-flow)
+- Relevant ADR in `docs/adr/`

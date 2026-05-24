@@ -1,18 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Architecture Overview — eero Dashboard</title>
-</head>
-<body>
+# Architecture Overview
 
-<h1>Architecture Overview</h1>
-<p><em>Last updated: May 2025</em></p>
-<p>eero Dashboard is a self-hosted web app for managing eero mesh networks. It consists of a <strong>FastAPI backend</strong> that proxies the unofficial eero cloud API and a <strong>React frontend</strong> that renders the dashboard UI.</p>
+*Last updated: May 2025*
 
-<section id="deployment-topology">
-  <h2>Deployment Topology</h2>
-  <pre><code>┌─────────────────────────────────────┐
+eero Dashboard is a self-hosted web app for managing eero mesh networks. It consists of a **FastAPI backend** that proxies the unofficial eero cloud API and a **React frontend** that renders the dashboard UI.
+
+## Deployment Topology
+
+```
+┌─────────────────────────────────────┐
 │       Browser (React SPA)           │
 │  Port 5173 (dev) or Docker :8420    │
 └──────────────┬──────────────────────┘
@@ -37,12 +32,13 @@
 
 Persistence (Docker volume → backend/data/):
   data/.eero_session       → auth cookie
-  data/speed_history.json  → speed test results</code></pre>
-</section>
+  data/speed_history.json  → speed test results
+```
 
-<section id="directory-structure">
-  <h2>Directory Structure</h2>
-  <pre><code>eero-dashboard/
+## Directory Structure
+
+```
+eero-dashboard/
 ├── backend/
 │   ├── main.py                  # App init, middleware, speed-test, remaining routes
 │   ├── core/
@@ -68,24 +64,15 @@ Persistence (Docker volume → backend/data/):
 │   └── vite.config.ts           # Dev server + proxy + test config
 ├── docs/                        # This folder
 ├── Dockerfile                   # Multi-stage: node build → python runtime
-└── docker-compose.yml           # Production deployment</code></pre>
-</section>
+└── docker-compose.yml           # Production deployment
+```
 
-<section id="key-documents">
-  <h2>Key Documents</h2>
-  <table>
-    <thead>
-      <tr><th>Doc</th><th>Purpose</th></tr>
-    </thead>
-    <tbody>
-      <tr><td><a href="backend.html">Backend</a></td><td>Core modules, feature layers, caching, error handling</td></tr>
-      <tr><td><a href="frontend.html">Frontend</a></td><td>Components, API layer, hooks, state management</td></tr>
-      <tr><td><a href="data-flow.html">Data flow</a></td><td>Request lifecycle, caching strategy, mutation invalidation</td></tr>
-      <tr><td><a href="../api-reference.html">API reference</a></td><td>REST endpoint catalog</td></tr>
-      <tr><td><a href="../../../CONTRIBUTING.md">Contributing</a></td><td>Dev setup, validation, safe-change checklist</td></tr>
-    </tbody>
-  </table>
-</section>
+## Key Documents
 
-</body>
-</html>
+| Doc | Purpose |
+|----|----|
+| [Backend](backend.md) | Core modules, feature layers, caching, error handling |
+| [Frontend](frontend.md) | Components, API layer, hooks, state management |
+| [Data flow](data-flow.md) | Request lifecycle, caching strategy, mutation invalidation |
+| [API reference](../api-reference.md) | REST endpoint catalog |
+| [Contributing](../../CONTRIBUTING.md) | Dev setup, validation, safe-change checklist |
